@@ -1,0 +1,9 @@
+{
+  "name": "star-core-defense",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "serve": "npx --yes http-server dist -a 127.0.0.1 -p 4173 -c-1"
+  }
+}

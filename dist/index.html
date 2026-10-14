@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#061126">
+  <meta name="description" content="星核防線：原創手機直式防線遊戲。左右滑動擊破盤旋的多節感染群，三選一強化武器。">
+  <title>星核防線 · Starcore Defense</title>
+  <link rel="stylesheet" href="./style.css">
+  <script type="module" src="./src/main.js"></script>
+</head>
+<body>
+  <main class="game-shell" aria-label="星核防線遊戲">
+    <canvas id="arena" class="arena" aria-label="戰鬥畫面；在畫面上左右滑動可移動守衛者"></canvas>
+
+    <div id="hud" class="hud" hidden>
+      <div class="hud-top">
+        <div class="wave-label"><span id="wave-number">01</span><span class="wave-divider">/</span><span>06</span><small id="wave-name">訊號入侵</small></div>
+        <button id="pause-button" class="icon-button" type="button" aria-label="暫停遊戲">Ⅱ</button>
+      </div>
+      <div class="progress-track"><span id="wave-progress"></span></div>
+      <div class="hud-bottom">
+        <div class="core-readout"><span class="core-symbol">◈</span><span>星核耐久</span><strong id="core-value">100</strong></div>
+        <div class="score-readout"><span>得分</span><strong id="score-value">0</strong></div>
+      </div>
+      <div class="core-track"><span id="core-progress"></span></div>
+    </div>
+
+    <div id="hint" class="gesture-hint" hidden><span class="gesture-icon">↔</span> 左右滑動 · 自動射擊</div>
+
+    <section id="menu" class="screen menu-screen" aria-labelledby="game-title">
+      <div class="menu-top"><span class="eyebrow">ORIGINAL ARCADE · 001</span><span class="tiny-diamond">✧</span></div>
+      <div class="menu-hero">
+        <div class="brand-orbit"><span class="brand-core">✦</span></div>
+        <p class="kicker">守住最後一道光</p>
+        <h1 id="game-title">星核<span>防線</span></h1>
+        <p class="english-title">STARCORE DEFENSE</p>
+        <p class="menu-copy">一指左右滑動，逐節擊破盤旋的感染群。<br>選擇不同武器，守住最後一道防線。</p>
+      </div>
+      <div class="menu-actions">
+        <button id="start-button" class="primary-button" type="button"><span>開始作戰</span><span aria-hidden="true">↗</span></button>
+        <button id="continue-button" class="secondary-button" type="button" hidden>繼續上次進度</button>
+        <p class="menu-foot">單人 · 約 4 分鐘 · 無廣告</p>
+      </div>
+    </section>
+
+    <section id="upgrade-screen" class="screen upgrade-screen" aria-labelledby="upgrade-title" hidden>
+      <div class="upgrade-head">
+        <span class="eyebrow">WAVE CLEARED</span>
+        <h2 id="upgrade-title">選擇你的進化</h2>
+        <p>三選一，打造這一局的專屬火力</p>
+      </div>
+      <div id="upgrade-cards" class="upgrade-cards"></div>
+      <p class="upgrade-foot">選定後，下一波立即開始</p>
+    </section>
+
+    <section id="pause-screen" class="screen pause-screen" aria-labelledby="pause-title" hidden>
+      <div class="pause-panel">
+        <span class="eyebrow">PAUSED</span>
+        <h2 id="pause-title">戰鬥暫停</h2>
+        <p>深呼吸。星核仍在等你。</p>
+        <button id="resume-button" class="primary-button" type="button">繼續作戰 <span aria-hidden="true">↗</span></button>
+        <button id="menu-button" class="text-button" type="button">返回主畫面</button>
+      </div>
+    </section>
+
+    <section id="result-screen" class="screen result-screen" aria-labelledby="result-title" hidden>
+      <div class="result-panel">
+        <span id="result-kicker" class="eyebrow">MISSION COMPLETE</span>
+        <div id="result-emblem" class="result-emblem">✦</div>
+        <h2 id="result-title">星核守住了</h2>
+        <p id="result-copy">你讓這片星空繼續發光。</p>
+        <div class="result-stats"><div><span>本次得分</span><strong id="final-score">0</strong></div><div><span>最佳紀錄</span><strong id="best-score">0</strong></div></div>
+        <button id="retry-button" class="primary-button" type="button">再戰一次 <span aria-hidden="true">↗</span></button>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
