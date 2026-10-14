@@ -112,6 +112,45 @@ function guardian(ctx, x, y, time, invulnerable = 0) {
   ctx.restore();
 }
 
+function chest(ctx, item, time) {
+  ctx.save();
+  ctx.translate(item.x, item.y + Math.sin(time * 4) * 3);
+  ctx.rotate(Math.sin(time * 2) * 0.07);
+  ctx.shadowColor = '#ffdc83';
+  ctx.shadowBlur = 22;
+  ctx.fillStyle = '#855134';
+  ctx.strokeStyle = '#ffde88';
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.roundRect(-24, -21, 48, 42, 8);
+  ctx.fill();
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = '#edb75c';
+  ctx.fillRect(-20, -16, 40, 12);
+  ctx.fillRect(-4, -18, 8, 36);
+  ctx.fillStyle = '#fff4ba';
+  ctx.beginPath();
+  ctx.moveTo(0, -12);
+  ctx.lineTo(8, 0);
+  ctx.lineTo(0, 12);
+  ctx.lineTo(-8, 0);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+  ctx.textAlign = 'center';
+  ctx.font = '800 11px system-ui';
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = '#2c3349';
+  ctx.strokeText('打破補給箱', item.x, item.y - 33);
+  ctx.fillStyle = '#ffefb8';
+  ctx.fillText('打破補給箱', item.x, item.y - 33);
+  ctx.fillStyle = 'rgba(15,26,44,.65)';
+  ctx.fillRect(item.x - 23, item.y + 28, 46, 4);
+  ctx.fillStyle = '#ffdd82';
+  ctx.fillRect(item.x - 23, item.y + 28, 46 * Math.max(0, item.hp / item.maxHp), 4);
+}
+
 function segment(ctx, piece, chain, time) {
   if (piece.hp <= 0 || piece.y < -35 || piece.y > HEIGHT + 30) return;
   const p = PALETTES[chain.tint] || PALETTES.violet;
@@ -265,6 +304,7 @@ export function render(ctx, game, time) {
     return;
   }
   for (const item of game.chains) chain(ctx, item, time);
+  if (game.chest) chest(ctx, game.chest, time);
   for (const bullet of game.bullets) {
     ctx.save();
     ctx.shadowColor = '#88f3f7';

@@ -27,6 +27,7 @@
     </div>
 
     <div id="hint" class="gesture-hint" hidden><span class="gesture-icon">↔</span> 左右滑動 · 自動射擊</div>
+    <div id="boss-warning" class="boss-warning" hidden>母體逼近防線 · 集中火力</div>
 
     <section id="menu" class="screen menu-screen" aria-labelledby="game-title">
       <div class="menu-top"><span class="eyebrow">ORIGINAL ARCADE · 001</span><span class="tiny-diamond">✧</span></div>
@@ -39,19 +40,48 @@
       </div>
       <div class="menu-actions">
         <button id="start-button" class="primary-button" type="button"><span>開始作戰</span><span aria-hidden="true">↗</span></button>
-        <button id="continue-button" class="secondary-button" type="button" hidden>繼續上次進度</button>
-        <p class="menu-foot">單人 · 約 4 分鐘 · 無廣告</p>
+        <div class="menu-secondary-row">
+          <button id="continue-button" class="secondary-button" type="button" hidden>繼續進度</button>
+          <button id="research-button" class="secondary-button" type="button">細胞研究 <span id="menu-dna">◆ 0</span></button>
+        </div>
+        <p class="menu-foot">單人 · 無課金 · 無廣告</p>
       </div>
     </section>
 
     <section id="upgrade-screen" class="screen upgrade-screen" aria-labelledby="upgrade-title" hidden>
       <div class="upgrade-head">
-        <span class="eyebrow">WAVE CLEARED</span>
+        <span id="upgrade-kicker" class="eyebrow">SUPPLY OPENED</span>
         <h2 id="upgrade-title">選擇你的進化</h2>
         <p>三選一，打造這一局的專屬火力</p>
       </div>
       <div id="upgrade-cards" class="upgrade-cards"></div>
-      <p class="upgrade-foot">選定後，下一波立即開始</p>
+      <button id="reroll-button" class="reroll-button" type="button">免費刷新 · 剩餘 1 次</button>
+      <p id="upgrade-foot" class="upgrade-foot">選定後，戰鬥立即繼續</p>
+    </section>
+
+    <section id="research-screen" class="screen research-screen" aria-labelledby="research-title" hidden>
+      <div class="research-head">
+        <span class="eyebrow">PERMANENT GROWTH</span>
+        <h2 id="research-title">細胞研究</h2>
+        <p>每場戰鬥都能取得研究點；所有能力都靠遊玩解鎖。</p>
+        <div class="dna-balance">研究點 <strong id="research-dna">0</strong></div>
+      </div>
+      <div class="research-list">
+        <button class="research-item" data-research="fire" type="button"><span class="research-symbol">✦</span><span><strong>火力培養</strong><small>開局子彈傷害增加</small><em id="research-fire-level">等級 0 / 4</em></span><b id="research-fire-cost">◆ 45</b></button>
+        <button class="research-item" data-research="guard" type="button"><span class="research-symbol">♥</span><span><strong>韌性組織</strong><small>開局防線耐久增加</small><em id="research-guard-level">等級 0 / 4</em></span><b id="research-guard-cost">◆ 45</b></button>
+        <button class="research-item" data-research="scavenge" type="button"><span class="research-symbol">▣</span><span><strong>補給解析</strong><small>寶箱更容易被打開</small><em id="research-scavenge-level">等級 0 / 4</em></span><b id="research-scavenge-cost">◆ 45</b></button>
+      </div>
+      <button id="research-back" class="primary-button" type="button">返回主畫面 <span aria-hidden="true">↗</span></button>
+    </section>
+
+    <section id="route-screen" class="screen route-screen" aria-labelledby="route-title" hidden>
+      <div class="route-panel">
+        <span class="eyebrow">CHOOSE YOUR PATH</span>
+        <h2 id="route-title">下一段怎麼走？</h2>
+        <p>即將進入 <strong id="route-next-wave">下一關</strong>。選擇挑戰與收穫。</p>
+        <button id="route-stable" class="route-choice" type="button"><span class="route-glyph">◇</span><span><strong>穩定航道</strong><small>正常難度，穩定守住防線</small></span><span class="route-end">›</span></button>
+        <button id="route-volatile" class="route-choice risky" type="button"><span class="route-glyph">✦</span><span><strong>變異捷徑</strong><small>敵人更堅韌；結算多得 12 研究點</small></span><span class="route-end">›</span></button>
+      </div>
     </section>
 
     <section id="pause-screen" class="screen pause-screen" aria-labelledby="pause-title" hidden>
@@ -70,6 +100,7 @@
         <div id="result-emblem" class="result-emblem">✦</div>
         <h2 id="result-title">星核守住了</h2>
         <p id="result-copy">你讓這片星空繼續發光。</p>
+        <div class="result-reward">獲得研究點 <strong id="dna-gained">+0</strong></div>
         <div class="result-stats"><div><span>本次得分</span><strong id="final-score">0</strong></div><div><span>最佳紀錄</span><strong id="best-score">0</strong></div></div>
         <button id="retry-button" class="primary-button" type="button">再戰一次 <span aria-hidden="true">↗</span></button>
       </div>

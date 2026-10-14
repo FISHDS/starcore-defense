@@ -32,3 +32,51 @@ body{display:grid;place-items:center;background:radial-gradient(circle at 50% 45
 .upgrade-arrow{display:none}
 .upgrade-foot{font-size:11px;color:#e8f7ef;font-weight:700}
 @media(max-height:710px){.upgrade-head{padding:10px 8px}.upgrade-head h2{font-size:21px}.upgrade-cards{margin:9px 0}.upgrade-card{min-height:180px;padding:8px 5px}.upgrade-icon{flex-basis:43px;width:43px;height:43px;font-size:25px}.upgrade-desc{font-size:10px}}
+
+.menu-secondary-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}
+.menu-secondary-row .secondary-button{min-width:0;min-height:54px;margin:0;padding:0 9px;font-size:12px;letter-spacing:0}
+.menu-secondary-row .secondary-button:only-child{grid-column:span 2}
+#continue-button[hidden]+#research-button{grid-column:span 2}
+#research-button{gap:5px}
+#menu-dna{color:#ffe0a1;font-size:11px;white-space:nowrap}
+.research-screen{background:linear-gradient(180deg,#101d36,#08162c);text-align:left;justify-content:flex-start;padding:calc(env(safe-area-inset-top) + 32px) 22px calc(env(safe-area-inset-bottom) + 25px)}
+.research-head h2{font-size:32px;margin:10px 0 5px}
+.research-head p{font-size:12px;line-height:1.7;color:#bdd4dc;margin:0}
+.dna-balance{display:flex;justify-content:space-between;align-items:center;margin-top:20px;padding:12px 15px;border:1px solid rgba(255,219,139,.35);border-radius:13px;background:rgba(255,196,93,.1);color:#ffdfa0;font-size:12px;font-weight:800}
+.dna-balance strong{font-size:22px}
+.research-list{display:grid;gap:9px;margin:19px 0 auto}
+.research-item{width:100%;min-height:92px;display:flex;align-items:center;gap:12px;padding:10px;border:1px solid rgba(135,221,226,.29);border-radius:15px;background:#18334f;color:#f5ffff;text-align:left}
+.research-item:disabled{opacity:.5;cursor:default}
+.research-item>span:nth-child(2){display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.research-item strong{font-size:15px}
+.research-item small{font-size:11px;color:#bdd8df}
+.research-item em{font-style:normal;font-size:10px;color:#8fdedb;margin-top:5px}
+.research-item b{font-size:12px;color:#ffe0a1;white-space:nowrap}
+.research-symbol{flex:0 0 43px;width:43px;height:43px;display:grid;place-items:center;border-radius:12px;background:rgba(133,227,231,.13);color:#a2f5ed;font-size:27px}
+.result-reward{padding:12px;border-radius:13px;background:rgba(247,192,102,.12);color:#ffdc9b;font-weight:700;margin:0 0 15px;font-size:12px}
+.result-reward strong{font-size:21px;margin-left:9px}
+@media(max-height:710px){.research-screen{padding-top:calc(env(safe-area-inset-top) + 15px);padding-bottom:calc(env(safe-area-inset-bottom) + 15px)}.research-head h2{font-size:27px}.research-list{margin-top:11px;gap:7px}.research-item{min-height:76px}.research-head p{font-size:11px}.dna-balance{margin-top:12px}.research-screen .primary-button{min-height:48px}}
+.research-item:disabled{opacity:.72}
+.route-screen{align-items:center;justify-content:center;background:rgba(9,20,40,.83);backdrop-filter:blur(5px);padding-left:20px;padding-right:20px}
+.route-panel{width:100%;max-width:380px}
+.route-panel h2{font-size:29px;margin:11px 0 6px}
+.route-panel p{font-size:12px;color:#bdd7e0;margin:0 0 25px}
+.route-panel p strong{color:#e6fff7}
+.route-choice{display:flex;align-items:center;gap:13px;width:100%;min-height:104px;padding:14px;margin-top:11px;text-align:left;border:2px solid #7bdcd7;border-radius:17px;background:linear-gradient(110deg,#1b5267,#143651);color:#efffff}
+.route-choice.risky{border-color:#eea971;background:linear-gradient(110deg,#704654,#432f50)}
+.route-choice>span:nth-child(2){display:flex;flex-direction:column;gap:6px;flex:1}
+.route-choice strong{font-size:18px}
+.route-choice small{font-size:11px;line-height:1.5;color:#d2e4e6}
+.route-glyph{flex:0 0 43px;font-size:36px;color:#a5f9e8}
+.risky .route-glyph{color:#ffc783}
+.route-end{font-size:28px;color:#d2f7ee}
+.boss-warning{position:absolute;z-index:2;bottom:calc(env(safe-area-inset-bottom) + 112px);left:50%;transform:translateX(-50%);min-width:250px;padding:9px 13px;border:1px solid #ffb09b;border-radius:10px;background:rgba(87,29,49,.84);color:#ffe0c8;text-align:center;font-size:12px;font-weight:900;box-shadow:0 0 20px rgba(255,124,113,.23);pointer-events:none}
+.upgrade-card{position:relative}
+.upgrade-rarity{display:block;align-self:center;padding:3px 9px;border-radius:20px;background:#86ded2;color:#143e50;font-size:10px;font-weight:900;letter-spacing:.12em}
+.upgrade-card.rarity-rare{border-color:#76d2fa;background:linear-gradient(180deg,#174f77,#223d6a)}
+.rarity-rare .upgrade-rarity{background:#78d8fb;color:#143755}
+.upgrade-card.rarity-epic{border-color:#dd9bff;background:linear-gradient(180deg,#734071,#482c6e);box-shadow:0 0 0 3px rgba(69,27,86,.5),0 0 23px rgba(206,113,255,.28)}
+.rarity-epic .upgrade-rarity{background:#dea7ff;color:#43225b}
+.reroll-button{align-self:center;min-width:178px;min-height:36px;padding:6px 18px;border:1px solid #8edfeb;border-radius:9px;background:#1a536c;color:#e6ffff;font-size:12px;font-weight:800}
+.reroll-button:disabled{opacity:.58;cursor:default}
+@media(max-height:710px){.upgrade-card{min-height:190px}.upgrade-rarity{font-size:9px;padding:2px 7px}.reroll-button{min-height:32px}}

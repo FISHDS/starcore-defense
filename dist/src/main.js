@@ -1,7 +1,7 @@
-import { advance, chooseUpgrade, HEIGHT, startRun, UPGRADE_BY_ID, WAVES, WIDTH } from './game.js';
+import { advance, chooseRoute, chooseUpgrade, HEIGHT, rerollUpgrades, startRun, UPGRADE_BY_ID, WAVES, WIDTH } from './game.js';
 import { pointerToWorldX } from './input.js';
 import { render } from './render.js';
-import { clearCheckpoint, loadCheckpoint, readBest, saveCheckpoint, updateBest } from './storage.js';
+import { awardRun, buyResearch, clearCheckpoint, loadCheckpoint, readProfile, researchCost, saveCheckpoint, updateBest } from './storage.js';
 
 const $ = id => document.getElementById(id);
 const canvas = $('arena');
@@ -13,6 +13,8 @@ const hint = $('hint');
 const upgradeScreen = $('upgrade-screen');
 const pauseScreen = $('pause-screen');
 const resultScreen = $('result-screen');
+const researchScreen = $('research-screen');
+const routeScreen = $('route-screen');
 
 const fallbackData = new Map();
 const fallbackStorage = {
@@ -29,6 +31,7 @@ let dragging = false;
 let targetX = WIDTH / 2;
 let lastTime = 0;
 let handledResult = false;
+let showResearch = false;
 const keys = { left: false, right: false };
 
 function resize() {
@@ -47,25 +50,51 @@ function refreshHud() {
   $('wave-name').textContent = wave.name;
   $('core-value').textContent = String(Math.ceil(game.core));
   $('score-value').textContent = game.score.toLocaleString('zh-TW');
-  const head = game.boss?.segments[0];
-  const progress = wave.boss && head
-    ? 1 - Math.max(0, head.hp) / head.maxHp
+  const bossHeads = game.bosses.map(boss => boss.segments[0]);
+  const progress = wave.boss && bossHeads.length
+    ? 1 - bossHeads.reduce((sum, head) => sum + Math.max(0, head.hp), 0)
+      / bossHeads.reduce((sum, head) => sum + head.maxHp, 0)
     : Math.min(1, game.waveTime / wave.duration);
   $('wave-progress').style.width = `${Math.max(0, progress) * 100}%`;
-  $('core-progress').style.width = `${game.core}%`;
+  $('core-progress').style.width = `${game.core / game.maxCore * 100}%`;
+  const nearBoss = game.bosses.some(boss => boss.segments[0].hp > 0
+    && (boss.atBase || boss.segments[0].y > 580));
+  $('boss-warning').hidden = game.phase !== 'playing' || !nearBoss;
+  $('boss-warning').textContent = game.bosses.some(boss => boss.atBase && boss.segments[0].hp > 0)
+    ? '母體正在侵蝕防線 · 集中火力' : '母體逼近防線 · 集中火力';
+}
+
+function refreshResearch() {
+  const profile = readProfile(storage);
+  $('menu-dna').textContent = `◆ ${profile.dna}`;
+  $('research-dna').textContent = String(profile.dna);
+  for (const id of ['fire', 'guard', 'scavenge']) {
+    const level = profile[id];
+    const cost = researchCost(level);
+    $(`research-${id}-level`).textContent = `等級 ${level} / 4`;
+    $(`research-${id}-cost`).textContent = level >= 4 ? '已滿' : `◆ ${cost}`;
+    researchScreen.querySelector(`[data-research="${id}"]`).disabled = level >= 4 || profile.dna < cost;
+  }
 }
 
 function makeCards() {
+  $('upgrade-kicker').textContent = game.upgradeSource === 'chest' ? 'SUPPLY OPENED' : 'WAVE CLEARED';
+  $('upgrade-title').textContent = game.upgradeSource === 'chest' ? '寶箱技能三選一' : '選擇你的進化';
+  $('upgrade-foot').textContent = game.upgradeSource === 'chest'
+    ? '選定後，繼續擊退眼前的敵群' : '選定後，下一波立即開始';
   const holder = $('upgrade-cards');
   holder.replaceChildren();
+  const rarityName = { common: '普通', rare: '稀有', epic: '傳說' };
   for (const id of game.choices) {
     const item = UPGRADE_BY_ID[id];
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = `upgrade-card tone-${item.tone}`;
+    button.className = `upgrade-card rarity-${item.rarity} tone-${item.tone}`;
     button.setAttribute('aria-label', `${item.name}：${item.description}`);
     const icon = document.createElement('span');
     icon.className = 'upgrade-icon'; icon.textContent = item.icon;
+    const rarity = document.createElement('span');
+    rarity.className = 'upgrade-rarity'; rarity.textContent = rarityName[item.rarity];
     const text = document.createElement('span');
     text.className = 'upgrade-text';
     const name = document.createElement('span');
@@ -78,7 +107,7 @@ function makeCards() {
     text.append(name, desc, level);
     const arrow = document.createElement('span');
     arrow.className = 'upgrade-arrow'; arrow.textContent = '↗';
-    button.append(icon, text, arrow);
+    button.append(rarity, icon, text, arrow);
     button.addEventListener('click', () => {
       if (!chooseUpgrade(game, id)) return;
       saveCheckpoint(storage, game);
@@ -87,6 +116,10 @@ function makeCards() {
     });
     holder.append(button);
   }
+  const reroll = $('reroll-button');
+  reroll.disabled = game.rerollsLeft <= 0;
+  reroll.textContent = game.rerollsLeft > 0
+    ? `免費刷新 · 剩餘 ${game.rerollsLeft} 次` : '本次已刷新';
 }
 
 function setResult() {
@@ -94,6 +127,7 @@ function setResult() {
   handledResult = true;
   clearCheckpoint(storage);
   const best = updateBest(storage, game.score);
+  const reward = awardRun(storage, game);
   const won = game.phase === 'victory';
   resultScreen.classList.toggle('is-defeat', !won);
   $('result-kicker').textContent = won ? 'MISSION COMPLETE' : 'SIGNAL LOST';
@@ -102,10 +136,15 @@ function setResult() {
   $('result-copy').textContent = won ? '你讓這片星空繼續發光。' : '重新調整火力，下一次守住它。';
   $('final-score').textContent = game.score.toLocaleString('zh-TW');
   $('best-score').textContent = best.toLocaleString('zh-TW');
+  $('dna-gained').textContent = `+${reward.gained}`;
+  refreshResearch();
 }
 
 function syncScreen() {
-  menu.hidden = !!game;
+  menu.hidden = !!game || showResearch;
+  $('boss-warning').hidden = !game || game.phase !== 'playing';
+  researchScreen.hidden = !showResearch;
+  routeScreen.hidden = !game || game.phase !== 'route';
   hud.hidden = !game;
   hint.hidden = !game || game.phase !== 'playing' || paused;
   upgradeScreen.hidden = !game || game.phase !== 'upgrade';
@@ -113,13 +152,15 @@ function syncScreen() {
   resultScreen.hidden = !game || !['victory', 'defeat'].includes(game.phase);
   if (!game) $('continue-button').hidden = !loadCheckpoint(storage);
   if (game?.phase === 'upgrade') makeCards();
+  if (game?.phase === 'route') $('route-next-wave').textContent = WAVES[game.wave]?.name || '下一關';
   if (game && ['victory', 'defeat'].includes(game.phase)) setResult();
   refreshHud();
+  refreshResearch();
 }
 
 function beginNew() {
   clearCheckpoint(storage);
-  game = startRun(Math.floor(Math.random() * 0xffffffff));
+  game = startRun(Math.floor(Math.random() * 0xffffffff), readProfile(storage));
   paused = false;
   handledResult = false;
   targetX = game.player.x;
@@ -140,6 +181,29 @@ function continueRun() {
 $('start-button').addEventListener('click', beginNew);
 $('retry-button').addEventListener('click', beginNew);
 $('continue-button').addEventListener('click', continueRun);
+$('reroll-button').addEventListener('click', () => {
+  if (!game || !rerollUpgrades(game)) return;
+  saveCheckpoint(storage, game);
+  makeCards();
+});
+$('research-button').addEventListener('click', () => { showResearch = true; syncScreen(); });
+$('research-back').addEventListener('click', () => { showResearch = false; syncScreen(); });
+$('route-stable').addEventListener('click', () => {
+  if (!chooseRoute(game, 'stable')) return;
+  saveCheckpoint(storage, game);
+  syncScreen();
+});
+$('route-volatile').addEventListener('click', () => {
+  if (!chooseRoute(game, 'volatile')) return;
+  saveCheckpoint(storage, game);
+  syncScreen();
+});
+for (const button of researchScreen.querySelectorAll('[data-research]')) {
+  button.addEventListener('click', () => {
+    buyResearch(storage, button.dataset.research);
+    refreshResearch();
+  });
+}
 $('pause-button').addEventListener('click', () => { paused = true; syncScreen(); });
 $('resume-button').addEventListener('click', () => { paused = false; syncScreen(); });
 $('menu-button').addEventListener('click', () => { game = null; paused = false; syncScreen(); });
@@ -178,7 +242,10 @@ function frame(timestamp) {
     targetX = Math.max(26, Math.min(WIDTH - 26, targetX));
     const oldPhase = game.phase;
     advance(game, dt, targetX);
-    if (game.phase !== oldPhase) syncScreen();
+    if (game.phase !== oldPhase) {
+      if (game.phase === 'route') saveCheckpoint(storage, game);
+      syncScreen();
+    }
     else refreshHud();
   }
   ctx.setTransform(canvas.width / WIDTH, 0, 0, canvas.height / HEIGHT, 0, 0);

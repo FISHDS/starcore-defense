@@ -36,3 +36,19 @@ test('最佳成績只會提高，不會被較低成績覆蓋', () => {
   updateBest(storage, 50);
   assert.equal(readBest(storage), 200);
 });
+
+test('在分岔選擇畫面關閉後可回到同一個路口', () => {
+  const storage = memoryStorage();
+  const game = startRun(44);
+  game.phase = 'route';
+  game.wave = 2;
+  game.score = 560;
+  game.bonusDNA = 12;
+  game.routeChoices = ['stable', 'volatile'];
+  saveCheckpoint(storage, game);
+  const restored = loadCheckpoint(storage);
+  assert.equal(restored.phase, 'route');
+  assert.equal(restored.wave, 2);
+  assert.equal(restored.bonusDNA, 12);
+  assert.deepEqual(restored.routeChoices, ['stable', 'volatile']);
+});
