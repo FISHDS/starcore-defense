@@ -86,6 +86,24 @@ test('雙頭目迂迴後到達底線會留下持續施壓，玩家仍可反擊',
   assert.ok(head.hp <= 0);
 });
 
+test('雙頭目會交錯繞行數十秒，最後自然抵達防線', () => {
+  const game = startRun(74);
+  game.wave = WAVES.length;
+  game.core = game.maxCore = 1000;
+  game.fireTimer = -100000;
+  advance(game, 0.05);
+  const bosses = game.bosses;
+  const leftRight = new Set();
+  let arrival = 0;
+  for (let tick = 1; tick < 1800; tick++) {
+    advance(game, 0.05);
+    leftRight.add(Math.sign(bosses[0].segments[0].x - bosses[1].segments[0].x));
+    if (bosses.some(boss => boss.atBase)) { arrival = tick * 0.05; break; }
+  }
+  assert.ok(leftRight.has(-1) && leftRight.has(1));
+  assert.ok(arrival > 40 && arrival < 85);
+});
+
 test('多路線敵群在十秒內維持於防線上方，保留應對時間', () => {
   for (let wave = 1; wave <= WAVES.length; wave++) {
     const game = startRun(73);
