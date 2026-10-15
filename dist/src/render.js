@@ -14,6 +14,44 @@ function compact(value) {
   if (value >= 1000) return `${(value / 1000).toFixed(value >= 10000 ? 0 : 1)}K`;
   return String(Math.ceil(value));
 }
+
+// 只留下能辨認的戰場資訊；寶箱與數字不共用同一塊畫面。
+export function visibleChests(chains) {
+  return chains.filter(chain => !chain.dead).flatMap(chain => chain.segments)
+    .filter(piece => piece.chest && piece.hp > 0 && piece.y >= 55 && piece.y <= 700)
+    .sort((a, b) => b.y - a.y);
+}
+
+export function selectHealthLabels(chains) {
+  const chests = visibleChests(chains);
+  const candidates = chains.filter(chain => !chain.dead).flatMap(chain => chain.segments)
+    .filter(piece => piece.index > 0 && !piece.chest && piece.hp > 0
+      && piece.y >= 35 && piece.y <= 710 && piece.index % 6 === 2)
+    .sort((a, b) => b.y - a.y);
+  const selected = [];
+  for (const piece of candidates) {
+    if (chests.some(chest => Math.hypot(chest.x - piece.x, chest.y - piece.y) < 48)) continue;
+    if (selected.some(label => Math.abs(label.x - piece.x) < 50
+      && Math.abs(label.y - piece.y) < 28)) continue;
+    selected.push(piece);
+    if (selected.length === 16) break;
+  }
+  return selected;
+}
+
+export function selectDamagePopups(popups, chests) {
+  const selected = [];
+  for (let index = popups.length - 1; index >= 0; index--) {
+    const popup = popups[index];
+    if (popup.life <= 0 || chests.some(chest =>
+      Math.hypot(chest.x - popup.x, chest.y - popup.y) < 48)) continue;
+    if (selected.some(item => Math.abs(item.x - popup.x) < 34
+      && Math.abs(item.y - popup.y) < 24)) continue;
+    selected.push(popup);
+    if (selected.length === 12) break;
+  }
+  return selected;
+}
 const PALETTES = {
   mint: { body: '#62d8ba', edge: '#177e80', light: '#c2fff0', shadow: '#286e78', head: '#f58e81' },
   violet: { body: '#ab87e9', edge: '#51418e', light: '#e8d3ff', shadow: '#674eac', head: '#f478ad' },
@@ -191,15 +229,6 @@ function segment(ctx, piece, chain, time) {
     ctx.arc(0, 1, r * 0.58, -0.4, Math.PI + 0.4);
     ctx.stroke();
   }
-  ctx.font = `900 ${head ? 12 : 12}px system-ui`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.lineWidth = 3.5;
-  ctx.strokeStyle = '#26304b';
-  const hp = head ? '◆' : compact(Math.max(0, piece.hp));
-  ctx.strokeText(hp, 0, head ? 11 : piece.chest ? 11 : 4);
-  ctx.fillStyle = '#fff9ed';
-  ctx.fillText(hp, 0, head ? 11 : piece.chest ? 11 : 4);
   ctx.restore();
 }
 
@@ -260,6 +289,22 @@ function drawEffect(ctx, effect) {
   ctx.restore();
 }
 
+function healthNumbers(ctx, labels) {
+  ctx.save();
+  ctx.font = '900 12px system-ui';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  for (const piece of labels) {
+    const value = compact(piece.hp);
+    const width = Math.max(27, ctx.measureText(value).width + 10);
+    ctx.fillStyle = 'rgba(13,29,47,.80)';
+    ctx.fillRect(piece.x - width / 2, piece.y - 7, width, 17);
+    ctx.fillStyle = '#f4fdff';
+    ctx.fillText(value, piece.x, piece.y + 2);
+  }
+  ctx.restore();
+}
+
 function damageNumbers(ctx, popups) {
   ctx.save();
   ctx.textAlign = 'center';
@@ -273,6 +318,61 @@ function damageNumbers(ctx, popups) {
     ctx.fillStyle = popup.weak ? '#ffde80' : '#fff5f2';
     ctx.fillText(compact(popup.value), popup.x, popup.y);
   }
+  ctx.restore();
+}
+
+function chestHighlights(ctx, chests, time) {
+  ctx.save();
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  for (let index = 0; index < chests.length; index++) {
+    const chest = chests[index];
+    const color = chest.gold ? '#ffe080' : '#9ff7ff';
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 3;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 17 + 4 * Math.sin(time * 7);
+    ctx.beginPath();
+    ctx.arc(chest.x, chest.y, chest.radius + 5, 0, TAU);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+    if (index >= 3) continue;
+    const labelX = Math.max(32, Math.min(WIDTH - 32, chest.x));
+    ctx.fillStyle = 'rgba(10,25,42,.9)';
+    ctx.fillRect(labelX - 25, chest.y - 47, 50, 16);
+    ctx.font = '900 11px system-ui';
+    ctx.fillStyle = color;
+    ctx.fillText('寶箱', labelX, chest.y - 39);
+    ctx.fillStyle = 'rgba(10,25,42,.9)';
+    ctx.fillRect(chest.x - 22, chest.y + 28, 44, 8);
+    ctx.fillStyle = color;
+    ctx.fillRect(chest.x - 20, chest.y + 30,
+      40 * Math.max(0, chest.hp / chest.maxHp), 4);
+  }
+  ctx.restore();
+}
+
+function chestAimCue(ctx, game, chests) {
+  const target = chests[0];
+  if (!target) return;
+  const aligned = Math.abs(game.player.x - target.x) < 20;
+  const color = aligned ? '#ffe080' : '#8deffa';
+  ctx.save();
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = color;
+  ctx.shadowColor = color;
+  ctx.shadowBlur = aligned ? 18 : 9;
+  ctx.font = '900 11px system-ui';
+  ctx.fillText(aligned ? '已對準寶箱' : '寶箱位置',
+    Math.max(43, Math.min(WIDTH - 43, target.x)), 686);
+  ctx.beginPath();
+  ctx.moveTo(target.x, 697);
+  ctx.lineTo(target.x - 9, 709);
+  ctx.lineTo(target.x + 9, 709);
+  ctx.closePath();
+  ctx.fill();
+  ctx.shadowBlur = 0;
   ctx.restore();
 }
 
@@ -293,10 +393,13 @@ export function render(ctx, game, time) {
       }),
     };
     chain(ctx, preview, time);
+    healthNumbers(ctx, selectHealthLabels([preview]));
+    chestHighlights(ctx, visibleChests([preview]), time);
     rail(ctx, 100, time);
     guardian(ctx, WIDTH / 2, 744, time);
     return;
   }
+  const chests = visibleChests(game.chains);
   for (const item of game.chains) chain(ctx, item, time);
   for (const bullet of game.bullets) {
     ctx.save();
@@ -316,7 +419,10 @@ export function render(ctx, game, time) {
     circle(ctx, bullet.x, bullet.y, bullet.radius, '#ff9bab');
   }
   for (const effect of game.effects) drawEffect(ctx, effect);
-  damageNumbers(ctx, game.popups);
+  healthNumbers(ctx, selectHealthLabels(game.chains));
+  damageNumbers(ctx, selectDamagePopups(game.popups, chests));
   rail(ctx, game.core / game.maxCore * 100, time);
+  chestAimCue(ctx, game, chests);
+  chestHighlights(ctx, chests, time);
   guardian(ctx, game.player.x, game.player.y, time, game.invulnerable);
 }
