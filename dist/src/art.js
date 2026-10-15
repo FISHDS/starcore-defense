@@ -10,6 +10,34 @@ const BIOMES = [
   { top: '#2b3152', mid: '#343455', bottom: '#202842', accent: '#d48aca', enemy: '#d16ba6', shade: '#804177', pale: '#f7c9e9' },
 ];
 
+// 戰鬥插畫先載入一次；在無瀏覽器的測試環境保留向量圖備援。
+const SPRITE_FILES = {
+  guardian: 'battle-guardian.png',
+  headCoral: 'battle-head-coral.png',
+  headCrystal: 'battle-head-crystal.png',
+  bodyCoral: 'battle-body-coral.png',
+  bodyCrystal: 'battle-body-crystal.png',
+  bodyToxic: 'battle-body-toxic.png',
+  chestGold: 'battle-chest-gold.png',
+  chestCommon: 'battle-chest-common.png',
+};
+const SPRITES = {};
+if (typeof Image !== 'undefined') {
+  for (const [key, file] of Object.entries(SPRITE_FILES)) {
+    const image = new Image();
+    image.decoding = 'async';
+    image.src = new URL(`../assets/${file}`, import.meta.url).href;
+    SPRITES[key] = image;
+  }
+}
+
+function drawSprite(ctx, key, x, y, width, height) {
+  const image = SPRITES[key];
+  if (!image || !image.complete || !image.naturalWidth) return false;
+  ctx.drawImage(image, x - width / 2, y - height / 2, width, height);
+  return true;
+}
+
 function zoneIndex(zone) {
   return Math.max(0, Math.min(4, Math.floor(Number(zone) || 0)));
 }
@@ -176,6 +204,15 @@ export function drawGuardian(ctx, { x = 195, y = 744, time = 0, state = 'idle', 
   ctx.translate(x, y - 3 + Math.sin(time * 4) * 1.2);
   if (invulnerable > 0 && Math.floor(time * 10) % 2) ctx.globalAlpha = 0.55;
   ellipse(ctx, 0, 13, 19, 6, '#0819276b');
+  if (drawSprite(ctx, 'guardian', 0, -18, 76, 79)) {
+    if (state === 'fire') {
+      ctx.globalAlpha = 0.75;
+      sparkle(ctx, 1, -58, 6, '#fff4bb');
+    }
+    if (state === 'hit') sparkle(ctx, -26, -22, 6, '#fff5af');
+    ctx.restore();
+    return;
+  }
   ctx.shadowColor = '#9ef7db';
   ctx.shadowBlur = 12;
   ellipse(ctx, 0, 0, 20, 18, '#75e0ca', INK, 3.5);
@@ -354,10 +391,24 @@ export function drawSegment(ctx, { piece, chain = {}, time = 0, zone = 0 } = {})
   const biome = BIOMES[index];
   ctx.save();
   ctx.translate(piece.x, piece.y + Math.sin(time * 4 + (piece.depth || 0) * 0.5) * 0.8);
-  if (piece.chest) drawChest(ctx, piece, biome, time);
-  else if (piece.index === 0) drawHead(ctx, piece, biome, chain);
+  if (piece.chest) {
+    const pulse = 1 + Math.sin(time * 5) * 0.025;
+    if (!drawSprite(ctx, piece.gold ? 'chestGold' : 'chestCommon',
+      0, 0, 56 * pulse, 47 * pulse)) drawChest(ctx, piece, biome, time);
+  } else if (piece.index === 0) {
+    const key = (chain.boss && Number(chain.lane) % 2) || index === 2 || index === 4
+      ? 'headCrystal' : 'headCoral';
+    const size = chain.boss ? 74 : 61;
+    if (!drawSprite(ctx, key, 0, -3, size, size)) drawHead(ctx, piece, biome, chain);
+  }
   else {
-    drawBody(ctx, piece, biome, !!chain.boss, index, Number(chain.lane) || 0);
+    const key = piece.armorHp > 0 || (chain.boss && Number(chain.lane) % 2)
+      || index === 2 || index === 4 ? 'bodyCrystal'
+      : piece.poisonFor > 0 || index === 1 || piece.depth % 13 === 4
+        ? 'bodyToxic' : 'bodyCoral';
+    const scale = chain.boss ? 1.1 : 1;
+    if (!drawSprite(ctx, key, 0, 0, 51 * scale, 39 * scale))
+      drawBody(ctx, piece, biome, !!chain.boss, index, Number(chain.lane) || 0);
     if (piece.armorHp > 0) {
       ctx.strokeStyle = '#d7ecff'; ctx.lineWidth = 3.5;
       ctx.beginPath(); ctx.arc(0, 0, (piece.radius || 18) + 2, -2.8, -0.2); ctx.stroke();
@@ -374,6 +425,22 @@ export function drawSegment(ctx, { piece, chain = {}, time = 0, zone = 0 } = {})
       if (piece.weakOpen) sparkle(ctx, 0, 2, 5, '#ff9073');
     } else if (piece.haste) {
       line(ctx, [[-3, -9], [4, -2], [-2, -2], [3, 8]], '#fff0a2', 4);
+    }
+    if (piece.transitShield) {
+      const pulse = Math.sin(time * 7 + (piece.depth || 0) * 0.6) * 0.12;
+      ctx.save();
+      ctx.shadowColor = '#a3faff';
+      ctx.shadowBlur = 11;
+      ctx.fillStyle = `rgba(90, 242, 255, ${0.1 + pulse * 0.3})`;
+      ctx.strokeStyle = `rgba(177, 252, 255, ${0.78 + pulse})`;
+      ctx.lineWidth = 2.6;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 26, 22, 0, 0, TAU);
+      ctx.fill();
+      ctx.stroke();
+      line(ctx, [[-20, -14], [-12, -20], [-3, -21]], '#f4ffff', 1.6);
+      line(ctx, [[11, 20], [21, 12]], '#f4ffff', 1.6);
+      ctx.restore();
     }
   }
   if (chain.shielded && (piece.index === 0 || piece.chest)) {

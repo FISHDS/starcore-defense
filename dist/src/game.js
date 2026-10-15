@@ -1,5 +1,5 @@
-import { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID } from './content.js?v=20261015-campaign';
-import { routePosition } from './routes.js?v=20261015-campaign';
+import { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID } from './content.js?v=20261015-pressure-art-audio';
+import { routePosition } from './routes.js?v=20261015-pressure-art-audio';
 import { assignTraits, chainSpeed, chestGuarded, steerBullet,
   updateBossShields, updateHazards, updateWeakpoints } from './mechanics.js';
 
@@ -82,6 +82,7 @@ function configuredWave(game, index) {
 
 function initialTravel(path, boss) {
   if (boss) return 500;
+  if (path === 'tide') return 760;
   if (path === 'fork' || path === 'fork-right' || path === 'narrow') return 950;
   if (path === 'weave') return 1200;
   return 1700;
@@ -103,6 +104,8 @@ function reposition(chain, dt = 0) {
       segment.routeDistance);
     segment.x = position.x;
     segment.y = position.y;
+    segment.transitShield = chain.path === 'tide' && segment.index > 0
+      && segment.x > 130 && segment.x < 260;
   }
 }
 
@@ -155,6 +158,7 @@ function addPopup(game, x, y, value, weak = false) {
 export function hitSegment(game, chain, segment, amount, options = {}) {
   if (game.phase !== 'playing' || chain.dead || !chain.segments.includes(segment)
     || segment.index === 0 || segment.hp <= 0
+    || (segment.transitShield && (options.projectile || options.special || options.dot))
     || (segment.chest && (options.special || options.dot))) return false;
   const bossGuarded = chain.boss && game.bosses.some(other => other !== chain && !other.dead
     && other.segments.some(piece => piece.index > 0 && piece.y > segment.y
@@ -226,9 +230,12 @@ function updateChains(game, dt) {
     chain.recoil = Math.max(0, chain.recoil - dt);
     const visible = chain.segments.filter(piece => piece.index > 0
       && piece.y > 40 && piece.y < 730 && piece.x > -20 && piece.x < 410).length;
-    const feedTarget = !chain.boss && chain.segments.length > 30
+    const sparseFeed = !chain.boss && chain.segments.length > 30
       && chain.segments[0].y < 500
       ? visible < 8 ? 165 : visible < 14 ? 75 : 0 : 0;
+    const tailPressure = !chain.boss && chain.speed > 0 && chain.segments.length > 30
+      ? Math.min(95, Math.max(0, (390 - chain.segments[0].y) * 0.5)) : 0;
+    const feedTarget = Math.max(sparseFeed, tailPressure);
     chain.feedSpeed = (chain.feedSpeed || 0)
       + (feedTarget - (chain.feedSpeed || 0)) * Math.min(1, dt * 2);
     chain.actualSpeed = chainSpeed(chain) + chain.feedSpeed;
@@ -359,7 +366,7 @@ function updateBullets(game, dt) {
     for (const { chain, segment } of crossed) {
       const oldX = segment.x;
       const oldY = segment.y;
-      if (!hitSegment(game, chain, segment, bullet.damage)) continue;
+      if (!hitSegment(game, chain, segment, bullet.damage, { projectile: true })) continue;
       bullet.hit.push(segment.id);
       if (game.phase !== 'playing') { consumed = true; break; }
       if (game.upgrades.blast) {

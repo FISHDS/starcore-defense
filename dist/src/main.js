@@ -1,9 +1,10 @@
-import { advance, CHAPTERS, chooseUpgrade, getRunProgress, HEIGHT, rerollUpgrades, startRun, UPGRADE_BY_ID, WAVES, WIDTH } from './game.js?v=20261015-campaign';
+import { advance, CHAPTERS, chooseUpgrade, getRunProgress, HEIGHT, rerollUpgrades, startRun, UPGRADE_BY_ID, WAVES, WIDTH } from './game.js?v=20261015-pressure-art-audio';
 import { pointerToWorldX } from './input.js';
-import { render } from './render.js?v=20261015-campaign';
-import { awardRun, buyResearch, buyItem, equipItem, clearCheckpoint, loadCheckpoint, readProfile, researchCost, saveCheckpoint, updateBest } from './storage.js?v=20261015-campaign';
+import { render } from './render.js?v=20261015-pressure-art-audio';
+import { awardRun, buyResearch, buyItem, equipItem, clearCheckpoint, loadCheckpoint, readProfile, researchCost, saveCheckpoint, updateBest } from './storage.js?v=20261015-pressure-art-audio';
 import { ORGANS, WEAPONS } from './meta.js';
-import { drawSkillIcon } from './art.js';
+import { drawSkillIcon } from './art.js?v=20261015-battle-art';
+import { createAudioEngine } from './audio.js?v=20261015-pressure-art-audio';
 
 const $ = id => document.getElementById(id);
 const canvas = $('arena');
@@ -27,6 +28,29 @@ const fallbackStorage = {
 };
 let storage;
 try { storage = window.localStorage; } catch { storage = fallbackStorage; }
+const audio = createAudioEngine({ storage });
+
+function refreshAudioButtons() {
+  const settings = audio.getSettings();
+  for (const button of document.querySelectorAll('[data-audio]')) {
+    const music = button.dataset.audio === 'music';
+    const muted = music ? settings.musicMuted : settings.effectsMuted;
+    button.textContent = music ? `♫ 音樂${muted ? '關' : '開'}`
+      : `♪ 音效${muted ? '關' : '開'}`;
+    button.setAttribute('aria-pressed', String(muted));
+    button.setAttribute('aria-label', `${muted ? '開啟' : '關閉'}${music ? '背景音樂' : '音效'}`);
+  }
+}
+
+function syncAudioScene() {
+  const zone = game?.chapter === 26
+    ? 5 : game ? CHAPTERS[game.chapter - 1].zone + 1 : 1;
+  const scene = !game ? 'menu' : paused ? 'paused'
+    : game.phase === 'upgrade' ? 'upgrade'
+      : game.phase === 'victory' || game.phase === 'defeat' ? 'result'
+        : game.encounter === 'boss' ? 'boss' : 'battle';
+  audio.setScene(scene, zone);
+}
 
 let game = null;
 let paused = false;
@@ -40,6 +64,7 @@ let showLoadout = false;
 let lastSavedAt = 0;
 let selectedChapter = readProfile(storage).unlockedStage;
 let selectedZone = Math.floor((selectedChapter - 1) / 5);
+let bossWarningActive = false;
 const keys = { left: false, right: false };
 
 function resize() {
@@ -69,6 +94,8 @@ function refreshHud() {
   $('core-progress').style.width = `${game.core / game.maxCore * 100}%`;
   const nearBoss = game.bosses.some(boss => !boss.dead && boss.segments[0].y > 540);
   $('boss-warning').hidden = game.phase !== 'playing' || !nearBoss;
+  if (game.phase === 'playing' && nearBoss && !bossWarningActive) audio.playSfx('warning');
+  bossWarningActive = game.phase === 'playing' && nearBoss;
   $('boss-warning').textContent = activeChapter.bossMode === 'final'
     ? '雙母體輪流亮起護盾 · 改打沒發光的長鏈'
     : '雙母體逼近 · 瞄準身體讓頭部後退';
@@ -207,6 +234,7 @@ function makeCards() {
       saveCheckpoint(storage, game);
       targetX = game.player.x;
       syncScreen();
+      audio.playSfx('upgrade');
     });
     holder.append(button);
   }
@@ -261,12 +289,15 @@ function syncScreen() {
   refreshResearch();
   if (!game) refreshStages();
   if (showLoadout) refreshLoadout();
+  syncAudioScene();
+  refreshAudioButtons();
 }
 
 function beginNew() {
   const profile = readProfile(storage);
   if (selectedChapter === 26 ? !profile.endlessUnlocked
     : selectedChapter > profile.unlockedStage) return;
+  audio.unlockFromGesture();
   clearCheckpoint(storage);
   game = startRun(Math.floor(Math.random() * 0xffffffff), profile, selectedChapter);
   paused = false;
@@ -275,17 +306,20 @@ function beginNew() {
   lastSavedAt = 0;
   saveCheckpoint(storage, game);
   syncScreen();
+  audio.playSfx('start');
 }
 
 function continueRun() {
   const loaded = loadCheckpoint(storage);
   if (!loaded) return;
+  audio.unlockFromGesture();
   game = loaded;
   paused = false;
   handledResult = false;
   targetX = game.player.x;
   lastSavedAt = game.runTime;
   syncScreen();
+  audio.playSfx('start');
 }
 
 $('start-button').addEventListener('click', beginNew);
@@ -296,12 +330,31 @@ $('reroll-button').addEventListener('click', () => {
   saveCheckpoint(storage, game);
   makeCards();
 });
-$('research-button').addEventListener('click', () => { showResearch = true; syncScreen(); });
+$('research-button').addEventListener('click', () => {
+  audio.unlockFromGesture();
+  showResearch = true; syncScreen(); audio.playSfx('click');
+});
 $('research-back').addEventListener('click', () => { showResearch = false; syncScreen(); });
-$('stage-button').addEventListener('click', () => { showStages = true; syncScreen(); });
+$('stage-button').addEventListener('click', () => {
+  audio.unlockFromGesture();
+  showStages = true; syncScreen(); audio.playSfx('click');
+});
 $('stage-back').addEventListener('click', () => { showStages = false; syncScreen(); });
-$('loadout-button').addEventListener('click', () => { showLoadout = true; syncScreen(); });
+$('loadout-button').addEventListener('click', () => {
+  audio.unlockFromGesture();
+  showLoadout = true; syncScreen(); audio.playSfx('click');
+});
 $('loadout-back').addEventListener('click', () => { showLoadout = false; syncScreen(); });
+for (const button of document.querySelectorAll('[data-audio]')) {
+  button.addEventListener('click', () => {
+    audio.unlockFromGesture();
+    const settings = audio.getSettings();
+    if (button.dataset.audio === 'music') audio.setMusicMuted(!settings.musicMuted);
+    else audio.setEffectsMuted(!settings.effectsMuted);
+    refreshAudioButtons();
+    audio.playSfx('click');
+  });
+}
 for (const button of researchScreen.querySelectorAll('[data-research]')) {
   button.addEventListener('click', () => {
     buyResearch(storage, button.dataset.research);
@@ -312,7 +365,12 @@ $('pause-button').addEventListener('click', () => {
   if (game) saveCheckpoint(storage, game);
   paused = true; syncScreen();
 });
-$('resume-button').addEventListener('click', () => { paused = false; syncScreen(); });
+$('resume-button').addEventListener('click', () => {
+  audio.unlockFromGesture();
+  paused = false;
+  syncScreen();
+  audio.playSfx('click');
+});
 $('menu-button').addEventListener('click', () => { game = null; paused = false; syncScreen(); });
 
 canvas.addEventListener('pointerdown', event => {
@@ -351,17 +409,38 @@ function frame(timestamp) {
     if (keys.right) targetX += dt * 280;
     targetX = Math.max(26, Math.min(WIDTH - 26, targetX));
     const oldPhase = game.phase;
+    const oldEncounter = game.encounter;
+    const oldCore = game.core;
+    const oldShots = game.shotCount;
+    const oldDestroyed = game.normalDestroyed + game.bossDestroyed;
+    const priorEffects = new Set(game.effects);
     advance(game, dt, targetX);
+    if (game.shotCount > oldShots) audio.playSfx('shot');
+    const destroyed = game.normalDestroyed + game.bossDestroyed > oldDestroyed;
+    if (destroyed) {
+      audio.playSfx('break');
+      audio.playSfx('retreat');
+    } else if (game.effects.some(effect => effect.kind === 'hit' && !priorEffects.has(effect))) {
+      audio.playSfx('hit');
+    }
+    if (game.core < oldCore) audio.playSfx('hurt');
+    if (oldEncounter !== game.encounter && game.encounter === 'boss') audio.playSfx('boss');
     if (game.phase !== oldPhase) {
+      if (game.phase === 'upgrade') audio.playSfx('chest');
+      if (game.phase === 'victory') audio.playSfx('victory');
+      if (game.phase === 'defeat') audio.playSfx('defeat');
       if (game.phase === 'upgrade') saveCheckpoint(storage, game);
       syncScreen();
+    } else {
+      if (oldEncounter !== game.encounter) syncAudioScene();
+      refreshHud();
     }
-    else refreshHud();
     if (game.phase === 'playing' && game.runTime - lastSavedAt >= 12) {
       saveCheckpoint(storage, game);
       lastSavedAt = game.runTime;
     }
   }
+  audio.update();
   ctx.setTransform(canvas.width / WIDTH, 0, 0, canvas.height / HEIGHT, 0, 0);
   render(ctx, game, timestamp / 1000);
   requestAnimationFrame(frame);

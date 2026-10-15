@@ -1,7 +1,7 @@
-import { WIDTH, HEIGHT } from './game.js?v=20261015-campaign';
-import { routePosition } from './routes.js?v=20261015-campaign';
+import { WIDTH, HEIGHT } from './game.js?v=20261015-pressure-art-audio';
+import { routePosition } from './routes.js?v=20261015-pressure-art-audio';
 import { drawBiome, drawChestFocus, drawConnector, drawGuardian,
-  drawProjectile, drawSegment } from './art.js';
+  drawProjectile, drawSegment } from './art.js?v=20261015-battle-art';
 
 const TAU = Math.PI * 2;
 const BACKGROUND_TONES = [
@@ -249,7 +249,13 @@ function chain(ctx, item, time, zone = 0) {
       lane: item.lane, shielded: item.shielded, time });
   }
   for (let i = item.segments.length - 1; i >= 0; i--) {
-    drawSegment(ctx, { piece: item.segments[i], chain: item, time, zone });
+    if (!item.segments[i].chest)
+      drawSegment(ctx, { piece: item.segments[i], chain: item, time, zone });
+  }
+  // 寶箱疊在相鄰甲片上方，瞄準時不會被長鏈遮住。
+  for (let i = item.segments.length - 1; i >= 0; i--) {
+    if (item.segments[i].chest)
+      drawSegment(ctx, { piece: item.segments[i], chain: item, time, zone });
   }
 }
 

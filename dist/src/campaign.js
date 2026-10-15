@@ -15,7 +15,7 @@ const MECHANIC_NAMES = {
 };
 
 const LEVELS = [
-  ['孢子初潮', 'sine', [], 'cover'],
+  ['孢子初潮', 'tide', [], 'cover'],
   ['窄膜通道', 'narrow', ['narrow'], 'cover'],
   ['回折潮汐', 'weave', ['switchback'], 'cover'],
   ['甲殼試煉', 'mirror', ['armor'], 'armor'],
@@ -51,12 +51,13 @@ export const CHAPTERS = LEVELS.map(([name, path, mechanics, bossMode], index) =>
     id, zone, name, region: zoneInfo.name,
     difficulty: id <= 5 ? '入門' : id <= 10 ? '進階' : id <= 20 ? '挑戰' : '深域',
     mechanics, bossMode, path,
-    summary: mechanics.length ? mechanics.map(rule => MECHANIC_NAMES[rule]).join(' · ')
+    summary: id === 1 ? '中央護膜無法擊破 · 左右追擊'
+      : mechanics.length ? mechanics.map(rule => MECHANIC_NAMES[rule]).join(' · ')
       : '連綿長鏈 · 基礎瞄準',
     paths: [path, path, path, path, path, 'cross'],
     tints: [tint, tint, tint, tint, tint, zone === 4 ? 'coral' : tint],
     hpScale: 1 + index * 0.055,
-    speedScale: 1 + index * 0.014,
+    speedScale: (id === 1 ? 0.84 : 1) + index * 0.014,
     gapScale: 1,
   };
 });

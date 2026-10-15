@@ -1,4 +1,4 @@
-import { startRun, WAVES, UPGRADE_BY_ID } from './game.js?v=20261015-campaign';
+import { startRun, WAVES, UPGRADE_BY_ID } from './game.js?v=20261015-pressure-art-audio';
 import { META_BY_ID, MILESTONE_REWARDS, ORGANS, WEAPONS } from './meta.js';
 
 const CHECKPOINT = 'starcore.checkpoint.v5';

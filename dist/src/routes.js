@@ -10,6 +10,9 @@ function rowBounds(path, row, boss, lane) {
     return lane % 2 ? [255, 355] : [35, 135];
   }
   switch (path) {
+    case 'tide': {
+      return row >= 3 && row < 6 ? [280, 355] : [35, 110];
+    }
     case 'fork': return row < 4 ? [35, 165] : [225, 355];
     case 'fork-right': return row < 4 ? [225, 355] : [35, 165];
     case 'narrow': return row < 4 ? [50, 185] : [205, 340];

@@ -7,8 +7,8 @@
   <meta name="description" content="星核防線：原創手機直式長鏈防線遊戲。擊破身體讓頭部後退，打開藏在敵群中的寶箱進化武器。">
   <title>星核防線 · Starcore Defense</title>
   <link rel="icon" type="image/svg+xml" href="./assets/icon.svg">
-  <link rel="stylesheet" href="./style.css">
-  <script type="module" src="./src/main.js?v=20261015-campaign"></script>
+  <link rel="stylesheet" href="./style.css?v=20261015-pressure-art-audio">
+  <script type="module" src="./src/main.js?v=20261015-pressure-art-audio"></script>
 </head>
 <body>
   <main class="game-shell" aria-label="星核防線遊戲">
@@ -31,7 +31,7 @@
     <div id="boss-warning" class="boss-warning" hidden>母體逼近防線 · 集中火力</div>
 
     <section id="menu" class="screen menu-screen" aria-labelledby="game-title">
-      <div class="menu-top"><span class="eyebrow">ORIGINAL ARCADE · 001</span><span class="tiny-diamond">✧</span></div>
+      <div class="menu-top"><span class="eyebrow">ORIGINAL ARCADE · 001</span><div class="audio-controls" role="group" aria-label="聲音設定"><button class="audio-toggle" data-audio="music" type="button" aria-label="關閉背景音樂">♫ 音樂</button><button class="audio-toggle" data-audio="effects" type="button" aria-label="關閉音效">♪ 音效</button></div></div>
       <div class="menu-hero">
         <img class="menu-art" src="./assets/menu-key-art.png" alt="守衛細胞對抗帶著寶箱的連綿怪物">
         <p class="kicker">守住最後一道光</p>
@@ -98,6 +98,7 @@
         <span class="eyebrow">PAUSED</span>
         <h2 id="pause-title">戰鬥暫停</h2>
         <p>深呼吸。星核仍在等你。</p>
+        <div class="audio-controls pause-audio-controls" role="group" aria-label="聲音設定"><button class="audio-toggle" data-audio="music" type="button" aria-label="關閉背景音樂">♫ 音樂</button><button class="audio-toggle" data-audio="effects" type="button" aria-label="關閉音效">♪ 音效</button></div>
         <button id="resume-button" class="primary-button" type="button">繼續作戰 <span aria-hidden="true">↗</span></button>
         <button id="menu-button" class="text-button" type="button">返回主畫面</button>
       </div>
