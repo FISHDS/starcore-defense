@@ -7,8 +7,8 @@
   <meta name="description" content="星核防線：原創手機直式長鏈防線遊戲。擊破身體讓頭部後退，打開藏在敵群中的寶箱進化武器。">
   <title>星核防線 · Starcore Defense</title>
   <link rel="icon" type="image/svg+xml" href="./assets/icon.svg">
-  <link rel="stylesheet" href="./style.css?v=20261015-pressure-art-audio">
-  <script type="module" src="./src/main.js?v=20261015-pressure-art-audio"></script>
+  <link rel="stylesheet" href="./style.css?v=20261016-boss-evolution">
+  <script type="module" src="./src/main.js?v=20261016-boss-evolution"></script>
 </head>
 <body>
   <main class="game-shell" aria-label="星核防線遊戲">
@@ -89,6 +89,8 @@
         <button class="research-item" data-research="fire" type="button"><span class="research-symbol">✦</span><span><strong>火力培養</strong><small>開局子彈傷害增加</small><em id="research-fire-level">等級 0 / 4</em></span><b id="research-fire-cost">◆ 45</b></button>
         <button class="research-item" data-research="guard" type="button"><span class="research-symbol">♥</span><span><strong>韌性組織</strong><small>開局防線耐久增加</small><em id="research-guard-level">等級 0 / 4</em></span><b id="research-guard-cost">◆ 45</b></button>
         <button class="research-item" data-research="scavenge" type="button"><span class="research-symbol">▣</span><span><strong>補給解析</strong><small>寶箱更容易被打開</small><em id="research-scavenge-level">等級 0 / 4</em></span><b id="research-scavenge-cost">◆ 45</b></button>
+        <button class="research-item" data-research="tactics" type="button"><span class="research-symbol">↻</span><span><strong>戰術推演</strong><small>每級增加一次寶箱重抽</small><em id="research-tactics-level">等級 0 / 4</em></span><b id="research-tactics-cost">◆ 45</b></button>
+        <button class="research-item" data-research="collector" type="button"><span class="research-symbol">◆</span><span><strong>拾取觸鬚</strong><small>移動拾取能量與護盾的範圍更大</small><em id="research-collector-level">等級 0 / 4</em></span><b id="research-collector-cost">◆ 45</b></button>
       </div>
       <button id="research-back" class="primary-button" type="button">返回主畫面 <span aria-hidden="true">↗</span></button>
     </section>
@@ -112,7 +114,7 @@
         <p id="result-copy">你讓這片星空繼續發光。</p>
         <div class="result-reward">獲得研究點 <strong id="dna-gained">+0</strong></div>
         <div class="result-stats"><div><span>本次得分</span><strong id="final-score">0</strong></div><div><span>最佳紀錄</span><strong id="best-score">0</strong></div></div>
-        <button id="retry-button" class="primary-button" type="button">再戰一次 <span aria-hidden="true">↗</span></button>
+        <button id="retry-button" class="primary-button" type="button"><span id="retry-label">再戰一次</span> <span aria-hidden="true">↗</span></button>
       </div>
     </section>
   </main>

@@ -1,10 +1,11 @@
-import { advance, CHAPTERS, chooseUpgrade, getRunProgress, HEIGHT, rerollUpgrades, startRun, UPGRADE_BY_ID, WAVES, WIDTH } from './game.js?v=20261015-pressure-art-audio';
+import { advance, CHAPTERS, chooseUpgrade, getRunProgress, HEIGHT, rerollUpgrades, startRun, UPGRADE_BY_ID, WAVES, WIDTH } from './game.js?v=20261016-boss-evolution';
 import { pointerToWorldX } from './input.js';
-import { render } from './render.js?v=20261015-pressure-art-audio';
-import { awardRun, buyResearch, buyItem, equipItem, clearCheckpoint, loadCheckpoint, readProfile, researchCost, saveCheckpoint, updateBest } from './storage.js?v=20261015-pressure-art-audio';
+import { render } from './render.js?v=20261016-boss-evolution';
+import { awardRun, buyResearch, buyItem, equipItem, clearCheckpoint, loadCheckpoint, readProfile, researchCost, saveCheckpoint, updateBest } from './storage.js?v=20261016-boss-evolution';
 import { ORGANS, WEAPONS } from './meta.js';
-import { drawSkillIcon } from './art.js?v=20261015-battle-art';
+import { drawSkillIcon } from './art.js?v=20261016-boss-evolution';
 import { createAudioEngine } from './audio.js?v=20261015-pressure-art-audio';
+import { getBattleHint } from './tutorial.js';
 
 const $ = id => document.getElementById(id);
 const canvas = $('arena');
@@ -65,6 +66,7 @@ let lastSavedAt = 0;
 let selectedChapter = readProfile(storage).unlockedStage;
 let selectedZone = Math.floor((selectedChapter - 1) / 5);
 let bossWarningActive = false;
+let resultDelayUntil = 0;
 const keys = { left: false, right: false };
 
 function resize() {
@@ -77,13 +79,12 @@ resize();
 
 function refreshHud() {
   if (!game) return;
-  hint.hidden = game.phase !== 'playing' || paused || game.wave > 1 || game.waveTime > 5;
   const wave = WAVES[game.wave - 1];
   const activeChapter = game.chapter === 26 ? CHAPTERS[20 + (game.endlessTier - 1) % 5]
     : CHAPTERS[game.chapter - 1];
-  hint.textContent = game.chapter === 26
-    ? `第 ${game.endlessTier} 輪 · ${activeChapter.summary}`
-    : `${activeChapter.summary} · 滑動瞄準寶箱`;
+  hint.textContent = getBattleHint(game, activeChapter.summary);
+  hint.hidden = paused || !hint.textContent;
+  hint.classList.toggle('persistent-tutorial', game.chapter === 1 && game.normalDestroyed === 0);
   $('wave-number').textContent = game.chapter === 26
     ? `無盡 ${game.endlessTier}` : `第${game.chapter}關`;
   $('wave-name').textContent = `${game.chapter === 26 ? '無盡挑戰' : CHAPTERS[game.chapter - 1].name} · ${wave.name}`;
@@ -105,7 +106,7 @@ function refreshResearch() {
   const profile = readProfile(storage);
   $('menu-dna').textContent = `◆ ${profile.dna}`;
   $('research-dna').textContent = String(profile.dna);
-  for (const id of ['fire', 'guard', 'scavenge']) {
+  for (const id of ['fire', 'guard', 'scavenge', 'tactics', 'collector']) {
     const level = profile[id];
     const cost = researchCost(level);
     $(`research-${id}-level`).textContent = `等級 ${level} / 4`;
@@ -202,7 +203,7 @@ function makeCards() {
   $('upgrade-foot').textContent = '選定後，回到原本的連續戰鬥';
   const holder = $('upgrade-cards');
   holder.replaceChildren();
-  const rarityName = { common: '普通', rare: '稀有', epic: '傳說' };
+  const rarityName = { common: '普通', rare: '稀有', epic: '傳說', evolution: '合成進化' };
   for (const id of game.choices) {
     const item = UPGRADE_BY_ID[id];
     const button = document.createElement('button');
@@ -224,7 +225,8 @@ function makeCards() {
     desc.className = 'upgrade-desc'; desc.textContent = item.description;
     const level = document.createElement('span');
     level.className = 'upgrade-level';
-    level.textContent = `目前等級 ${game.upgrades[id] || 0} · 選後等級 ${(game.upgrades[id] || 0) + 1}`;
+    level.textContent = item.rarity === 'evolution' ? '雙技能已達 2 級 · 本局限定'
+      : `目前等級 ${game.upgrades[id] || 0} · 選後等級 ${(game.upgrades[id] || 0) + 1}`;
     text.append(name, desc, level);
     const arrow = document.createElement('span');
     arrow.className = 'upgrade-arrow'; arrow.textContent = '↗';
@@ -265,8 +267,8 @@ function setResult() {
       : `已解鎖第 ${reward.profile.unlockedStage} 關。下一關有新的路線與機制。`;
     selectedChapter = game.chapter === 25 ? 26 : reward.profile.unlockedStage;
     selectedZone = Math.min(4, Math.floor((selectedChapter - 1) / 5));
-    $('retry-button').firstElementChild.textContent = '挑戰下一關';
-  } else $('retry-button').firstElementChild.textContent = '再戰一次';
+    $('retry-label').textContent = '挑戰下一關';
+  } else $('retry-label').textContent = '再戰一次';
   refreshResearch();
   refreshStages();
 }
@@ -281,10 +283,12 @@ function syncScreen() {
   hint.hidden = !game || game.phase !== 'playing' || paused;
   upgradeScreen.hidden = !game || game.phase !== 'upgrade';
   pauseScreen.hidden = !game || !paused || game.phase !== 'playing';
-  resultScreen.hidden = !game || !['victory', 'defeat'].includes(game.phase);
+  resultScreen.hidden = !game || !['victory', 'defeat'].includes(game.phase)
+    || resultDelayUntil > 0;
   if (!game) $('continue-button').hidden = !loadCheckpoint(storage);
   if (game?.phase === 'upgrade') makeCards();
-  if (game && ['victory', 'defeat'].includes(game.phase)) setResult();
+  if (game && ['victory', 'defeat'].includes(game.phase)
+    && resultDelayUntil === 0) setResult();
   refreshHud();
   refreshResearch();
   if (!game) refreshStages();
@@ -302,6 +306,7 @@ function beginNew() {
   game = startRun(Math.floor(Math.random() * 0xffffffff), profile, selectedChapter);
   paused = false;
   handledResult = false;
+  resultDelayUntil = 0;
   targetX = game.player.x;
   lastSavedAt = 0;
   saveCheckpoint(storage, game);
@@ -316,6 +321,7 @@ function continueRun() {
   game = loaded;
   paused = false;
   handledResult = false;
+  resultDelayUntil = 0;
   targetX = game.player.x;
   lastSavedAt = game.runTime;
   syncScreen();
@@ -430,6 +436,7 @@ function frame(timestamp) {
       if (game.phase === 'victory') audio.playSfx('victory');
       if (game.phase === 'defeat') audio.playSfx('defeat');
       if (game.phase === 'upgrade') saveCheckpoint(storage, game);
+      if (game.phase === 'victory') resultDelayUntil = timestamp + 800;
       syncScreen();
     } else {
       if (oldEncounter !== game.encounter) syncAudioScene();
@@ -439,6 +446,10 @@ function frame(timestamp) {
       saveCheckpoint(storage, game);
       lastSavedAt = game.runTime;
     }
+  }
+  if (resultDelayUntil > 0 && timestamp >= resultDelayUntil) {
+    resultDelayUntil = 0;
+    syncScreen();
   }
   audio.update();
   ctx.setTransform(canvas.width / WIDTH, 0, 0, canvas.height / HEIGHT, 0, 0);

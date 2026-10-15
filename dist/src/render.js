@@ -1,7 +1,10 @@
-import { WIDTH, HEIGHT } from './game.js?v=20261015-pressure-art-audio';
+import { WIDTH, HEIGHT } from './game.js?v=20261016-boss-evolution';
 import { routePosition } from './routes.js?v=20261015-pressure-art-audio';
 import { drawBiome, drawChestFocus, drawConnector, drawGuardian,
-  drawProjectile, drawSegment } from './art.js?v=20261015-battle-art';
+  drawProjectile, drawSegment } from './art.js?v=20261016-boss-evolution';
+import { BOSS_PROFILES, bossProfileFor } from './boss-profiles.js';
+import { resolveBossPose } from './boss-rig.js';
+import { drawBossConnector, drawBossSegment } from './boss-art.js';
 
 const TAU = Math.PI * 2;
 const BACKGROUND_TONES = [
@@ -240,17 +243,39 @@ function segment(ctx, piece, chain, time) {
 
 function chain(ctx, item, time, zone = 0) {
   if (item.dead) return;
+  const profile = item.boss ? bossProfileFor(zone * 5 + 1, item.lane) : null;
+  const pose = profile ? resolveBossPose(item, profile, time) : null;
+  if (item.rig?.telegraphFor > 0 && item.segments[0].y > 70) {
+    const source = item.segments[0];
+    ctx.save();
+    ctx.setLineDash([9, 8]);
+    ctx.strokeStyle = profile.colors.glow;
+    ctx.lineWidth = 3 + Math.sin(time * 22) * .8;
+    for (const spread of [-40, 40]) {
+      const landingX = (item.rig.targetX ?? source.x) + spread;
+      ctx.beginPath(); ctx.moveTo(source.x, source.y + 22);
+      ctx.lineTo(landingX, 740); ctx.stroke();
+      ctx.fillStyle = `${profile.colors.glow}55`;
+      ctx.fillRect(landingX - 13, 724, 26, 20);
+    }
+    ctx.setLineDash([]);
+    ctx.restore();
+  }
   for (let i = item.segments.length - 1; i > 0; i--) {
     const a = item.segments[i];
     const b = item.segments[i - 1];
     if (a.hp <= 0 || b.hp <= 0 || a.y < -20 || b.y < -20
       || (a.x < -35 && b.x < -35) || (a.x > WIDTH + 35 && b.x > WIDTH + 35)) continue;
-    drawConnector(ctx, { from: a, to: b, zone, boss: item.boss,
+    if (profile) drawBossConnector(ctx, { from: a, to: b, profile, pose, index: i });
+    else drawConnector(ctx, { from: a, to: b, zone, boss: item.boss,
       lane: item.lane, shielded: item.shielded, time });
   }
   for (let i = item.segments.length - 1; i >= 0; i--) {
-    if (!item.segments[i].chest)
-      drawSegment(ctx, { piece: item.segments[i], chain: item, time, zone });
+    if (!item.segments[i].chest) {
+      if (profile) drawBossSegment(ctx, { piece: item.segments[i], chain: item,
+        time, profile, pose });
+      else drawSegment(ctx, { piece: item.segments[i], chain: item, time, zone });
+    }
   }
   // 寶箱疊在相鄰甲片上方，瞄準時不會被長鏈遮住。
   for (let i = item.segments.length - 1; i >= 0; i--) {
@@ -259,11 +284,51 @@ function chain(ctx, item, time, zone = 0) {
   }
 }
 
-function drawEffect(ctx, effect) {
-  const progress = effect.life / effect.maxLife;
+export function effectVisualProgress(effect, time) {
+  if (effect.kind !== 'bossDeath') return effect.life / effect.maxLife;
+  effect.visualStartAt ??= time;
+  return Math.max(0, 1 - (time - effect.visualStartAt) / effect.maxLife);
+}
+
+function drawEffect(ctx, effect, time) {
+  const progress = effectVisualProgress(effect, time);
+  if (progress <= 0) return;
   ctx.save();
   ctx.globalAlpha = Math.min(1, progress * 2);
-  if (effect.kind === 'orbit') {
+  if (effect.kind === 'bossDeath') {
+    const profile = BOSS_PROFILES.find(item => item.id === effect.profileId);
+    const color = profile?.colors.glow || '#fff0a8';
+    const spread = (1 - progress) * 44;
+    if (profile) {
+      ctx.save();
+      ctx.translate(effect.x, effect.y + (1 - progress) * 15);
+      ctx.scale(Math.max(0.05, progress), Math.max(0.05, progress));
+      ctx.translate(-effect.x, -effect.y);
+      drawBossSegment(ctx, {
+        piece: { index: 0, x: effect.x, y: effect.y, hp: 1, radius: 27 },
+        chain: {}, profile, time: 0,
+        pose: { head: { x: effect.x, y: effect.y, scale: profile.anatomy.headScale },
+          angle: 0, phase: 1, state: 'dying',
+          antenna: [-1, 1].map(side => ({ side, length: profile.anatomy.hornLength, bend: 0 })),
+          jaw: profile.anatomy.jawWidth },
+      });
+      ctx.restore();
+    }
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = 3;
+    for (let piece = 0; piece < 8; piece++) {
+      const angle = piece * TAU / 8;
+      const x = effect.x + Math.cos(angle) * spread;
+      const y = effect.y + Math.sin(angle) * spread;
+      ctx.beginPath();
+      ctx.moveTo(x, y - 7 * progress);
+      ctx.lineTo(x + 6 * progress, y + 4 * progress);
+      ctx.lineTo(x - 5 * progress, y + 3 * progress);
+      ctx.closePath(); ctx.fill();
+    }
+    ctx.beginPath(); ctx.arc(effect.x, effect.y, 14 + spread, 0, TAU); ctx.stroke();
+  } else if (effect.kind === 'orbit') {
     ctx.strokeStyle = '#ffc76d';
     ctx.shadowColor = '#ffab4e';
     ctx.shadowBlur = 18;
@@ -387,11 +452,45 @@ export function render(ctx, game, time) {
   for (const bullet of game.enemyBullets) {
     drawProjectile(ctx, { x: bullet.x, y: bullet.y, time, enemy: true });
   }
-  for (const effect of game.effects) drawEffect(ctx, effect);
+  for (const effect of game.effects) drawEffect(ctx, effect, time);
+  for (const pickup of game.pickups || []) {
+    if (pickup.y < -15 || pickup.y > 790) continue;
+    const shield = pickup.kind === 'shield';
+    ctx.save();
+    ctx.translate(pickup.x, pickup.y);
+    ctx.shadowColor = shield ? '#9af7d6' : '#ffd36d';
+    ctx.shadowBlur = 14;
+    ctx.fillStyle = shield ? '#8ce9cf' : '#ffcc64';
+    ctx.strokeStyle = '#15344b';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(0, -10); ctx.lineTo(9, 0);
+    ctx.lineTo(0, 10); ctx.lineTo(-9, 0); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#15344b';
+    ctx.font = '900 12px system-ui'; ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle'; ctx.fillText(shield ? '+' : 'ϟ', 0, 1);
+    ctx.restore();
+  }
   healthNumbers(ctx, selectHealthLabels(game.chains));
   damageNumbers(ctx, selectDamagePopups(game.popups, chests));
+  if (game.comboCount >= 3 && game.comboTimer > 0) {
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.font = '900 20px system-ui';
+    ctx.strokeStyle = '#193348'; ctx.lineWidth = 5;
+    ctx.strokeText(`${game.comboCount} 連擊`, WIDTH / 2, 157);
+    ctx.fillStyle = '#ffe29b';
+    ctx.fillText(`${game.comboCount} 連擊`, WIDTH / 2, 157);
+    ctx.restore();
+  }
   rail(ctx, game.core / game.maxCore * 100, time);
   chestHighlights(ctx, chests, time);
+  if (game.chargeFor > 0) {
+    ctx.save(); ctx.strokeStyle = '#ffde79'; ctx.lineWidth = 3;
+    ctx.shadowColor = '#ffcf6e'; ctx.shadowBlur = 10;
+    ctx.beginPath(); ctx.arc(game.player.x, game.player.y - 11, 38, 0, TAU); ctx.stroke();
+    ctx.restore();
+  }
   drawGuardian(ctx, { x: game.player.x, y: game.player.y, time,
     invulnerable: game.invulnerable });
 }

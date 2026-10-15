@@ -1,7 +1,9 @@
-import { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID } from './content.js?v=20261015-pressure-art-audio';
+import { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID } from './content.js?v=20261016-boss-evolution';
 import { routePosition } from './routes.js?v=20261015-pressure-art-audio';
 import { assignTraits, chainSpeed, chestGuarded, steerBullet,
   updateBossShields, updateHazards, updateWeakpoints } from './mechanics.js';
+import { createBossRig, updateBossRig } from './boss-rig.js';
+import { bossProfileFor } from './boss-profiles.js';
 
 export { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID };
 export const WIDTH = 390;
@@ -18,6 +20,8 @@ export function startRun(seed = Date.now(), profile = {}, chapter = 1) {
     fire: Math.max(0, Math.min(4, profile.fire || 0)),
     guard: Math.max(0, Math.min(4, profile.guard || 0)),
     scavenge: Math.max(0, Math.min(4, profile.scavenge || 0)),
+    tactics: Math.max(0, Math.min(4, profile.tactics || 0)),
+    collector: Math.max(0, Math.min(4, profile.collector || 0)),
   };
   const organs = Array.isArray(profile.equippedOrgans) ? profile.equippedOrgans : [];
   const weapon = ['capsule', 'scatter', 'rail', 'prism'].includes(profile.equippedWeapon)
@@ -38,6 +42,7 @@ export function startRun(seed = Date.now(), profile = {}, chapter = 1) {
     chestMaxHp: 100 - profileLevels.scavenge * 8 - (organs.includes('salvage') ? 15 : 0),
     profileLevels, score: 0, player: { x: WIDTH / 2, y: RAIL_Y },
     chains: [], chest: null, bullets: [], enemyBullets: [], effects: [], popups: [],
+    pickups: [], chargeFor: 0, comboCount: 0, comboTimer: 0,
     boss: null, bosses: [], invulnerable: 0, upgrades: {}, choices: [],
     rerollsLeft: 0, upgradeSource: null,
   };
@@ -54,7 +59,10 @@ export function getShotDamage(game) {
   const upgrades = 1 + (game.upgrades.power || 0) * 0.35
     + (game.upgrades.needle || 0) * 0.14 + (game.upgrades.rail || 0) * 0.13;
   const danger = 1 + (game.upgrades.fury || 0) * 0.5 * (1 - game.core / game.maxCore);
-  return Math.round(natural * upgrades * danger * (game.equippedWeapon === 'rail' ? 1.2 : 1));
+  const chain = 1 + Math.min(10, game.comboCount || 0) * (game.upgrades.combo || 0) * 0.015;
+  const charge = game.chargeFor > 0 ? 1.25 : 1;
+  return Math.round(natural * upgrades * danger * chain * charge
+    * (game.equippedWeapon === 'rail' ? 1.2 : 1));
 }
 
 export function getRunProgress(game) {
@@ -119,6 +127,8 @@ function spawnChain(game, wave, lane = game.spawnCount) {
     spacing: boss ? 31 : 29, speed: wave.speed, actualSpeed: wave.speed,
     feedSpeed: 0,
     slowFor: 0, recoil: 0, segments: [],
+    originalBodyCount: boss ? count - 1 : 0,
+    rig: boss ? createBossRig(bossProfileFor(game.chapter, lane).id) : null,
   };
   const chestIndices = boss ? [5, 15, 26, 38]
     : [5, 18, 36, 60, 84, 110, 138, 168, 198];
@@ -176,11 +186,23 @@ export function hitSegment(game, chain, segment, amount, options = {}) {
   segment.hp -= damage - armor;
   addPopup(game, segment.x, segment.y - 12, damage, critical || segment.chest);
   game.effects.push({ kind: 'hit', x: segment.x, y: segment.y, life: 0.2, maxLife: 0.2 });
+  if (chain.boss && chain.rig && !options.dot) chain.rig.hurtFor = 0.14;
   if (!options.dot) {
     if (game.upgrades.frost) chain.slowFor = Math.max(chain.slowFor, 0.8 + game.upgrades.frost * 0.5);
     if (game.upgrades.poison) segment.poisonFor = 3 + game.upgrades.poison;
     if (game.upgrades.burn) segment.burnFor = 2 + game.upgrades.burn;
     if (game.upgrades.mark) segment.mark = Math.max(segment.mark, game.upgrades.mark * 0.11);
+  }
+  if (game.upgrades.detonation && !options.dot && segment.poisonFor > 0
+    && segment.burnFor > 0 && (segment.detonationCooldown || 0) <= 0) {
+    segment.detonationCooldown = 1.2;
+    game.effects.push({ kind: 'blast', x: segment.x, y: segment.y,
+      life: 0.35, maxLife: 0.35 });
+    const blastIndex = chain.segments.indexOf(segment);
+    for (const near of [chain.segments[blastIndex - 1], chain.segments[blastIndex + 1]]) {
+      if (near?.index > 0 && !near.chest) hitSegment(game, chain, near,
+        getShotDamage(game) * 0.28, { dot: true });
+    }
   }
   if (segment.hp > 0) return true;
   const position = chain.segments.indexOf(segment);
@@ -200,9 +222,22 @@ export function hitSegment(game, chain, segment, amount, options = {}) {
     if (game.wave !== nextWave) { game.wave = nextWave; game.waveTime = 0; }
   } else game.bossDestroyed++;
   game.score += (chain.boss ? 30 : 12) * (1 + (game.upgrades.bounty || 0));
+  game.comboCount = game.comboTimer > 0 ? Math.min(99, game.comboCount + 1) : 1;
+  game.comboTimer = 2.5;
+  if (!segment.chest && game.pickups.length < 24
+    && random(game) < 0.06 + (game.upgrades.harvest || 0) * 0.08) {
+    game.pickups.push({ x: segment.x, y: segment.y,
+      kind: random(game) < 0.33 ? 'shield' : 'energy' });
+  }
   game.effects.push({ kind: 'burst', x: segment.x, y: segment.y, life: 0.43, maxLife: 0.43 });
   if (chain.segments.length === 1) {
     chain.dead = true;
+    if (chain.rig) {
+      chain.rig.dyingFor = 0.8;
+      game.effects.push({ kind: 'bossDeath', x: chain.segments[0].x,
+        y: chain.segments[0].y, profileId: chain.rig.profileId,
+        life: 0.8, maxLife: 0.8 });
+    }
     if (!chain.boss) {
       game.encounter = 'boss'; game.wave = WAVES.length;
       game.spawnCount = 0; game.waveTime = 0;
@@ -227,6 +262,7 @@ function updateChains(game, dt) {
   for (let index = game.chains.length - 1; index >= 0; index--) {
     const chain = game.chains[index];
     if (chain.dead) { game.chains.splice(index, 1); continue; }
+    updateBossRig(chain, dt);
     chain.recoil = Math.max(0, chain.recoil - dt);
     const visible = chain.segments.filter(piece => piece.index > 0
       && piece.y > 40 && piece.y < 730 && piece.x > -20 && piece.x < 410).length;
@@ -302,12 +338,14 @@ function fireSpecials(game, dt) {
   if (game.upgrades.arc && specialTimer(game, 'arc', dt,
     Math.max(0.55, 1.7 - game.upgrades.arc * 0.2))) {
     const targets = activeBodies(game).sort((a, b) => b.segment.y - a.segment.y)
-      .slice(0, 2 + game.upgrades.arc);
+      .slice(0, 2 + game.upgrades.arc + (game.upgrades.superconductor ? 2 : 0));
     let from = { x: game.player.x, y: game.player.y - 22 };
     for (const target of targets) {
       game.effects.push({ kind: 'arc', x: from.x, y: from.y,
         x2: target.segment.x, y2: target.segment.y, life: 0.24, maxLife: 0.24 });
-      hitSegment(game, target.chain, target.segment, power * 0.58, { special: true });
+      hitSegment(game, target.chain, target.segment,
+        power * (game.upgrades.superconductor ? 0.8 : 0.58), { special: true });
+      if (game.upgrades.superconductor) target.chain.slowFor = Math.max(target.chain.slowFor, 1.6);
       from = target.segment;
       if (game.phase !== 'playing') return;
     }
@@ -381,6 +419,19 @@ function updateBullets(game, dt) {
         }
         game.effects.push({ kind: 'blast', x: oldX, y: oldY, life: 0.28, maxLife: 0.28 });
       }
+      if (game.upgrades.bankshot && game.phase === 'playing') {
+        const next = activeBodies(game).filter(item => !item.segment.chest
+          && item.segment.id !== segment.id
+          && Math.hypot(item.segment.x - oldX, item.segment.y - oldY) < 115)
+          .sort((a, b) => Math.hypot(a.segment.x - oldX, a.segment.y - oldY)
+            - Math.hypot(b.segment.x - oldX, b.segment.y - oldY))[0];
+        if (next) {
+          game.effects.push({ kind: 'arc', x: oldX, y: oldY,
+            x2: next.segment.x, y2: next.segment.y, life: 0.17, maxLife: 0.17 });
+          hitSegment(game, next.chain, next.segment,
+            bullet.damage * (0.2 + game.upgrades.bankshot * 0.1), { special: true });
+        }
+      }
       if (bullet.pierce > 0) bullet.pierce--;
       else { consumed = true; break; }
     }
@@ -414,6 +465,7 @@ function updateEffects(game, dt) {
 
 function updateStatuses(game, dt) {
   for (const { chain, segment } of activeBodies(game)) {
+    segment.detonationCooldown = Math.max(0, (segment.detonationCooldown || 0) - dt);
     if (segment.poisonFor > 0) {
       segment.poisonFor -= dt;
       hitSegment(game, chain, segment, getShotDamage(game)
@@ -425,6 +477,24 @@ function updateStatuses(game, dt) {
         * 0.18 * (game.upgrades.burn || 0) * dt, { dot: true });
     }
     if (game.phase !== 'playing') return;
+  }
+}
+
+function updatePickups(game, dt) {
+  game.chargeFor = Math.max(0, game.chargeFor - dt);
+  game.comboTimer = Math.max(0, game.comboTimer - dt);
+  if (game.comboTimer === 0) game.comboCount = 0;
+  for (let index = game.pickups.length - 1; index >= 0; index--) {
+    const pickup = game.pickups[index];
+    pickup.y += dt * 220;
+    if (pickup.y > 704 && pickup.y < 767
+      && Math.abs(pickup.x - game.player.x) < 22 + game.profileLevels.collector * 7) {
+      if (pickup.kind === 'shield') game.core = Math.min(game.maxCore, game.core + 9);
+      else game.chargeFor = Math.max(game.chargeFor, 5);
+      game.effects.push({ kind: 'orbit', x: game.player.x, y: RAIL_Y,
+        radius: 23, damage: 0, hit: [], life: 0.4, maxLife: 0.4 });
+      game.pickups.splice(index, 1);
+    } else if (pickup.y > 785) game.pickups.splice(index, 1);
   }
 }
 
@@ -447,16 +517,36 @@ function updateBossShots(game, dt) {
   }
   if (!game.bosses.some(boss => !boss.dead)) return;
   game.bossShotTimer += dt;
-  const bossInterval = game.chapter <= 5 ? 3.1
-    : game.chapter <= 10 ? 2.7 : 2.2;
+  const phaseTwo = game.bosses.some(boss => !boss.dead && boss.rig?.phase === 2);
+  const bossInterval = (game.chapter <= 5 ? 3.1
+    : game.chapter <= 10 ? 2.7 : 2.2)
+    * (phaseTwo ? (game.chapter <= 5 ? 0.94 : 0.82) : 1);
+  if (game.bossShotTimer >= bossInterval - 0.55) {
+    for (const boss of game.bosses) {
+      if (boss.dead || boss.segments[0].y < 120 || !boss.rig) continue;
+      if (!boss.rig.telegraphLocked) {
+        boss.rig.targetX = game.player.x;
+        boss.rig.telegraphLocked = true;
+      }
+      boss.rig.telegraphFor = Math.max(0, bossInterval - game.bossShotTimer);
+    }
+  }
   while (game.bossShotTimer >= bossInterval) {
     game.bossShotTimer -= bossInterval;
     for (const boss of game.bosses) {
       if (boss.dead || boss.segments[0].y < 120) continue;
       const head = boss.segments[0];
+      if (boss.rig) {
+        boss.rig.telegraphFor = 0;
+        boss.rig.telegraphLocked = false;
+        boss.rig.strikeFor = 0.32;
+      }
+      const vy = phaseTwo ? (game.chapter <= 5 ? 226 : 245) : 220;
+      const flight = Math.max(0.6, (game.player.y - head.y - 25) / vy);
       for (const spread of [-40, 40]) {
         game.enemyBullets.push({ x: head.x, y: head.y + 25,
-          vx: (game.player.x - head.x) * 0.28 + spread, vy: 220, radius: 7 });
+          vx: ((boss.rig?.targetX ?? game.player.x) - head.x + spread) / flight,
+          vy, radius: 7 });
       }
     }
   }
@@ -482,12 +572,16 @@ function updateEnemyBullets(game, dt) {
 }
 
 function drawUpgradeChoices(game, previous = []) {
-  const available = UPGRADES.filter(item => (game.upgrades[item.id] || 0) < item.max);
+  const evolved = UPGRADES.filter(item => item.rarity === 'evolution'
+    && !game.upgrades[item.id]
+    && item.requires.every(id => (game.upgrades[id] || 0) >= 2));
+  const available = UPGRADES.filter(item => item.rarity !== 'evolution'
+    && (game.upgrades[item.id] || 0) < item.max);
   const fresh = available.filter(item => !previous.includes(item.id));
   const pool = [...(fresh.length >= 3 ? fresh : available)];
   const weight = game.upgradeSource === 'gold'
     ? { common: 2, rare: 5, epic: 3 } : { common: 5, rare: 3, epic: 1 };
-  const choices = [];
+  const choices = evolved.map(item => item.id).slice(0, 2);
   while (choices.length < 3 && pool.length) {
     let roll = random(game) * pool.reduce((sum, item) => sum + weight[item.rarity], 0);
     let index = 0;
@@ -502,7 +596,7 @@ function drawUpgradeChoices(game, previous = []) {
 function presentUpgrades(game, source) {
   game.phase = 'upgrade';
   game.upgradeSource = source;
-  game.rerollsLeft = 1;
+  game.rerollsLeft = 1 + game.profileLevels.tactics;
   game.choices = drawUpgradeChoices(game);
 }
 
@@ -517,6 +611,7 @@ export function advance(game, dt, targetX = game.player.x) {
   if (game.phase !== 'playing') return;
   dt = Math.max(0, Math.min(0.1, dt));
   game.player.x = Math.max(24, Math.min(WIDTH - 24, targetX));
+  updatePickups(game, dt);
   game.runTime += dt;
   game.waveTime += dt;
   if (game.encounter === 'boss') {

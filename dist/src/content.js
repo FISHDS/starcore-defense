@@ -39,6 +39,11 @@ export const UPGRADES = [
   { id: 'anchor', name: '重力錨', description: '每擊破一節，敵群暫停前進更久', icon: '⚓', tone: 'cyan', rarity: 'epic', category: 'control', max: 3 },
   { id: 'bounty', name: '細胞回收', description: '擊破身體增加分數與研究獎勵', icon: '◆', tone: 'mint', rarity: 'common', category: 'survival', max: 3 },
   { id: 'secondwind', name: '急救裝置', description: '護盾低於一半時緩慢回復', icon: '✚', tone: 'mint', rarity: 'rare', category: 'survival', max: 3 },
+  { id: 'bankshot', name: '折射藥丸', description: '命中後彈向附近另一節身體', icon: '⤴', tone: 'cyan', rarity: 'rare', category: 'bullet', max: 3 },
+  { id: 'harvest', name: '能量採集', description: '擊破後更容易掉能量與護盾，需移動拾取', icon: '⬡', tone: 'mint', rarity: 'rare', category: 'survival', max: 3 },
+  { id: 'combo', name: '連擊激勵', description: '短時間連續擊破會提高火力', icon: '✴', tone: 'gold', rarity: 'rare', category: 'bullet', max: 3 },
+  { id: 'detonation', name: '爆燃反應', description: '毒素與灼熱達 2 級後合成；雙重感染時引爆鄰節', icon: '✹', tone: 'coral', rarity: 'evolution', category: 'evolution', max: 1, requires: ['poison', 'burn'] },
+  { id: 'superconductor', name: '超導連鎖', description: '電弧與冰凍達 2 級後合成；電弧延伸並強化凍結', icon: 'ϟ', tone: 'cyan', rarity: 'evolution', category: 'evolution', max: 1, requires: ['arc', 'frost'] },
 ];
 
 export const UPGRADE_BY_ID = Object.fromEntries(UPGRADES.map(upgrade => [upgrade.id, upgrade]));

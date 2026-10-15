@@ -108,6 +108,11 @@ body{display:grid;place-items:center;background:radial-gradient(circle at 50% 45
 .stage-tile.selected{border-color:#ffd175;box-shadow:0 0 19px rgba(255,202,91,.2)}
 .stage-tile:disabled{opacity:.46;background:#263c4b}
 .gesture-hint{top:54%;bottom:auto;max-width:calc(100% - 28px);padding:8px 11px;border:1px solid rgba(157,239,222,.65);border-radius:10px;background:rgba(11,37,51,.86);color:#eafff1;font-size:12px;line-height:1.4;letter-spacing:0;white-space:normal;text-align:center;box-shadow:0 5px 17px rgba(0,0,0,.3)}
+.gesture-hint.persistent-tutorial{top:auto;bottom:calc(env(safe-area-inset-bottom) + 155px);max-width:calc(100% - 56px);font-size:11px;opacity:.93}
+.upgrade-card.rarity-evolution{border-color:#fff0a4;background:linear-gradient(180deg,#9a572b,#704169 55%,#4d346d);box-shadow:0 0 0 3px #583454,0 0 27px #ffd377aa;animation:evolution-glow 1.3s ease-in-out infinite alternate}
+.rarity-evolution .upgrade-rarity{background:#fff0a4;color:#593322}
+@keyframes evolution-glow{from{box-shadow:0 0 0 3px #583454,0 0 14px #ffca67aa}to{box-shadow:0 0 0 3px #865c54,0 0 33px #ffe49dcc}}
+.research-list{min-height:0;overflow-y:auto;align-content:start;flex:1;padding-bottom:12px}
 .endless-button{min-height:42px;border:1px solid #d9a2ed;background:#5b3973;color:#fff1ff;border-radius:10px;font-weight:800}
 .collection-screen .primary-button{flex:0 0 52px;min-height:52px}
 .collection-screen .dna-balance{margin:3px 0}

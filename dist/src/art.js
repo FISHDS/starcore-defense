@@ -493,10 +493,10 @@ export function drawProjectile(ctx, { x = 0, y = 0, time = 0, enemy = false } = 
 }
 
 function skillPalette(id) {
-  if (['power', 'blast', 'burn', 'fury', 'rebound'].includes(id)) return ['#f5826f', '#ffd2a6'];
-  if (['rapid', 'orbit', 'focus', 'crit', 'rail', 'bounty'].includes(id)) return ['#f6c96c', '#fff1b0'];
+  if (['power', 'blast', 'burn', 'fury', 'rebound', 'detonation'].includes(id)) return ['#f5826f', '#ffd2a6'];
+  if (['rapid', 'orbit', 'focus', 'crit', 'rail', 'bounty', 'combo'].includes(id)) return ['#f6c96c', '#fff1b0'];
   if (['pierce', 'needle', 'saw', 'mark', 'pulse'].includes(id)) return ['#ae92e8', '#eed8ff'];
-  if (['frost', 'arc', 'multi', 'scatter', 'echo', 'magnet', 'anchor'].includes(id)) return ['#7edee2', '#dbffff'];
+  if (['frost', 'arc', 'multi', 'scatter', 'echo', 'magnet', 'anchor', 'bankshot', 'superconductor'].includes(id)) return ['#7edee2', '#dbffff'];
   return ['#8adcb0', '#e3ffd8'];
 }
 
@@ -550,7 +550,7 @@ export function drawSkillIcon(ctx, { id = 'power', x = 0, y = 0, size = 52, time
       ctx.beginPath(); ctx.moveTo(13, -21); ctx.lineTo(23, -24); ctx.lineTo(19, -12); ctx.closePath();
       ctx.fillStyle = fill; ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = 2.5; ctx.stroke();
       break;
-    case 'blast': case 'rebound':
+    case 'blast': case 'rebound': case 'detonation':
       for (let i = 0; i < 8; i++) {
         const a = i * TAU / 8;
         line(ctx, [[Math.cos(a) * 12, Math.sin(a) * 12], [Math.cos(a) * 23, Math.sin(a) * 23]], shine, 4);
@@ -565,7 +565,7 @@ export function drawSkillIcon(ctx, { id = 'power', x = 0, y = 0, size = 52, time
       ctx.beginPath(); ctx.arc(0, 0, 17, 0.3, 5.4); ctx.stroke();
       circle(ctx, 17, -3, 5, shine, INK, 2);
       break;
-    case 'arc': case 'echo':
+    case 'arc': case 'echo': case 'superconductor':
       boltIcon(ctx, fill);
       if (id === 'echo') { ctx.globalAlpha = 0.5; ctx.translate(7, 2); boltIcon(ctx, shine); }
       break;
@@ -608,6 +608,21 @@ export function drawSkillIcon(ctx, { id = 'power', x = 0, y = 0, size = 52, time
     case 'bounty':
       rounded(ctx, -18, -15, 36, 31, 7, fill, INK, 3);
       sparkle(ctx, 0, 0, 10, shine);
+      break;
+    case 'bankshot':
+      capsuleIcon(ctx, fill, shine);
+      line(ctx, [[-19, 15], [17, 15], [17, -13]], shine, 3);
+      break;
+    case 'harvest':
+      ctx.beginPath(); ctx.moveTo(0, -22); ctx.lineTo(19, 0);
+      ctx.lineTo(0, 22); ctx.lineTo(-19, 0); ctx.closePath();
+      ctx.fillStyle = fill; ctx.fill(); ctx.strokeStyle = INK;
+      ctx.lineWidth = 3; ctx.stroke();
+      sparkle(ctx, 0, 0, 9, shine);
+      break;
+    case 'combo':
+      for (let i = 0; i < 3; i++) sparkle(ctx, -14 + i * 14,
+        i % 2 ? -8 : 9, 6, i % 2 ? shine : fill);
       break;
     default:
       capsuleIcon(ctx, fill, shine);

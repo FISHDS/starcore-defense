@@ -1,15 +1,17 @@
-import { startRun, WAVES, UPGRADE_BY_ID } from './game.js?v=20261015-pressure-art-audio';
+import { startRun, WAVES, UPGRADE_BY_ID } from './game.js?v=20261016-boss-evolution';
 import { META_BY_ID, MILESTONE_REWARDS, ORGANS, WEAPONS } from './meta.js';
+import { createBossRig } from './boss-rig.js';
+import { bossProfileFor } from './boss-profiles.js';
 
 const CHECKPOINT = 'starcore.checkpoint.v5';
 const BEST = 'starcore.best.v1';
 const PROFILE = 'starcore.profile.v2';
 const LEGACY_PROFILE = 'starcore.profile.v1';
-const RESEARCH = ['fire', 'guard', 'scavenge'];
+const RESEARCH = ['fire', 'guard', 'scavenge', 'tactics', 'collector'];
 
 export function readProfile(storage) {
   const empty = {
-    dna: 0, fire: 0, guard: 0, scavenge: 0,
+    dna: 0, fire: 0, guard: 0, scavenge: 0, tactics: 0, collector: 0,
     unlockedStage: 1, cleared: [], endlessUnlocked: false,
     weapons: ['capsule'], organs: [], equippedWeapon: 'capsule',
     equippedOrgans: [], bestEndless: 0,
@@ -141,6 +143,10 @@ export function saveCheckpoint(storage, game) {
     chains: game.chains,
     bullets: game.bullets,
     enemyBullets: game.enemyBullets,
+    pickups: game.pickups,
+    chargeFor: game.chargeFor,
+    comboCount: game.comboCount,
+    comboTimer: game.comboTimer,
     playerX: game.player.x,
     core: game.core,
     score: game.score,
@@ -196,9 +202,22 @@ export function loadCheckpoint(storage) {
     game.hazardTimer = Number.isFinite(data.hazardTimer) ? data.hazardTimer : 0;
     game.hazards = Array.isArray(data.hazards) ? data.hazards.slice(0, 8) : [];
     game.chains = data.chains;
+    for (const chain of game.chains.filter(item => item.boss)) {
+      chain.originalBodyCount ||= WAVES.at(-1).segments - 1;
+      chain.rig ||= createBossRig(bossProfileFor(game.chapter, chain.lane).id);
+    }
     game.bullets = Array.isArray(data.bullets) ? data.bullets.slice(0, 150) : [];
     game.enemyBullets = Array.isArray(data.enemyBullets)
       ? data.enemyBullets.slice(0, 100) : [];
+    game.pickups = Array.isArray(data.pickups) ? data.pickups.filter(item =>
+      Number.isFinite(item.x) && Number.isFinite(item.y)
+      && ['shield', 'energy'].includes(item.kind)).slice(0, 24) : [];
+    game.chargeFor = Number.isFinite(data.chargeFor)
+      ? Math.max(0, Math.min(5, data.chargeFor)) : 0;
+    game.comboCount = Number.isInteger(data.comboCount)
+      ? Math.max(0, Math.min(99, data.comboCount)) : 0;
+    game.comboTimer = Number.isFinite(data.comboTimer)
+      ? Math.max(0, Math.min(2.5, data.comboTimer)) : 0;
     game.player.x = Number.isFinite(data.playerX)
       ? Math.max(24, Math.min(366, data.playerX)) : game.player.x;
     game.bosses = game.chains.filter(chain => chain.boss);
@@ -212,7 +231,8 @@ export function loadCheckpoint(storage) {
       if (!Array.isArray(data.choices) || data.choices.length !== 3
         || data.choices.some(id => !UPGRADE_BY_ID[id])) return null;
       game.choices = data.choices;
-      game.rerollsLeft = data.rerollsLeft === 0 ? 0 : 1;
+      game.rerollsLeft = Number.isInteger(data.rerollsLeft)
+        ? Math.max(0, Math.min(5, data.rerollsLeft)) : 1;
       game.upgradeSource = data.upgradeSource === 'gold' ? 'gold' : 'chest';
     }
     return game;
