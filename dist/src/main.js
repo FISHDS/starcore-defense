@@ -1,6 +1,6 @@
 import { advance, CHAPTERS, chooseUpgrade, HEIGHT, rerollUpgrades, startRun, UPGRADE_BY_ID, WAVES, WIDTH } from './game.js';
 import { pointerToWorldX } from './input.js';
-import { render } from './render.js';
+import { render } from './render.js?v=20261015-readability';
 import { awardRun, buyResearch, clearCheckpoint, loadCheckpoint, readProfile, researchCost, saveCheckpoint, updateBest } from './storage.js';
 
 const $ = id => document.getElementById(id);
