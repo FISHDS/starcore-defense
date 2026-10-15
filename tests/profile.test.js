@@ -34,10 +34,10 @@ test('可用研究點購買永久火力、耐久與寶箱能力', () => {
   assert.equal(buyResearch(storage, 'scavenge').success, false);
   const profile = readProfile(storage);
   const run = startRun(23, profile);
-  assert.ok(run.baseDamage > 20);
+  assert.ok(run.baseDamage > 40);
   assert.ok(run.maxCore > 100);
-  advance(run, 6.1);
-  assert.ok(run.chest);
+  advance(run, 0.05);
+  assert.ok(run.chains[0].segments.some(segment => segment.chest));
 });
 
 test('未有足夠研究點不能提升，續玩保留開局的永久能力', () => {
@@ -49,4 +49,15 @@ test('未有足夠研究點不能提升，續玩保留開局的永久能力', ()
   assert.equal(restored.baseDamage, run.baseDamage);
   assert.equal(restored.maxCore, run.maxCore);
   assert.equal(restored.chestMaxHp, run.chestMaxHp);
+});
+
+test('長局戰鬥的續玩會保留已經經過的時間', () => {
+  const storage = memoryStorage();
+  const run = startRun(25);
+  run.runTime = 121;
+  run.wave = 3;
+  saveCheckpoint(storage, run);
+  const restored = loadCheckpoint(storage);
+  assert.ok(restored.runTime >= 121);
+  assert.equal(restored.wave, 3);
 });

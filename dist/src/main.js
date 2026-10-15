@@ -1,4 +1,4 @@
-import { advance, chooseRoute, chooseUpgrade, HEIGHT, rerollUpgrades, startRun, UPGRADE_BY_ID, WAVES, WIDTH } from './game.js';
+import { advance, CHAPTERS, chooseUpgrade, HEIGHT, rerollUpgrades, startRun, UPGRADE_BY_ID, WAVES, WIDTH } from './game.js';
 import { pointerToWorldX } from './input.js';
 import { render } from './render.js';
 import { awardRun, buyResearch, clearCheckpoint, loadCheckpoint, readProfile, researchCost, saveCheckpoint, updateBest } from './storage.js';
@@ -14,7 +14,6 @@ const upgradeScreen = $('upgrade-screen');
 const pauseScreen = $('pause-screen');
 const resultScreen = $('result-screen');
 const researchScreen = $('research-screen');
-const routeScreen = $('route-screen');
 
 const fallbackData = new Map();
 const fallbackStorage = {
@@ -32,6 +31,8 @@ let targetX = WIDTH / 2;
 let lastTime = 0;
 let handledResult = false;
 let showResearch = false;
+let lastSavedAt = 0;
+let selectedChapter = 1;
 const keys = { left: false, right: false };
 
 function resize() {
@@ -46,22 +47,16 @@ function refreshHud() {
   if (!game) return;
   hint.hidden = game.phase !== 'playing' || paused || game.wave > 1 || game.waveTime > 5;
   const wave = WAVES[game.wave - 1];
-  $('wave-number').textContent = String(game.wave).padStart(2, '0');
-  $('wave-name').textContent = wave.name;
+  $('wave-number').textContent = `第${game.chapter}關`;
+  $('wave-name').textContent = `${CHAPTERS[game.chapter - 1].name} · ${wave.name}`;
   $('core-value').textContent = String(Math.ceil(game.core));
   $('score-value').textContent = game.score.toLocaleString('zh-TW');
-  const bossHeads = game.bosses.map(boss => boss.segments[0]);
-  const progress = wave.boss && bossHeads.length
-    ? 1 - bossHeads.reduce((sum, head) => sum + Math.max(0, head.hp), 0)
-      / bossHeads.reduce((sum, head) => sum + head.maxHp, 0)
-    : Math.min(1, game.waveTime / wave.duration);
+  const progress = Math.min(1, game.runTime / 300);
   $('wave-progress').style.width = `${Math.max(0, progress) * 100}%`;
   $('core-progress').style.width = `${game.core / game.maxCore * 100}%`;
-  const nearBoss = game.bosses.some(boss => boss.segments[0].hp > 0
-    && (boss.atBase || boss.segments[0].y > 580));
+  const nearBoss = game.bosses.some(boss => !boss.dead && boss.segments[0].y > 540);
   $('boss-warning').hidden = game.phase !== 'playing' || !nearBoss;
-  $('boss-warning').textContent = game.bosses.some(boss => boss.atBase && boss.segments[0].hp > 0)
-    ? '母體正在侵蝕防線 · 集中火力' : '母體逼近防線 · 集中火力';
+  $('boss-warning').textContent = '雙母體逼近 · 瞄準身體讓頭部後退';
 }
 
 function refreshResearch() {
@@ -78,10 +73,9 @@ function refreshResearch() {
 }
 
 function makeCards() {
-  $('upgrade-kicker').textContent = game.upgradeSource === 'chest' ? 'SUPPLY OPENED' : 'WAVE CLEARED';
-  $('upgrade-title').textContent = game.upgradeSource === 'chest' ? '寶箱技能三選一' : '選擇你的進化';
-  $('upgrade-foot').textContent = game.upgradeSource === 'chest'
-    ? '選定後，繼續擊退眼前的敵群' : '選定後，下一波立即開始';
+  $('upgrade-kicker').textContent = game.upgradeSource === 'gold' ? 'GOLD SUPPLY' : 'SUPPLY OPENED';
+  $('upgrade-title').textContent = '寶箱技能三選一';
+  $('upgrade-foot').textContent = '選定後，回到原本的連續戰鬥';
   const holder = $('upgrade-cards');
   holder.replaceChildren();
   const rarityName = { common: '普通', rare: '稀有', epic: '傳說' };
@@ -144,7 +138,6 @@ function syncScreen() {
   menu.hidden = !!game || showResearch;
   $('boss-warning').hidden = !game || game.phase !== 'playing';
   researchScreen.hidden = !showResearch;
-  routeScreen.hidden = !game || game.phase !== 'route';
   hud.hidden = !game;
   hint.hidden = !game || game.phase !== 'playing' || paused;
   upgradeScreen.hidden = !game || game.phase !== 'upgrade';
@@ -152,7 +145,6 @@ function syncScreen() {
   resultScreen.hidden = !game || !['victory', 'defeat'].includes(game.phase);
   if (!game) $('continue-button').hidden = !loadCheckpoint(storage);
   if (game?.phase === 'upgrade') makeCards();
-  if (game?.phase === 'route') $('route-next-wave').textContent = WAVES[game.wave]?.name || '下一關';
   if (game && ['victory', 'defeat'].includes(game.phase)) setResult();
   refreshHud();
   refreshResearch();
@@ -160,10 +152,11 @@ function syncScreen() {
 
 function beginNew() {
   clearCheckpoint(storage);
-  game = startRun(Math.floor(Math.random() * 0xffffffff), readProfile(storage));
+  game = startRun(Math.floor(Math.random() * 0xffffffff), readProfile(storage), selectedChapter);
   paused = false;
   handledResult = false;
   targetX = game.player.x;
+  lastSavedAt = 0;
   saveCheckpoint(storage, game);
   syncScreen();
 }
@@ -175,6 +168,7 @@ function continueRun() {
   paused = false;
   handledResult = false;
   targetX = game.player.x;
+  lastSavedAt = game.runTime;
   syncScreen();
 }
 
@@ -188,16 +182,16 @@ $('reroll-button').addEventListener('click', () => {
 });
 $('research-button').addEventListener('click', () => { showResearch = true; syncScreen(); });
 $('research-back').addEventListener('click', () => { showResearch = false; syncScreen(); });
-$('route-stable').addEventListener('click', () => {
-  if (!chooseRoute(game, 'stable')) return;
-  saveCheckpoint(storage, game);
-  syncScreen();
-});
-$('route-volatile').addEventListener('click', () => {
-  if (!chooseRoute(game, 'volatile')) return;
-  saveCheckpoint(storage, game);
-  syncScreen();
-});
+for (const button of document.querySelectorAll('[data-chapter]')) {
+  button.addEventListener('click', () => {
+    selectedChapter = Number(button.dataset.chapter);
+    for (const option of document.querySelectorAll('[data-chapter]')) {
+      const active = Number(option.dataset.chapter) === selectedChapter;
+      option.classList.toggle('selected', active);
+      option.setAttribute('aria-pressed', String(active));
+    }
+  });
+}
 for (const button of researchScreen.querySelectorAll('[data-research]')) {
   button.addEventListener('click', () => {
     buyResearch(storage, button.dataset.research);
@@ -242,11 +236,12 @@ function frame(timestamp) {
     targetX = Math.max(26, Math.min(WIDTH - 26, targetX));
     const oldPhase = game.phase;
     advance(game, dt, targetX);
-    if (game.phase !== oldPhase) {
-      if (game.phase === 'route') saveCheckpoint(storage, game);
-      syncScreen();
-    }
+    if (game.phase !== oldPhase) syncScreen();
     else refreshHud();
+    if (game.phase === 'playing' && game.runTime - lastSavedAt >= 12) {
+      saveCheckpoint(storage, game);
+      lastSavedAt = game.runTime;
+    }
   }
   ctx.setTransform(canvas.width / WIDTH, 0, 0, canvas.height / HEIGHT, 0, 0);
   render(ctx, game, timestamp / 1000);

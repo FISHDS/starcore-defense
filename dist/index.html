@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
   <meta name="theme-color" content="#061126">
-  <meta name="description" content="星核防線：原創手機直式防線遊戲。左右滑動擊破盤旋的多節感染群，三選一強化武器。">
+  <meta name="description" content="星核防線：原創手機直式長鏈防線遊戲。擊破身體讓頭部後退，打開藏在敵群中的寶箱進化武器。">
   <title>星核防線 · Starcore Defense</title>
   <link rel="stylesheet" href="./style.css">
   <script type="module" src="./src/main.js"></script>
@@ -15,7 +15,7 @@
 
     <div id="hud" class="hud" hidden>
       <div class="hud-top">
-        <div class="wave-label"><span id="wave-number">01</span><span class="wave-divider">/</span><span>06</span><small id="wave-name">訊號入侵</small></div>
+        <div class="wave-label"><span id="wave-number">第1關</span><small id="wave-name">孢子潮汐</small></div>
         <button id="pause-button" class="icon-button" type="button" aria-label="暫停遊戲">Ⅱ</button>
       </div>
       <div class="progress-track"><span id="wave-progress"></span></div>
@@ -26,7 +26,7 @@
       <div class="core-track"><span id="core-progress"></span></div>
     </div>
 
-    <div id="hint" class="gesture-hint" hidden><span class="gesture-icon">↔</span> 左右滑動 · 自動射擊</div>
+    <div id="hint" class="gesture-hint" hidden><span class="gesture-icon">↔</span> 滑動瞄準身體與寶箱節點</div>
     <div id="boss-warning" class="boss-warning" hidden>母體逼近防線 · 集中火力</div>
 
     <section id="menu" class="screen menu-screen" aria-labelledby="game-title">
@@ -36,9 +36,14 @@
         <p class="kicker">守住最後一道光</p>
         <h1 id="game-title">星核<span>防線</span></h1>
         <p class="english-title">STARCORE DEFENSE</p>
-        <p class="menu-copy">一指左右滑動，逐節擊破盤旋的感染群。<br>選擇不同武器，守住最後一道防線。</p>
+        <p class="menu-copy">長鏈敵群會連綿進場。打掉身體，讓頭部沿路後退。<br>瞄準藏在身體裡的寶箱，進化你的武器。</p>
       </div>
       <div class="menu-actions">
+        <div class="chapter-picker" role="group" aria-label="選擇關卡">
+          <button class="chapter-option selected" data-chapter="1" type="button" aria-pressed="true"><strong>星核邊境</strong><small>入門</small></button>
+          <button class="chapter-option" data-chapter="2" type="button" aria-pressed="false"><strong>斷層裂縫</strong><small>進階</small></button>
+          <button class="chapter-option" data-chapter="3" type="button" aria-pressed="false"><strong>旋潮深域</strong><small>嚴峻</small></button>
+        </div>
         <button id="start-button" class="primary-button" type="button"><span>開始作戰</span><span aria-hidden="true">↗</span></button>
         <div class="menu-secondary-row">
           <button id="continue-button" class="secondary-button" type="button" hidden>繼續進度</button>
@@ -72,16 +77,6 @@
         <button class="research-item" data-research="scavenge" type="button"><span class="research-symbol">▣</span><span><strong>補給解析</strong><small>寶箱更容易被打開</small><em id="research-scavenge-level">等級 0 / 4</em></span><b id="research-scavenge-cost">◆ 45</b></button>
       </div>
       <button id="research-back" class="primary-button" type="button">返回主畫面 <span aria-hidden="true">↗</span></button>
-    </section>
-
-    <section id="route-screen" class="screen route-screen" aria-labelledby="route-title" hidden>
-      <div class="route-panel">
-        <span class="eyebrow">CHOOSE YOUR PATH</span>
-        <h2 id="route-title">下一段怎麼走？</h2>
-        <p>即將進入 <strong id="route-next-wave">下一關</strong>。選擇挑戰與收穫。</p>
-        <button id="route-stable" class="route-choice" type="button"><span class="route-glyph">◇</span><span><strong>穩定航道</strong><small>正常難度，穩定守住防線</small></span><span class="route-end">›</span></button>
-        <button id="route-volatile" class="route-choice risky" type="button"><span class="route-glyph">✦</span><span><strong>變異捷徑</strong><small>敵人更堅韌；結算多得 12 研究點</small></span><span class="route-end">›</span></button>
-      </div>
     </section>
 
     <section id="pause-screen" class="screen pause-screen" aria-labelledby="pause-title" hidden>

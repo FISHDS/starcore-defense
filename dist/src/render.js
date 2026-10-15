@@ -1,6 +1,19 @@
 import { WIDTH, HEIGHT } from './game.js';
 
 const TAU = Math.PI * 2;
+const BACKGROUND_TONES = [
+  ['#243d47', '#243b4d', '#1b2b3b'],
+  ['#383451', '#302e54', '#202743'],
+  ['#4d3b38', '#40394b', '#272c3f'],
+  ['#4a3142', '#35334e', '#252941'],
+  ['#2c3a53', '#28334d', '#19293c'],
+  ['#472c43', '#332c4b', '#222739'],
+];
+function compact(value) {
+  if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
+  if (value >= 1000) return `${(value / 1000).toFixed(value >= 10000 ? 0 : 1)}K`;
+  return String(Math.ceil(value));
+}
 const PALETTES = {
   mint: { body: '#62d8ba', edge: '#177e80', light: '#c2fff0', shadow: '#286e78', head: '#f58e81' },
   violet: { body: '#ab87e9', edge: '#51418e', light: '#e8d3ff', shadow: '#674eac', head: '#f478ad' },
@@ -15,11 +28,12 @@ function circle(ctx, x, y, radius, color) {
   ctx.fill();
 }
 
-function background(ctx, time) {
+function background(ctx, time, wave = 1) {
+  const tones = BACKGROUND_TONES[Math.max(0, Math.min(5, wave - 1))];
   const gradient = ctx.createLinearGradient(0, 0, 0, HEIGHT);
-  gradient.addColorStop(0, '#35415b');
-  gradient.addColorStop(0.68, '#303b56');
-  gradient.addColorStop(1, '#212b43');
+  gradient.addColorStop(0, tones[0]);
+  gradient.addColorStop(0.68, tones[1]);
+  gradient.addColorStop(1, tones[2]);
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
@@ -112,45 +126,6 @@ function guardian(ctx, x, y, time, invulnerable = 0) {
   ctx.restore();
 }
 
-function chest(ctx, item, time) {
-  ctx.save();
-  ctx.translate(item.x, item.y + Math.sin(time * 4) * 3);
-  ctx.rotate(Math.sin(time * 2) * 0.07);
-  ctx.shadowColor = '#ffdc83';
-  ctx.shadowBlur = 22;
-  ctx.fillStyle = '#855134';
-  ctx.strokeStyle = '#ffde88';
-  ctx.lineWidth = 4;
-  ctx.beginPath();
-  ctx.roundRect(-24, -21, 48, 42, 8);
-  ctx.fill();
-  ctx.stroke();
-  ctx.shadowBlur = 0;
-  ctx.fillStyle = '#edb75c';
-  ctx.fillRect(-20, -16, 40, 12);
-  ctx.fillRect(-4, -18, 8, 36);
-  ctx.fillStyle = '#fff4ba';
-  ctx.beginPath();
-  ctx.moveTo(0, -12);
-  ctx.lineTo(8, 0);
-  ctx.lineTo(0, 12);
-  ctx.lineTo(-8, 0);
-  ctx.closePath();
-  ctx.fill();
-  ctx.restore();
-  ctx.textAlign = 'center';
-  ctx.font = '800 11px system-ui';
-  ctx.lineWidth = 3;
-  ctx.strokeStyle = '#2c3349';
-  ctx.strokeText('打破補給箱', item.x, item.y - 33);
-  ctx.fillStyle = '#ffefb8';
-  ctx.fillText('打破補給箱', item.x, item.y - 33);
-  ctx.fillStyle = 'rgba(15,26,44,.65)';
-  ctx.fillRect(item.x - 23, item.y + 28, 46, 4);
-  ctx.fillStyle = '#ffdd82';
-  ctx.fillRect(item.x - 23, item.y + 28, 46 * Math.max(0, item.hp / item.maxHp), 4);
-}
-
 function segment(ctx, piece, chain, time) {
   if (piece.hp <= 0 || piece.y < -35 || piece.y > HEIGHT + 30) return;
   const p = PALETTES[chain.tint] || PALETTES.violet;
@@ -170,7 +145,12 @@ function segment(ctx, piece, chain, time) {
     ctx.stroke();
   }
   circle(ctx, 2, 3, r + 1, p.edge);
+  if (piece.chest) {
+    ctx.shadowColor = piece.gold ? '#ffd668' : '#a3edff';
+    ctx.shadowBlur = 20 + Math.sin(time * 5) * 5;
+  }
   circle(ctx, 0, 0, r - 2, head ? p.head : p.body);
+  ctx.shadowBlur = 0;
   ctx.fillStyle = p.light;
   ctx.globalAlpha = 0.28;
   ctx.beginPath();
@@ -192,6 +172,18 @@ function segment(ctx, piece, chain, time) {
     circle(ctx, 7, -3, 3.5, '#432b4b');
     circle(ctx, 0, -12, 5, '#fff0a8');
     circle(ctx, 0, -12, 2.5, '#ff696e');
+  } else if (piece.chest) {
+    ctx.fillStyle = piece.gold ? '#f5bc53' : '#a0ddeb';
+    ctx.strokeStyle = '#283b51';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.roundRect(-10, -13, 20, 17, 3);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = piece.gold ? '#ffe799' : '#d6f7ff';
+    ctx.fillRect(-10, -15, 20, 5);
+    ctx.fillStyle = '#506481';
+    ctx.fillRect(-2, -14, 4, 18);
   } else {
     ctx.strokeStyle = p.shadow;
     ctx.lineWidth = 2;
@@ -199,19 +191,20 @@ function segment(ctx, piece, chain, time) {
     ctx.arc(0, 1, r * 0.58, -0.4, Math.PI + 0.4);
     ctx.stroke();
   }
-  ctx.font = `900 ${head ? 13 : 11}px system-ui`;
+  ctx.font = `900 ${head ? 12 : 12}px system-ui`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.lineWidth = 3.5;
   ctx.strokeStyle = '#26304b';
-  const hp = String(Math.max(0, Math.ceil(piece.hp)));
-  ctx.strokeText(hp, 0, head ? 11 : 4);
+  const hp = head ? '◆' : compact(Math.max(0, piece.hp));
+  ctx.strokeText(hp, 0, head ? 11 : piece.chest ? 11 : 4);
   ctx.fillStyle = '#fff9ed';
-  ctx.fillText(hp, 0, head ? 11 : 4);
+  ctx.fillText(hp, 0, head ? 11 : piece.chest ? 11 : 4);
   ctx.restore();
 }
 
 function chain(ctx, item, time) {
+  if (item.dead) return;
   const p = PALETTES[item.tint] || PALETTES.violet;
   ctx.lineCap = 'round';
   for (let i = item.segments.length - 1; i > 0; i--) {
@@ -276,25 +269,26 @@ function damageNumbers(ctx, popups) {
     ctx.font = `900 ${popup.weak ? 22 : 15}px system-ui`;
     ctx.lineWidth = 4;
     ctx.strokeStyle = '#28304a';
-    ctx.strokeText(String(popup.value), popup.x, popup.y);
+    ctx.strokeText(compact(popup.value), popup.x, popup.y);
     ctx.fillStyle = popup.weak ? '#ffde80' : '#fff5f2';
-    ctx.fillText(String(popup.value), popup.x, popup.y);
+    ctx.fillText(compact(popup.value), popup.x, popup.y);
   }
   ctx.restore();
 }
 
 export function render(ctx, game, time) {
   ctx.clearRect(0, 0, WIDTH, HEIGHT);
-  background(ctx, time);
+  background(ctx, time, game?.wave || 1);
   if (!game) {
     const preview = {
       tint: 'violet',
-      segments: Array.from({ length: 22 }, (_, index) => {
-        const distance = 460 - index * 25;
+      segments: Array.from({ length: 68 }, (_, index) => {
+        const distance = 640 - index * 23;
         return {
           x: WIDTH / 2 + 143 * Math.sin(distance / 78 + 1.2),
-          y: 82 + distance * 0.31,
-          hp: 54, maxHp: 54, index, radius: index === 0 ? 21 : 17,
+          y: 174 + distance * 0.21,
+          hp: index ? 105 : 1, maxHp: index ? 105 : 1,
+          chest: index === 14, gold: false, index, radius: index === 0 ? 23 : 18,
         };
       }),
     };
@@ -304,7 +298,6 @@ export function render(ctx, game, time) {
     return;
   }
   for (const item of game.chains) chain(ctx, item, time);
-  if (game.chest) chest(ctx, game.chest, time);
   for (const bullet of game.bullets) {
     ctx.save();
     ctx.shadowColor = '#88f3f7';
@@ -324,6 +317,6 @@ export function render(ctx, game, time) {
   }
   for (const effect of game.effects) drawEffect(ctx, effect);
   damageNumbers(ctx, game.popups);
-  rail(ctx, game.core, time);
+  rail(ctx, game.core / game.maxCore * 100, time);
   guardian(ctx, game.player.x, game.player.y, time, game.invulnerable);
 }
