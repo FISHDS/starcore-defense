@@ -1,7 +1,7 @@
-import { advance, CHAPTERS, chooseUpgrade, HEIGHT, rerollUpgrades, startRun, UPGRADE_BY_ID, WAVES, WIDTH } from './game.js';
+import { advance, CHAPTERS, chooseUpgrade, getRunProgress, HEIGHT, rerollUpgrades, startRun, UPGRADE_BY_ID, WAVES, WIDTH } from './game.js?v=20261015-singlechain';
 import { pointerToWorldX } from './input.js';
-import { render } from './render.js?v=20261015-readability';
-import { awardRun, buyResearch, clearCheckpoint, loadCheckpoint, readProfile, researchCost, saveCheckpoint, updateBest } from './storage.js';
+import { render } from './render.js?v=20261015-singlechain';
+import { awardRun, buyResearch, clearCheckpoint, loadCheckpoint, readProfile, researchCost, saveCheckpoint, updateBest } from './storage.js?v=20261015-singlechain';
 
 const $ = id => document.getElementById(id);
 const canvas = $('arena');
@@ -51,7 +51,7 @@ function refreshHud() {
   $('wave-name').textContent = `${CHAPTERS[game.chapter - 1].name} · ${wave.name}`;
   $('core-value').textContent = String(Math.ceil(game.core));
   $('score-value').textContent = game.score.toLocaleString('zh-TW');
-  const progress = Math.min(1, game.runTime / 300);
+  const progress = getRunProgress(game);
   $('wave-progress').style.width = `${Math.max(0, progress) * 100}%`;
   $('core-progress').style.width = `${game.core / game.maxCore * 100}%`;
   const nearBoss = game.bosses.some(boss => !boss.dead && boss.segments[0].y > 540);
@@ -198,7 +198,10 @@ for (const button of researchScreen.querySelectorAll('[data-research]')) {
     refreshResearch();
   });
 }
-$('pause-button').addEventListener('click', () => { paused = true; syncScreen(); });
+$('pause-button').addEventListener('click', () => {
+  if (game) saveCheckpoint(storage, game);
+  paused = true; syncScreen();
+});
 $('resume-button').addEventListener('click', () => { paused = false; syncScreen(); });
 $('menu-button').addEventListener('click', () => { game = null; paused = false; syncScreen(); });
 
@@ -224,7 +227,10 @@ window.addEventListener('keyup', event => {
   if (event.key === 'ArrowRight' || event.key.toLowerCase() === 'd') keys.right = false;
 });
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden && game?.phase === 'playing') { paused = true; syncScreen(); }
+  if (document.hidden && game?.phase === 'playing') {
+    saveCheckpoint(storage, game);
+    paused = true; syncScreen();
+  }
 });
 
 function frame(timestamp) {
@@ -236,7 +242,10 @@ function frame(timestamp) {
     targetX = Math.max(26, Math.min(WIDTH - 26, targetX));
     const oldPhase = game.phase;
     advance(game, dt, targetX);
-    if (game.phase !== oldPhase) syncScreen();
+    if (game.phase !== oldPhase) {
+      if (game.phase === 'upgrade') saveCheckpoint(storage, game);
+      syncScreen();
+    }
     else refreshHud();
     if (game.phase === 'playing' && game.runTime - lastSavedAt >= 12) {
       saveCheckpoint(storage, game);

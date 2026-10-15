@@ -1,6 +1,6 @@
-import { startRun, WAVES, UPGRADE_BY_ID } from './game.js';
+import { startRun, WAVES, UPGRADE_BY_ID } from './game.js?v=20261015-singlechain';
 
-const CHECKPOINT = 'starcore.checkpoint.v3';
+const CHECKPOINT = 'starcore.checkpoint.v5';
 const BEST = 'starcore.best.v1';
 const PROFILE = 'starcore.profile.v1';
 const RESEARCH = ['fire', 'guard', 'scavenge'];
@@ -47,23 +47,34 @@ export function awardRun(storage, game) {
 }
 
 export function saveCheckpoint(storage, game) {
-  if (game.phase !== 'playing') return;
+  if (game.phase !== 'playing' && game.phase !== 'upgrade') return;
   const data = {
-    version: 3,
+    version: 5,
     seed: game.seed,
     chapter: game.chapter,
+    phase: game.phase,
     wave: game.wave,
+    waveTime: game.waveTime,
     runTime: game.runTime,
+    encounter: game.encounter,
+    normalTotal: game.normalTotal,
+    normalDestroyed: game.normalDestroyed,
+    bossDestroyed: game.bossDestroyed,
     spawnCount: game.spawnCount,
-    nextSpawnAt: game.nextSpawnAt,
     nextId: game.nextId,
     fireTimer: game.fireTimer,
     specialTimers: game.specialTimers,
     bossShotTimer: game.bossShotTimer,
     chains: game.chains,
+    bullets: game.bullets,
+    enemyBullets: game.enemyBullets,
+    playerX: game.player.x,
     core: game.core,
     score: game.score,
     upgrades: game.upgrades,
+    choices: game.choices,
+    rerollsLeft: game.rerollsLeft,
+    upgradeSource: game.upgradeSource,
     profileLevels: game.profileLevels,
   };
   try { storage.setItem(CHECKPOINT, JSON.stringify(data)); } catch { /* 瀏覽器停用儲存時仍可遊玩 */ }
@@ -72,19 +83,28 @@ export function saveCheckpoint(storage, game) {
 export function loadCheckpoint(storage) {
   try {
     const data = JSON.parse(storage.getItem(CHECKPOINT) || 'null');
-    if (!data || data.version !== 3 || !Number.isInteger(data.wave)
+    if (!data || data.version !== 5 || !Number.isInteger(data.wave)
       || data.wave < 1 || data.wave > WAVES.length || !Number.isFinite(data.core)
       || data.core <= 0 || !Number.isFinite(data.score)
       || !Number.isFinite(data.runTime) || data.runTime < 0 || data.runTime > 3600
-      || !Array.isArray(data.chains) || data.chains.length > 20
+      || !['playing', 'upgrade'].includes(data.phase)
+      || !['normal', 'boss'].includes(data.encounter)
+      || !Number.isInteger(data.normalDestroyed) || data.normalDestroyed < 0
+      || data.normalDestroyed > WAVES[0].segments - 1
+      || !Array.isArray(data.chains) || data.chains.length > 2
       || data.chains.some(chain => !Array.isArray(chain.segments)
-        || chain.segments.length > 120 || !Number.isFinite(chain.travel))) return null;
+        || chain.segments.length > WAVES[0].segments
+        || !Number.isFinite(chain.travel))) return null;
     const game = startRun(data.seed, data.profileLevels || readProfile(storage), data.chapter);
     if (data.core > game.maxCore) return null;
     game.wave = data.wave;
+    game.phase = data.phase;
     game.runTime = data.runTime;
-    game.waveTime = Math.max(0, game.runTime - WAVES[game.wave - 1].startsAt);
-    game.nextSpawnAt = Number.isFinite(data.nextSpawnAt) ? data.nextSpawnAt : game.runTime;
+    game.waveTime = Number.isFinite(data.waveTime) ? data.waveTime : 0;
+    game.encounter = data.encounter;
+    game.normalDestroyed = data.normalDestroyed;
+    game.bossDestroyed = Number.isInteger(data.bossDestroyed)
+      ? Math.max(0, Math.min(2 * (WAVES.at(-1).segments - 1), data.bossDestroyed)) : 0;
     game.spawnCount = Number.isInteger(data.spawnCount) ? data.spawnCount : 0;
     game.nextId = Number.isInteger(data.nextId) ? data.nextId : 1;
     game.fireTimer = Number.isFinite(data.fireTimer) ? data.fireTimer : 0;
@@ -92,6 +112,11 @@ export function loadCheckpoint(storage) {
       ? data.specialTimers : {};
     game.bossShotTimer = Number.isFinite(data.bossShotTimer) ? data.bossShotTimer : 0;
     game.chains = data.chains;
+    game.bullets = Array.isArray(data.bullets) ? data.bullets.slice(0, 150) : [];
+    game.enemyBullets = Array.isArray(data.enemyBullets)
+      ? data.enemyBullets.slice(0, 100) : [];
+    game.player.x = Number.isFinite(data.playerX)
+      ? Math.max(24, Math.min(366, data.playerX)) : game.player.x;
     game.bosses = game.chains.filter(chain => chain.boss);
     game.boss = game.bosses[0] || null;
     game.core = data.core;
@@ -99,6 +124,13 @@ export function loadCheckpoint(storage) {
     game.upgrades = Object.fromEntries(Object.entries(data.upgrades || {})
       .filter(([id, level]) => UPGRADE_BY_ID[id] && Number.isInteger(level)
         && level >= 1 && level <= UPGRADE_BY_ID[id].max));
+    if (data.phase === 'upgrade') {
+      if (!Array.isArray(data.choices) || data.choices.length !== 3
+        || data.choices.some(id => !UPGRADE_BY_ID[id])) return null;
+      game.choices = data.choices;
+      game.rerollsLeft = data.rerollsLeft === 0 ? 0 : 1;
+      game.upgradeSource = data.upgradeSource === 'gold' ? 'gold' : 'chest';
+    }
     return game;
   } catch { return null; }
 }

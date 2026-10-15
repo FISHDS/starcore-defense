@@ -1,10 +1,10 @@
-import { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID } from './content.js';
+import { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID } from './content.js?v=20261015-singlechain';
+import { routeLength, routePosition } from './routes.js?v=20261015-singlechain';
 
 export { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID };
 export const WIDTH = 390;
 export const HEIGHT = 844;
 const RAIL_Y = 744;
-const LAST_TIME = WAVES.at(-1).startsAt + WAVES.at(-1).duration;
 
 export function startRun(seed = Date.now(), profile = {}, chapter = 1) {
   const profileLevels = {
@@ -17,7 +17,9 @@ export function startRun(seed = Date.now(), profile = {}, chapter = 1) {
     phase: 'playing', seed: seed >>> 0,
     chapter: CHAPTERS.some(item => item.id === chapter) ? chapter : 1,
     wave: 1, waveTime: 0, runTime: 0,
-    spawnCount: 0, nextSpawnAt: 0, nextId: 1,
+    encounter: 'normal', normalTotal: WAVES[0].segments - 1,
+    normalDestroyed: 0, bossDestroyed: 0,
+    spawnCount: 0, nextId: 1,
     fireTimer: 0, specialTimers: {}, bossShotTimer: 0, regenTimer: 0,
     maxCore, core: maxCore, baseDamage: 40 + profileLevels.fire * 5,
     chestMaxHp: 100 - profileLevels.scavenge * 8,
@@ -34,67 +36,60 @@ function random(game) {
 }
 
 export function getShotDamage(game) {
-  const natural = game.baseDamage * (1 + game.runTime / 60) ** 1.65;
+  const elapsed = Math.max(game.runTime, game.normalDestroyed * 1.2);
+  const natural = game.baseDamage * (1 + elapsed / 60) ** 1.65;
   const upgrades = 1 + (game.upgrades.power || 0) * 0.35
     + (game.upgrades.needle || 0) * 0.14 + (game.upgrades.rail || 0) * 0.13;
   const danger = 1 + (game.upgrades.fury || 0) * 0.5 * (1 - game.core / game.maxCore);
   return Math.round(natural * upgrades * danger);
 }
 
-function currentWaveIndex(time) {
-  for (let index = WAVES.length - 1; index >= 0; index--) {
-    if (time >= WAVES[index].startsAt) return index;
-  }
-  return 0;
+export function getRunProgress(game) {
+  if (game.phase === 'victory') return 1;
+  const normal = Math.min(1, game.normalDestroyed / game.normalTotal);
+  const bossTotal = 2 * (WAVES.at(-1).segments - 1);
+  const boss = Math.min(1, game.bossDestroyed / bossTotal);
+  return normal * 0.8 + boss * 0.2;
 }
 
 function configuredWave(game, index) {
   const source = WAVES[index];
   const chapter = CHAPTERS[game.chapter - 1];
+  const path = chapter.paths[index];
+  const originalDistance = routeLength(source.path, !!source.boss, 0)
+    - initialTravel(source.path, !!source.boss);
+  const chapterDistance = routeLength(path, !!source.boss, 0)
+    - initialTravel(path, !!source.boss);
   return {
     ...source,
-    path: chapter.paths[index],
+    path,
     tint: chapter.tints[index],
     hp: Math.round(source.hp * chapter.hpScale),
-    speed: source.speed * chapter.speedScale,
-    spawnGap: source.spawnGap * chapter.gapScale,
+    speed: source.speed * chapter.speedScale * chapterDistance / originalDistance,
   };
 }
 
-function trackPosition(chain, index) {
-  const distance = chain.travel - index * chain.spacing;
-  const side = chain.lane % 2 ? -1 : 1;
-  let x;
-  switch (chain.path) {
-    case 'mirror':
-      x = WIDTH / 2 + side * (93 + 42 * Math.sin(distance / 68 + 0.6)); break;
-    case 'fork':
-      x = WIDTH / 2 + side * (87 + 47 * Math.sin(distance / 92 + 0.4)); break;
-    case 'weave':
-      x = WIDTH / 2 + 105 * Math.sin(distance / 61 + chain.phase)
-        + 29 * Math.sin(distance / 22 + chain.phase); break;
-    case 'spiral':
-      x = WIDTH / 2 + (89 + 51 * Math.sin(distance / 135))
-        * Math.sin(distance / 56 + chain.phase); break;
-    case 'cross':
-      x = WIDTH / 2 + 138 * Math.sin(distance / 62
-        + (chain.lane % 2 ? Math.PI : 0) + 0.5); break;
-    default:
-      x = WIDTH / 2 + 140 * Math.sin(distance / 76 + chain.phase);
-  }
-  return {
-    x: Math.max(25, Math.min(WIDTH - 25, x)),
-    y: 174 + distance * (chain.boss ? 0.19 : 0.21)
-      + (chain.boss ? 42 : 22) * Math.sin(distance / 77 + chain.phase)
-      + chain.yOffset,
-  };
+function initialTravel(path, boss) {
+  if (boss) return 500;
+  if (path === 'fork') return 950;
+  if (path === 'weave') return 1200;
+  return 1700;
 }
 
-function reposition(chain) {
+function reposition(chain, dt = 0) {
   for (let index = 0; index < chain.segments.length; index++) {
     const segment = chain.segments[index];
     segment.index = index;
-    const position = trackPosition(chain, index);
+    const target = chain.travel - index * chain.spacing;
+    if (!Number.isFinite(segment.routeDistance)) segment.routeDistance = target;
+    if (dt > 0) {
+      const desiredStep = (target - segment.routeDistance)
+        * (1 - Math.exp(-dt * (index === 0 ? 24 : 10)));
+      const maxStep = dt * (index === 0 ? 380 : 400);
+      segment.routeDistance += Math.max(-maxStep, Math.min(maxStep, desiredStep));
+    }
+    const position = routePosition(chain.path, chain.boss, chain.lane,
+      segment.routeDistance);
     segment.x = position.x;
     segment.y = position.y;
   }
@@ -102,25 +97,26 @@ function reposition(chain) {
 
 function spawnChain(game, wave, lane = game.spawnCount) {
   const boss = !!wave.boss;
-  const count = wave.segments + (boss ? 0 : Math.floor(random(game) * 5));
+  const count = wave.segments;
   const chain = {
     id: game.nextId++, boss, dead: false, path: wave.path, lane, stage: game.wave,
-    tint: wave.tint, phase: random(game) * Math.PI * 2,
-    yOffset: (lane % 2 ? -25 : 0), travel: 275,
-    spacing: boss ? 25 : 23, speed: wave.speed * (lane % 3 === 2 ? 1.06 : 1),
-    slowFor: 0, breachLock: 0, breaches: 0, segments: [],
+    tint: wave.tint, travel: initialTravel(wave.path, boss),
+    spacing: boss ? 31 : 29, speed: wave.speed,
+    slowFor: 0, recoil: 0, segments: [],
   };
-  const chestIndex = 10 + Math.floor(random(game) * 7);
-  const carriesChest = boss || lane % 3 !== 2;
+  const chestIndices = boss ? [5, 15, 26, 38]
+    : [5, 18, 36, 60, 84, 110, 138, 168, 198];
   for (let index = 0; index < count; index++) {
     const head = index === 0;
-    const chest = carriesChest && index === chestIndex;
-    const hp = head ? 1 : Math.round(wave.hp * (chest
-      ? Math.max(0.25, game.chestMaxHp / 250) : 1) * (boss ? 1.15 : 1));
+    const chest = chestIndices.includes(index);
+    const depthHp = boss ? wave.hp * (1 + index / count)
+      : wave.hp * (1 + (index / 25) ** 3);
+    const hp = head ? 1 : Math.round(depthHp * (chest
+      ? Math.max(0.35, game.chestMaxHp / 200) : 1));
     chain.segments.push({
-      id: game.nextId++, index, x: 0, y: 0, hp, maxHp: hp,
+      id: game.nextId++, index, depth: index, x: 0, y: 0, hp, maxHp: hp,
       radius: head ? (boss ? 27 : 23) : chest ? 23 : boss ? 20 : 18,
-      chest, gold: chest && (boss || lane % 4 === 0),
+      chest, gold: chest && (boss || index === 60 || index === 138 || index === 198),
       poisonFor: 0, burnFor: 0, mark: 0,
     });
   }
@@ -162,12 +158,25 @@ export function hitSegment(game, chain, segment, amount, options = {}) {
   const position = chain.segments.indexOf(segment);
   const neighbors = [chain.segments[position - 1], chain.segments[position + 1]];
   chain.segments.splice(position, 1);
-  chain.travel -= chain.spacing * (1.75 + (game.upgrades.anchor || 0) * 0.42);
-  reposition(chain);
+  chain.segments.forEach((piece, index) => { piece.index = index; });
+  // 收掉一節時把鏈頭的目標位置退一節；後段的路線位置因此保持不變。
+  chain.travel -= chain.spacing;
+  chain.recoil = Math.max(chain.recoil || 0,
+    0.18 + (game.upgrades.anchor || 0) * 0.04);
+  if (!chain.boss) {
+    game.normalDestroyed++;
+    const nextWave = Math.min(5, 1 + Math.floor(game.normalDestroyed
+      / (game.normalTotal / 5)));
+    if (game.wave !== nextWave) { game.wave = nextWave; game.waveTime = 0; }
+  } else game.bossDestroyed++;
   game.score += (chain.boss ? 30 : 12) * (1 + (game.upgrades.bounty || 0));
   game.effects.push({ kind: 'burst', x: segment.x, y: segment.y, life: 0.43, maxLife: 0.43 });
   if (chain.segments.length === 1) {
     chain.dead = true;
+    if (!chain.boss) {
+      game.encounter = 'boss'; game.wave = WAVES.length;
+      game.spawnCount = 0; game.waveTime = 0;
+    }
     game.score += chain.boss ? 450 : 90;
     game.effects.push({ kind: 'burst', x: chain.segments[0].x,
       y: chain.segments[0].y, life: 0.8, maxLife: 0.8 });
@@ -188,22 +197,18 @@ function updateChains(game, dt) {
   for (let index = game.chains.length - 1; index >= 0; index--) {
     const chain = game.chains[index];
     if (chain.dead) { game.chains.splice(index, 1); continue; }
-    chain.breachLock = Math.max(0, chain.breachLock - dt);
-    chain.travel += chain.speed * (chain.slowFor > 0 ? 0.58 : 1) * dt;
+    if (chain.recoil > 0) {
+      chain.recoil = Math.max(0, chain.recoil - dt);
+    } else {
+      chain.travel += chain.speed * (chain.slowFor > 0 ? 0.58 : 1) * dt;
+    }
     chain.slowFor = Math.max(0, chain.slowFor - dt);
-    reposition(chain);
-    if (chain.segments[0].y >= RAIL_Y - 8 && chain.breachLock <= 0) {
-      chain.breaches++;
-      const damage = Math.max(4, (chain.boss ? 22 : 8 + chain.stage * 2)
-        - (game.upgrades.shield || 0) * 3);
-      game.core = Math.max(0, game.core - damage);
+    reposition(chain, dt);
+    if (chain.segments[0].y >= RAIL_Y - 8) {
       game.effects.push({ kind: 'breach', x: chain.segments[0].x,
         y: RAIL_Y, life: 0.55, maxLife: 0.55 });
-      chain.travel -= chain.boss ? 700 : 650;
-      chain.breachLock = 4;
-      reposition(chain);
-      if (!chain.boss && chain.breaches >= 3) chain.dead = true;
-      if (game.core <= 0) game.phase = 'defeat';
+      game.phase = 'defeat';
+      return;
     }
   }
 }
@@ -218,7 +223,7 @@ function fireCapsules(game, dt) {
     for (let shot = 0; shot < count + extra; shot++) {
       game.bullets.push({
         x: Math.max(10, Math.min(WIDTH - 10, game.player.x
-          + (shot - (count + extra - 1) / 2) * (25 + (game.upgrades.scatter || 0) * 9))),
+          + (shot - (count + extra - 1) / 2) * (8 + (game.upgrades.scatter || 0) * 4))),
         y: game.player.y - 29, damage: getShotDamage(game),
         pierce: game.upgrades.pierce || 0, hit: [],
         seeking: random(game) < (game.upgrades.magnet || 0) * 0.22,
@@ -230,7 +235,8 @@ function fireCapsules(game, dt) {
 
 function activeBodies(game) {
   return game.chains.flatMap(chain => chain.segments.slice(1)
-    .filter(segment => segment.hp > 0 && segment.y > 45 && segment.y < RAIL_Y)
+    .filter(segment => segment.hp > 0 && segment.y > 45 && segment.y < RAIL_Y
+      && segment.x > -segment.radius && segment.x < WIDTH + segment.radius)
     .map(segment => ({ chain, segment })));
 }
 
@@ -306,7 +312,7 @@ function updateBullets(game, dt) {
         Math.min(240 * dt, chest.x - bullet.x));
     }
     const previousY = bullet.y;
-    bullet.y -= (650 + (game.upgrades.needle || 0) * 85) * dt;
+    bullet.y -= (1250 + (game.upgrades.needle || 0) * 100) * dt;
     const crossed = activeBodies(game)
       .filter(({ segment }) => !bullet.hit.includes(segment.id)
         && Math.abs(bullet.x - segment.x) <= segment.radius + bullet.width
@@ -450,25 +456,17 @@ export function advance(game, dt, targetX = game.player.x) {
   dt = Math.max(0, Math.min(0.1, dt));
   game.player.x = Math.max(24, Math.min(WIDTH - 24, targetX));
   game.runTime += dt;
-  const waveIndex = currentWaveIndex(game.runTime);
-  if (game.wave !== waveIndex + 1) {
-    game.wave = waveIndex + 1;
-    game.spawnCount = 0;
-    game.nextSpawnAt = game.runTime;
-  }
-  const wave = configuredWave(game, waveIndex);
-  game.waveTime = game.runTime - wave.startsAt;
-  if (wave.boss) {
+  game.waveTime += dt;
+  if (game.encounter === 'boss') {
     if (game.spawnCount === 0) {
+      const wave = configuredWave(game, WAVES.length - 1);
       spawnChain(game, wave, 0);
       spawnChain(game, wave, 1);
       game.spawnCount = 2;
     }
-  } else if (game.runTime >= game.nextSpawnAt
-    && game.runTime < wave.startsAt + wave.duration) {
-    spawnChain(game, wave);
-    game.spawnCount++;
-    game.nextSpawnAt = game.runTime + wave.spawnGap;
+  } else if (game.spawnCount === 0) {
+    spawnChain(game, configuredWave(game, 0), 0);
+    game.spawnCount = 1;
   }
   updateChains(game, dt);
   if (game.phase !== 'playing') return;
@@ -490,8 +488,9 @@ export function advance(game, dt, targetX = game.player.x) {
       game.core = Math.min(game.maxCore, game.core + game.upgrades.secondwind * 2);
     }
   }
-  if (game.phase === 'playing' && game.runTime >= LAST_TIME
-    && game.bosses.length === 2 && game.bosses.every(boss => boss.dead)) {
+  if (game.phase === 'playing' && game.encounter === 'boss'
+    && game.spawnCount >= 2 && game.bosses.length > 0
+    && game.bosses.every(boss => boss.dead)) {
     game.phase = 'victory';
   }
 }

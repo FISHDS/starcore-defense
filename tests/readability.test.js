@@ -11,6 +11,11 @@ test('長鏈密集時只顯示少量彼此分開的血量，寶箱周圍保持�
 
   assert.ok(labels.length > 0);
   assert.ok(labels.length <= 10, `顯示了 ${labels.length} 個血量`);
+  assert.ok(labels.every(piece => piece.x >= 20 && piece.x <= 370),
+    '畫面外的身體佔用了血量標示名額');
+  assert.ok(visibleChests(game.chains).every(piece => piece.x >= 20 && piece.x <= 370));
+  assert.ok(new Set(labels.map(piece => piece.maxHp)).size >= 4,
+    '畫面上可見節點的血量仍看起來完全一樣');
   assert.ok(labels.every(piece => !piece.chest && piece.index > 0));
   assert.ok(labels.every(piece => Math.hypot(piece.x - chest.x, piece.y - chest.y) >= 48));
   for (let i = 0; i < labels.length; i++) {

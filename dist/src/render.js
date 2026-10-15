@@ -1,4 +1,5 @@
-import { WIDTH, HEIGHT } from './game.js';
+import { WIDTH, HEIGHT } from './game.js?v=20261015-singlechain';
+import { routePosition } from './routes.js?v=20261015-singlechain';
 
 const TAU = Math.PI * 2;
 const BACKGROUND_TONES = [
@@ -18,7 +19,8 @@ function compact(value) {
 // 只留下能辨認的戰場資訊；寶箱與數字不共用同一塊畫面。
 export function visibleChests(chains) {
   return chains.filter(chain => !chain.dead).flatMap(chain => chain.segments)
-    .filter(piece => piece.chest && piece.hp > 0 && piece.y >= 55 && piece.y <= 700)
+    .filter(piece => piece.chest && piece.hp > 0 && piece.y >= 55 && piece.y <= 700
+      && piece.x >= 20 && piece.x <= WIDTH - 20)
     .sort((a, b) => b.y - a.y);
 }
 
@@ -26,7 +28,8 @@ export function selectHealthLabels(chains) {
   const chests = visibleChests(chains);
   const candidates = chains.filter(chain => !chain.dead).flatMap(chain => chain.segments)
     .filter(piece => piece.index > 0 && !piece.chest && piece.hp > 0
-      && piece.y >= 35 && piece.y <= 710 && piece.index % 6 === 2)
+      && piece.y >= 35 && piece.y <= 710 && piece.x >= 20
+      && piece.x <= WIDTH - 20 && piece.index % 6 === 2)
     .sort((a, b) => b.y - a.y);
   const selected = [];
   for (const piece of candidates) {
@@ -34,7 +37,7 @@ export function selectHealthLabels(chains) {
     if (selected.some(label => Math.abs(label.x - piece.x) < 50
       && Math.abs(label.y - piece.y) < 28)) continue;
     selected.push(piece);
-    if (selected.length === 16) break;
+    if (selected.length === 10) break;
   }
   return selected;
 }
@@ -165,7 +168,8 @@ function guardian(ctx, x, y, time, invulnerable = 0) {
 }
 
 function segment(ctx, piece, chain, time) {
-  if (piece.hp <= 0 || piece.y < -35 || piece.y > HEIGHT + 30) return;
+  if (piece.hp <= 0 || piece.y < -35 || piece.y > HEIGHT + 30
+    || piece.x < -35 || piece.x > WIDTH + 35) return;
   const p = PALETTES[chain.tint] || PALETTES.violet;
   const head = piece.index === 0;
   const r = piece.radius;
@@ -239,7 +243,8 @@ function chain(ctx, item, time) {
   for (let i = item.segments.length - 1; i > 0; i--) {
     const a = item.segments[i];
     const b = item.segments[i - 1];
-    if (a.hp <= 0 || b.hp <= 0 || a.y < -20 || b.y < -20) continue;
+    if (a.hp <= 0 || b.hp <= 0 || a.y < -20 || b.y < -20
+      || (a.x < -35 && b.x < -35) || (a.x > WIDTH + 35 && b.x > WIDTH + 35)) continue;
     ctx.strokeStyle = p.edge;
     ctx.lineWidth = item.boss ? 31 : 27;
     ctx.beginPath();
@@ -352,30 +357,6 @@ function chestHighlights(ctx, chests, time) {
   ctx.restore();
 }
 
-function chestAimCue(ctx, game, chests) {
-  const target = chests[0];
-  if (!target) return;
-  const aligned = Math.abs(game.player.x - target.x) < 20;
-  const color = aligned ? '#ffe080' : '#8deffa';
-  ctx.save();
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillStyle = color;
-  ctx.shadowColor = color;
-  ctx.shadowBlur = aligned ? 18 : 9;
-  ctx.font = '900 11px system-ui';
-  ctx.fillText(aligned ? '已對準寶箱' : '寶箱位置',
-    Math.max(43, Math.min(WIDTH - 43, target.x)), 686);
-  ctx.beginPath();
-  ctx.moveTo(target.x, 697);
-  ctx.lineTo(target.x - 9, 709);
-  ctx.lineTo(target.x + 9, 709);
-  ctx.closePath();
-  ctx.fill();
-  ctx.shadowBlur = 0;
-  ctx.restore();
-}
-
 export function render(ctx, game, time) {
   ctx.clearRect(0, 0, WIDTH, HEIGHT);
   background(ctx, time, game?.wave || 1);
@@ -383,12 +364,13 @@ export function render(ctx, game, time) {
     const preview = {
       tint: 'violet',
       segments: Array.from({ length: 68 }, (_, index) => {
-        const distance = 640 - index * 23;
+        const position = routePosition('sine', false, 0, 750 - index * 29);
         return {
-          x: WIDTH / 2 + 143 * Math.sin(distance / 78 + 1.2),
-          y: 174 + distance * 0.21,
-          hp: index ? 105 : 1, maxHp: index ? 105 : 1,
-          chest: index === 14, gold: false, index, radius: index === 0 ? 23 : 18,
+          x: position.x,
+          y: position.y,
+          hp: index ? Math.round(50 * (1 + (index / 25) ** 3)) : 1,
+          maxHp: index ? Math.round(50 * (1 + (index / 25) ** 3)) : 1,
+          chest: index === 5 || index === 15, gold: false, index, radius: index === 0 ? 23 : 18,
         };
       }),
     };
@@ -422,7 +404,6 @@ export function render(ctx, game, time) {
   healthNumbers(ctx, selectHealthLabels(game.chains));
   damageNumbers(ctx, selectDamagePopups(game.popups, chests));
   rail(ctx, game.core / game.maxCore * 100, time);
-  chestAimCue(ctx, game, chests);
   chestHighlights(ctx, chests, time);
   guardian(ctx, game.player.x, game.player.y, time, game.invulnerable);
 }
