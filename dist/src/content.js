@@ -8,26 +8,7 @@ export const WAVES = [
   { name: '交錯雙母體', startsAt: 250, duration: 50, spawnGap: 0, segments: 42, hp: 14000, speed: 27, tint: 'coral', path: 'cross', boss: true },
 ];
 
-export const CHAPTERS = [
-  {
-    id: 1, name: '星核邊境', difficulty: '入門',
-    paths: ['sine', 'mirror', 'fork', 'weave', 'spiral', 'cross'],
-    tints: ['mint', 'violet', 'amber', 'coral', 'violet', 'coral'],
-    hpScale: 1, speedScale: 1, gapScale: 1,
-  },
-  {
-    id: 2, name: '斷層裂縫', difficulty: '進階',
-    paths: ['fork', 'weave', 'mirror', 'spiral', 'cross', 'cross'],
-    tints: ['amber', 'coral', 'violet', 'mint', 'amber', 'violet'],
-    hpScale: 1.22, speedScale: 1.06, gapScale: 0.92,
-  },
-  {
-    id: 3, name: '旋潮深域', difficulty: '嚴峻',
-    paths: ['spiral', 'cross', 'weave', 'fork', 'mirror', 'cross'],
-    tints: ['violet', 'coral', 'mint', 'amber', 'coral', 'violet'],
-    hpScale: 1.35, speedScale: 1.05, gapScale: 0.87,
-  },
-];
+export { CHAPTERS } from './campaign.js';
 
 export const UPGRADES = [
   { id: 'power', name: '高能藥丸', description: '藥丸傷害 +35%', icon: '✦', tone: 'coral', rarity: 'common', category: 'bullet', max: 5 },

@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>星核防線美術預覽</title>
+  <style>
+    *{box-sizing:border-box}html,body{margin:0;background:#081320;color:#f5fbef;font-family:system-ui,sans-serif}
+    main{max-width:780px;margin:auto;padding:12px}h1{font-size:18px;margin:0}p{font-size:12px;margin:4px 0 14px;color:#b4c8c8}
+    nav{display:flex;gap:5px;overflow:auto;margin-bottom:10px}button{padding:9px 10px;border:1px solid #688d91;border-radius:7px;background:#254c59;color:white;white-space:nowrap}
+    canvas{display:block;width:min(100%,390px);height:min(100dvh,844px);margin:auto;border-radius:13px;box-shadow:0 8px 30px #0008}
+    h2{font-size:16px;margin:24px 0 7px}img{display:block;width:min(100%,390px);height:auto;margin:auto;background:#244653;border-radius:13px}
+  </style>
+</head>
+<body>
+  <main>
+    <h1>星核防線 · 原創美術預覽</h1>
+    <p>建立日期：2026-10-15</p>
+    <nav id="zones"></nav>
+    <canvas id="preview" width="390" height="844"></canvas>
+    <h2>主畫面插畫</h2>
+    <img src="./menu-key-art.png" alt="守衛細胞面對藏有金色寶箱的長鏈怪物">
+  </main>
+  <script type="module">
+    import { drawBiome, drawGuardian, drawConnector, drawSegment, drawChestFocus,
+      drawSkillIcon, drawProjectile } from '../src/art.js';
+    const canvas = document.querySelector('#preview');
+    const ctx = canvas.getContext('2d');
+    if (new URLSearchParams(location.search).get('phone') === 'small') {
+      canvas.style.width = '360px';
+      canvas.style.height = '740px';
+    }
+    const names = ['培養皿邊陲', '黏液沼槽', '晶化裂隙', '熱毒導管', '深海母巢'];
+    let zone = 0;
+    let bossPreview = false;
+    const nav = document.querySelector('#zones');
+    names.forEach((name, index) => {
+      const button = document.createElement('button');
+      button.textContent = name;
+      button.addEventListener('click', () => { zone = index; bossPreview = false; });
+      nav.append(button);
+    });
+    const bossButton = document.createElement('button');
+    bossButton.textContent = '雙頭目';
+    bossButton.addEventListener('click', () => { zone = 4; bossPreview = true; });
+    nav.append(bossButton);
+    function frame(ms) {
+      const time = ms / 1000;
+      drawBiome(ctx, { zone, time });
+      const chains = bossPreview ? [0, 1].map(lane => ({
+        chain: { lane, boss: true },
+        pieces: Array.from({ length: 13 }, (_, index) => ({
+          index, depth: index, hp: 100, maxHp: 100, radius: index ? 20 : 27,
+          x: lane ? 320 - (index % 6) * 28 : 65 + (index % 6) * 28,
+          y: 350 + lane * 120 - Math.floor(index / 6) * 35,
+          chest: index === 5, gold: true,
+        })),
+      })) : [{ chain: { lane: 0, boss: false },
+        pieces: Array.from({ length: 42 }, (_, index) => ({
+          index, depth: index, hp: 100, maxHp: 100,
+          radius: index ? index === 15 || index === 31 ? 23 : 18 : 23,
+          x: 26 + (index % 12) * 31,
+          y: 430 - Math.floor(index / 12) * 36,
+          chest: index === 15 || index === 31, gold: index === 31,
+        })),
+      }];
+      for (const { chain, pieces } of chains) {
+        for (let i = pieces.length - 1; i > 0; i--) drawConnector(ctx,
+          { from: pieces[i], to: pieces[i - 1], zone, boss: chain.boss, lane: chain.lane, time });
+        for (let i = pieces.length - 1; i >= 0; i--) drawSegment(ctx,
+          { piece: pieces[i], chain, zone, time });
+        for (const piece of pieces.filter(item => item.chest)) drawChestFocus(ctx,
+          { x: piece.x, y: piece.y, gold: piece.gold, time, hpRatio: 0.7 });
+      }
+      drawGuardian(ctx, { x: 195, y: 735, time, state: 'fire' });
+      drawProjectile(ctx, { x: 195, y: 560, time });
+      const icons = ['power', 'rapid', 'multi', 'pierce', 'blast', 'orbit', 'arc', 'frost'];
+      icons.forEach((id, index) => drawSkillIcon(ctx,
+        { id, x: 29 + index * 47, y: 650, size: 42, time }));
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  </script>
+</body>
+</html>

@@ -5,7 +5,7 @@ import { routeLength, routePosition } from '../dist/src/routes.js';
 
 test('同一條長鏈後段達數萬血，玩家火力隨進度成長', () => {
   const game = startRun(12);
-  game.runTime = 250;
+  game.normalDestroyed = 150;
   advance(game, 0.05);
   const chain = game.chains[0];
   assert.ok(chain.segments.at(-1).maxHp > 20000);

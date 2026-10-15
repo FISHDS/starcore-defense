@@ -20,7 +20,7 @@ test('研究點只由結算取得，無課金或廣告欄位', () => {
   const result = awardRun(storage, game);
   assert.ok(result.gained > 0);
   assert.equal(readProfile(storage).dna, result.gained);
-  assert.deepEqual(Object.keys(readProfile(storage)).sort(), ['dna', 'fire', 'guard', 'scavenge']);
+  assert.ok(!Object.keys(readProfile(storage)).some(key => /ad|purchase|payment/i.test(key)));
 });
 
 test('可用研究點購買永久火力、耐久與寶箱能力', () => {

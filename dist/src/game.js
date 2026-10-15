@@ -1,10 +1,17 @@
-import { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID } from './content.js?v=20261015-singlechain';
-import { routeLength, routePosition } from './routes.js?v=20261015-singlechain';
+import { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID } from './content.js?v=20261015-campaign';
+import { routePosition } from './routes.js?v=20261015-campaign';
+import { assignTraits, chainSpeed, chestGuarded, steerBullet,
+  updateBossShields, updateHazards, updateWeakpoints } from './mechanics.js';
 
 export { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID };
 export const WIDTH = 390;
 export const HEIGHT = 844;
 const RAIL_Y = 744;
+
+function activeStage(game) {
+  return CHAPTERS[game.chapter === 26
+    ? 20 + ((game.endlessTier - 1) % 5) : game.chapter - 1];
+}
 
 export function startRun(seed = Date.now(), profile = {}, chapter = 1) {
   const profileLevels = {
@@ -12,17 +19,23 @@ export function startRun(seed = Date.now(), profile = {}, chapter = 1) {
     guard: Math.max(0, Math.min(4, profile.guard || 0)),
     scavenge: Math.max(0, Math.min(4, profile.scavenge || 0)),
   };
-  const maxCore = 120 + profileLevels.guard * 15;
+  const organs = Array.isArray(profile.equippedOrgans) ? profile.equippedOrgans : [];
+  const weapon = ['capsule', 'scatter', 'rail', 'prism'].includes(profile.equippedWeapon)
+    ? profile.equippedWeapon : 'capsule';
+  const maxCore = 120 + profileLevels.guard * 15 + (organs.includes('guard-membrane') ? 20 : 0);
   return {
     phase: 'playing', seed: seed >>> 0,
-    chapter: CHAPTERS.some(item => item.id === chapter) ? chapter : 1,
+    chapter: chapter === 26 || CHAPTERS.some(item => item.id === chapter) ? chapter : 1,
+    endlessTier: 1, equippedWeapon: weapon, equippedOrgans: organs.slice(0, 2), shotCount: 0,
     wave: 1, waveTime: 0, runTime: 0,
     encounter: 'normal', normalTotal: WAVES[0].segments - 1,
     normalDestroyed: 0, bossDestroyed: 0,
     spawnCount: 0, nextId: 1,
-    fireTimer: 0, specialTimers: {}, bossShotTimer: 0, regenTimer: 0,
+    fireTimer: 0, specialTimers: {}, bossShotTimer: 0, normalShotTimer: 0,
+    regenTimer: 0,
+    hazardTimer: 0, hazards: [],
     maxCore, core: maxCore, baseDamage: 40 + profileLevels.fire * 5,
-    chestMaxHp: 100 - profileLevels.scavenge * 8,
+    chestMaxHp: 100 - profileLevels.scavenge * 8 - (organs.includes('salvage') ? 15 : 0),
     profileLevels, score: 0, player: { x: WIDTH / 2, y: RAIL_Y },
     chains: [], chest: null, bullets: [], enemyBullets: [], effects: [], popups: [],
     boss: null, bosses: [], invulnerable: 0, upgrades: {}, choices: [],
@@ -36,12 +49,12 @@ function random(game) {
 }
 
 export function getShotDamage(game) {
-  const elapsed = Math.max(game.runTime, game.normalDestroyed * 1.2);
-  const natural = game.baseDamage * (1 + elapsed / 60) ** 1.65;
+  const depth = Math.max(0, game.normalDestroyed);
+  const natural = game.baseDamage * (1 + depth / 30) ** 1.6;
   const upgrades = 1 + (game.upgrades.power || 0) * 0.35
     + (game.upgrades.needle || 0) * 0.14 + (game.upgrades.rail || 0) * 0.13;
   const danger = 1 + (game.upgrades.fury || 0) * 0.5 * (1 - game.core / game.maxCore);
-  return Math.round(natural * upgrades * danger);
+  return Math.round(natural * upgrades * danger * (game.equippedWeapon === 'rail' ? 1.2 : 1));
 }
 
 export function getRunProgress(game) {
@@ -54,24 +67,22 @@ export function getRunProgress(game) {
 
 function configuredWave(game, index) {
   const source = WAVES[index];
-  const chapter = CHAPTERS[game.chapter - 1];
+  const chapter = activeStage(game);
   const path = chapter.paths[index];
-  const originalDistance = routeLength(source.path, !!source.boss, 0)
-    - initialTravel(source.path, !!source.boss);
-  const chapterDistance = routeLength(path, !!source.boss, 0)
-    - initialTravel(path, !!source.boss);
   return {
     ...source,
     path,
     tint: chapter.tints[index],
-    hp: Math.round(source.hp * chapter.hpScale),
-    speed: source.speed * chapter.speedScale * chapterDistance / originalDistance,
+    hp: Math.round(source.hp * chapter.hpScale * (game.chapter === 26
+      ? 1 + (game.endlessTier - 1) * 0.18 : 1)),
+    speed: source.speed * chapter.speedScale * (game.chapter === 26
+      ? 1 + (game.endlessTier - 1) * 0.04 : 1),
   };
 }
 
 function initialTravel(path, boss) {
   if (boss) return 500;
-  if (path === 'fork') return 950;
+  if (path === 'fork' || path === 'fork-right' || path === 'narrow') return 950;
   if (path === 'weave') return 1200;
   return 1700;
 }
@@ -96,12 +107,14 @@ function reposition(chain, dt = 0) {
 }
 
 function spawnChain(game, wave, lane = game.spawnCount) {
+  const stage = activeStage(game);
   const boss = !!wave.boss;
   const count = wave.segments;
   const chain = {
     id: game.nextId++, boss, dead: false, path: wave.path, lane, stage: game.wave,
     tint: wave.tint, travel: initialTravel(wave.path, boss),
-    spacing: boss ? 31 : 29, speed: wave.speed,
+    spacing: boss ? 31 : 29, speed: wave.speed, actualSpeed: wave.speed,
+    feedSpeed: 0,
     slowFor: 0, recoil: 0, segments: [],
   };
   const chestIndices = boss ? [5, 15, 26, 38]
@@ -112,13 +125,18 @@ function spawnChain(game, wave, lane = game.spawnCount) {
     const depthHp = boss ? wave.hp * (1 + index / count)
       : wave.hp * (1 + (index / 25) ** 3);
     const hp = head ? 1 : Math.round(depthHp * (chest
-      ? Math.max(0.35, game.chestMaxHp / 200) : 1));
-    chain.segments.push({
+      ? Math.max(0.35, game.chestMaxHp / 200)
+        * (stage.mechanics.includes('focus') ? 0.72 : 1) : 1));
+    const piece = {
       id: game.nextId++, index, depth: index, x: 0, y: 0, hp, maxHp: hp,
+      armorHp: 0,
       radius: head ? (boss ? 27 : 23) : chest ? 23 : boss ? 20 : 18,
-      chest, gold: chest && (boss || index === 60 || index === 138 || index === 198),
+      chest, gold: chest && (boss || index === 60 || index === 138 || index === 198
+        || (stage.mechanics.includes('goldRush') && [18, 84, 168].includes(index))),
       poisonFor: 0, burnFor: 0, mark: 0,
-    });
+    };
+    assignTraits(piece, stage, boss, chestIndices);
+    chain.segments.push(piece);
   }
   reposition(chain);
   game.chains.push(chain);
@@ -138,14 +156,20 @@ export function hitSegment(game, chain, segment, amount, options = {}) {
   if (game.phase !== 'playing' || chain.dead || !chain.segments.includes(segment)
     || segment.index === 0 || segment.hp <= 0
     || (segment.chest && (options.special || options.dot))) return false;
-  const guarded = chain.boss && game.bosses.some(other => other !== chain && !other.dead
+  const bossGuarded = chain.boss && game.bosses.some(other => other !== chain && !other.dead
     && other.segments.some(piece => piece.index > 0 && piece.y > segment.y
       && piece.y < segment.y + 76 && Math.abs(piece.x - segment.x) < 48));
+  const supplyGuarded = chestGuarded(chain, segment);
   const critical = !options.dot && random(game) < (game.upgrades.crit || 0) * 0.1;
   const damage = Math.max(1, Math.round(amount * (critical ? 2 : 1)
     * (segment.chest ? 1 + (game.upgrades.focus || 0) * 0.6 : 1)
-    * (1 + segment.mark) * (guarded ? 0.66 : 1)));
-  segment.hp -= damage;
+    * (1 + segment.mark) * (bossGuarded ? 0.66 : 1)
+    * (chain.shielded ? 0.25 : 1)
+    * (supplyGuarded ? 0.35 : 1)
+    * (segment.weakpoint ? (segment.weakOpen ? 1.6 : 0.28) : 1)));
+  const armor = Math.min(segment.armorHp || 0, damage);
+  if (armor > 0) segment.armorHp -= armor;
+  segment.hp -= damage - armor;
   addPopup(game, segment.x, segment.y - 12, damage, critical || segment.chest);
   game.effects.push({ kind: 'hit', x: segment.x, y: segment.y, life: 0.2, maxLife: 0.2 });
   if (!options.dot) {
@@ -158,11 +182,13 @@ export function hitSegment(game, chain, segment, amount, options = {}) {
   const position = chain.segments.indexOf(segment);
   const neighbors = [chain.segments[position - 1], chain.segments[position + 1]];
   chain.segments.splice(position, 1);
+  chain.actualSpeed = chainSpeed(chain);
   chain.segments.forEach((piece, index) => { piece.index = index; });
   // 收掉一節時把鏈頭的目標位置退一節；後段的路線位置因此保持不變。
   chain.travel -= chain.spacing;
   chain.recoil = Math.max(chain.recoil || 0,
-    0.18 + (game.upgrades.anchor || 0) * 0.04);
+    0.18 + (game.upgrades.anchor || 0) * 0.04
+      + (game.equippedOrgans.includes('anchor-organ') ? 0.05 : 0));
   if (!chain.boss) {
     game.normalDestroyed++;
     const nextWave = Math.min(5, 1 + Math.floor(game.normalDestroyed
@@ -197,11 +223,16 @@ function updateChains(game, dt) {
   for (let index = game.chains.length - 1; index >= 0; index--) {
     const chain = game.chains[index];
     if (chain.dead) { game.chains.splice(index, 1); continue; }
-    if (chain.recoil > 0) {
-      chain.recoil = Math.max(0, chain.recoil - dt);
-    } else {
-      chain.travel += chain.speed * (chain.slowFor > 0 ? 0.58 : 1) * dt;
-    }
+    chain.recoil = Math.max(0, chain.recoil - dt);
+    const visible = chain.segments.filter(piece => piece.index > 0
+      && piece.y > 40 && piece.y < 730 && piece.x > -20 && piece.x < 410).length;
+    const feedTarget = !chain.boss && chain.segments.length > 30
+      && chain.segments[0].y < 500
+      ? visible < 8 ? 165 : visible < 14 ? 75 : 0 : 0;
+    chain.feedSpeed = (chain.feedSpeed || 0)
+      + (feedTarget - (chain.feedSpeed || 0)) * Math.min(1, dt * 2);
+    chain.actualSpeed = chainSpeed(chain) + chain.feedSpeed;
+    chain.travel += chain.actualSpeed * (chain.slowFor > 0 ? 0.58 : 1) * dt;
     chain.slowFor = Math.max(0, chain.slowFor - dt);
     reposition(chain, dt);
     if (chain.segments[0].y >= RAIL_Y - 8) {
@@ -215,17 +246,21 @@ function updateChains(game, dt) {
 
 function fireCapsules(game, dt) {
   game.fireTimer += dt;
-  const interval = 0.19 / (1 + (game.upgrades.rapid || 0) * 0.18);
+  const interval = 0.19 / (1 + (game.upgrades.rapid || 0) * 0.18)
+    * (game.equippedOrgans.includes('tempo') ? 0.9 : 1);
   while (game.fireTimer >= interval) {
     game.fireTimer -= interval;
-    const count = 1 + (game.upgrades.multi || 0);
+    game.shotCount++;
+    const count = 1 + (game.upgrades.multi || 0)
+      + (game.equippedWeapon === 'scatter' ? 1 : 0);
     const extra = random(game) < (game.upgrades.echo || 0) * 0.22 ? 1 : 0;
     for (let shot = 0; shot < count + extra; shot++) {
       game.bullets.push({
         x: Math.max(10, Math.min(WIDTH - 10, game.player.x
           + (shot - (count + extra - 1) / 2) * (8 + (game.upgrades.scatter || 0) * 4))),
         y: game.player.y - 29, damage: getShotDamage(game),
-        pierce: game.upgrades.pierce || 0, hit: [],
+        pierce: (game.upgrades.pierce || 0)
+          + (game.equippedWeapon === 'prism' && game.shotCount % 3 === 0 ? 1 : 0), hit: [],
         seeking: random(game) < (game.upgrades.magnet || 0) * 0.22,
         width: 4 + (game.upgrades.rail || 0) * 3,
       });
@@ -305,6 +340,7 @@ function fireSpecials(game, dt) {
 function updateBullets(game, dt) {
   for (let i = game.bullets.length - 1; i >= 0; i--) {
     const bullet = game.bullets[i];
+    steerBullet(game, bullet, dt);
     if (bullet.seeking) {
       const chest = activeBodies(game).filter(item => item.segment.chest)
         .sort((a, b) => b.segment.y - a.segment.y)[0]?.segment;
@@ -386,10 +422,28 @@ function updateStatuses(game, dt) {
 }
 
 function updateBossShots(game, dt) {
+  const normal = game.chains.find(chain => !chain.boss && !chain.dead);
+  if (normal) {
+    game.normalShotTimer += dt;
+    const interval = 11;
+    if (game.normalShotTimer >= interval) {
+      game.normalShotTimer -= interval;
+      const source = normal.segments.filter(piece => piece.index > 0
+        && piece.y > 150 && piece.y < 550).sort((a, b) => b.y - a.y)[0];
+      if (source) {
+        const vy = 210;
+        const flight = Math.max(0.7, (game.player.y - source.y) / vy);
+        game.enemyBullets.push({ kind: 'spore', x: source.x, y: source.y + 15,
+          vx: (game.player.x - source.x) / flight, vy, radius: 6, damage: 7 });
+      }
+    }
+  }
   if (!game.bosses.some(boss => !boss.dead)) return;
   game.bossShotTimer += dt;
-  while (game.bossShotTimer >= 2.2) {
-    game.bossShotTimer -= 2.2;
+  const bossInterval = game.chapter <= 5 ? 3.1
+    : game.chapter <= 10 ? 2.7 : 2.2;
+  while (game.bossShotTimer >= bossInterval) {
+    game.bossShotTimer -= bossInterval;
     for (const boss of game.bosses) {
       if (boss.dead || boss.segments[0].y < 120) continue;
       const head = boss.segments[0];
@@ -410,7 +464,8 @@ function updateEnemyBullets(game, dt) {
     if (Math.abs(shot.x - game.player.x) < shot.radius + 15
       && Math.abs(shot.y - game.player.y) < shot.radius + 15 && game.invulnerable === 0) {
       game.enemyBullets.splice(i, 1);
-      game.core = Math.max(0, game.core - Math.max(3, 9 - (game.upgrades.shield || 0) * 2));
+      game.core = Math.max(0, game.core - Math.max(2,
+        (shot.damage || 9) - (game.upgrades.shield || 0) * 2));
       game.invulnerable = 0.7;
       if (game.core <= 0) game.phase = 'defeat';
     } else if (shot.y > HEIGHT + 20 || shot.x < -30 || shot.x > WIDTH + 30) {
@@ -470,6 +525,11 @@ export function advance(game, dt, targetX = game.player.x) {
   }
   updateChains(game, dt);
   if (game.phase !== 'playing') return;
+  updateWeakpoints(game);
+  updateBossShields(game, activeStage(game).bossMode);
+  updateHazards(game, dt, activeStage(game).mechanics.includes('hazard')
+    || (game.encounter === 'boss' && ['hazard', 'final'].includes(activeStage(game).bossMode)));
+  if (game.phase !== 'playing') return;
   fireCapsules(game, dt);
   fireSpecials(game, dt);
   if (game.phase !== 'playing') return;
@@ -491,7 +551,20 @@ export function advance(game, dt, targetX = game.player.x) {
   if (game.phase === 'playing' && game.encounter === 'boss'
     && game.spawnCount >= 2 && game.bosses.length > 0
     && game.bosses.every(boss => boss.dead)) {
-    game.phase = 'victory';
+    if (game.chapter === 26) {
+      game.endlessTier++;
+      game.encounter = 'normal';
+      game.normalDestroyed = 0;
+      game.bossDestroyed = 0;
+      game.spawnCount = 0;
+      game.wave = 1;
+      game.waveTime = 0;
+      game.chains = [];
+      game.bosses = [];
+      game.boss = null;
+      game.hazards = [];
+      game.hazardTimer = 0;
+    } else game.phase = 'victory';
   }
 }
 

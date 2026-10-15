@@ -1,7 +1,7 @@
 // 每條長鏈沿同一條有實際長度的折返路線前進，身體共用該路線。
 const ROWS = 9;
-const TOP = 128;
-const ROW_STEP = 68;
+const TOP = 162;
+const ROW_STEP = 64;
 const routeCache = new Map();
 
 function rowBounds(path, row, boss, lane) {
@@ -11,6 +11,8 @@ function rowBounds(path, row, boss, lane) {
   }
   switch (path) {
     case 'fork': return row < 4 ? [35, 165] : [225, 355];
+    case 'fork-right': return row < 4 ? [225, 355] : [35, 165];
+    case 'narrow': return row < 4 ? [50, 185] : [205, 340];
     case 'weave': return Math.floor(row / 2) % 2 ? [215, 355] : [35, 175];
     case 'spiral': return [35 + Math.min(row % 5, 4 - row % 5) * 25,
       355 - Math.min((row + 2) % 5, 4 - (row + 2) % 5) * 22];

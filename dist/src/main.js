@@ -1,7 +1,9 @@
-import { advance, CHAPTERS, chooseUpgrade, getRunProgress, HEIGHT, rerollUpgrades, startRun, UPGRADE_BY_ID, WAVES, WIDTH } from './game.js?v=20261015-singlechain';
+import { advance, CHAPTERS, chooseUpgrade, getRunProgress, HEIGHT, rerollUpgrades, startRun, UPGRADE_BY_ID, WAVES, WIDTH } from './game.js?v=20261015-campaign';
 import { pointerToWorldX } from './input.js';
-import { render } from './render.js?v=20261015-singlechain';
-import { awardRun, buyResearch, clearCheckpoint, loadCheckpoint, readProfile, researchCost, saveCheckpoint, updateBest } from './storage.js?v=20261015-singlechain';
+import { render } from './render.js?v=20261015-campaign';
+import { awardRun, buyResearch, buyItem, equipItem, clearCheckpoint, loadCheckpoint, readProfile, researchCost, saveCheckpoint, updateBest } from './storage.js?v=20261015-campaign';
+import { ORGANS, WEAPONS } from './meta.js';
+import { drawSkillIcon } from './art.js';
 
 const $ = id => document.getElementById(id);
 const canvas = $('arena');
@@ -14,6 +16,8 @@ const upgradeScreen = $('upgrade-screen');
 const pauseScreen = $('pause-screen');
 const resultScreen = $('result-screen');
 const researchScreen = $('research-screen');
+const stageScreen = $('stage-screen');
+const loadoutScreen = $('loadout-screen');
 
 const fallbackData = new Map();
 const fallbackStorage = {
@@ -31,8 +35,11 @@ let targetX = WIDTH / 2;
 let lastTime = 0;
 let handledResult = false;
 let showResearch = false;
+let showStages = false;
+let showLoadout = false;
 let lastSavedAt = 0;
-let selectedChapter = 1;
+let selectedChapter = readProfile(storage).unlockedStage;
+let selectedZone = Math.floor((selectedChapter - 1) / 5);
 const keys = { left: false, right: false };
 
 function resize() {
@@ -47,8 +54,14 @@ function refreshHud() {
   if (!game) return;
   hint.hidden = game.phase !== 'playing' || paused || game.wave > 1 || game.waveTime > 5;
   const wave = WAVES[game.wave - 1];
-  $('wave-number').textContent = `第${game.chapter}關`;
-  $('wave-name').textContent = `${CHAPTERS[game.chapter - 1].name} · ${wave.name}`;
+  const activeChapter = game.chapter === 26 ? CHAPTERS[20 + (game.endlessTier - 1) % 5]
+    : CHAPTERS[game.chapter - 1];
+  hint.textContent = game.chapter === 26
+    ? `第 ${game.endlessTier} 輪 · ${activeChapter.summary}`
+    : `${activeChapter.summary} · 滑動瞄準寶箱`;
+  $('wave-number').textContent = game.chapter === 26
+    ? `無盡 ${game.endlessTier}` : `第${game.chapter}關`;
+  $('wave-name').textContent = `${game.chapter === 26 ? '無盡挑戰' : CHAPTERS[game.chapter - 1].name} · ${wave.name}`;
   $('core-value').textContent = String(Math.ceil(game.core));
   $('score-value').textContent = game.score.toLocaleString('zh-TW');
   const progress = getRunProgress(game);
@@ -56,7 +69,9 @@ function refreshHud() {
   $('core-progress').style.width = `${game.core / game.maxCore * 100}%`;
   const nearBoss = game.bosses.some(boss => !boss.dead && boss.segments[0].y > 540);
   $('boss-warning').hidden = game.phase !== 'playing' || !nearBoss;
-  $('boss-warning').textContent = '雙母體逼近 · 瞄準身體讓頭部後退';
+  $('boss-warning').textContent = activeChapter.bossMode === 'final'
+    ? '雙母體輪流亮起護盾 · 改打沒發光的長鏈'
+    : '雙母體逼近 · 瞄準身體讓頭部後退';
 }
 
 function refreshResearch() {
@@ -69,6 +84,88 @@ function refreshResearch() {
     $(`research-${id}-level`).textContent = `等級 ${level} / 4`;
     $(`research-${id}-cost`).textContent = level >= 4 ? '已滿' : `◆ ${cost}`;
     researchScreen.querySelector(`[data-research="${id}"]`).disabled = level >= 4 || profile.dna < cost;
+  }
+}
+
+function refreshStages() {
+  const profile = readProfile(storage);
+  $('selected-stage').textContent = selectedChapter === 26
+    ? `無盡挑戰 · 最佳第 ${profile.bestEndless} 輪`
+    : `第 ${selectedChapter} 關 · ${CHAPTERS[selectedChapter - 1].name}`;
+  const zones = $('stage-zones');
+  zones.replaceChildren();
+  for (let zone = 0; zone < 5; zone++) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `zone-tab ${zone === selectedZone ? 'selected' : ''}`;
+    button.textContent = `${zone + 1}區`;
+    button.addEventListener('click', () => { selectedZone = zone; refreshStages(); });
+    zones.append(button);
+  }
+  const stages = CHAPTERS.filter(stage => stage.zone === selectedZone);
+  $('stage-summary').textContent = `${stages[0].region} · 已通關 ${profile.cleared.length} / 25`;
+  const grid = $('stage-grid');
+  grid.replaceChildren();
+  for (const stage of stages) {
+    const unlocked = stage.id <= profile.unlockedStage;
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `stage-tile ${selectedChapter === stage.id ? 'selected' : ''}`;
+    button.disabled = !unlocked;
+    const number = document.createElement('strong');
+    number.textContent = unlocked ? String(stage.id).padStart(2, '0') : '🔒';
+    const name = document.createElement('span');
+    name.textContent = stage.name;
+    const state = document.createElement('small');
+    state.textContent = profile.cleared.includes(stage.id) ? '已通關' : unlocked ? stage.difficulty : '未解鎖';
+    const detail = document.createElement('em');
+    detail.textContent = stage.summary;
+    button.append(number, name, detail, state);
+    button.addEventListener('click', () => {
+      selectedChapter = stage.id;
+      showStages = false;
+      syncScreen();
+    });
+    grid.append(button);
+  }
+  $('endless-button').hidden = !profile.endlessUnlocked;
+  $('endless-button').onclick = () => {
+    selectedChapter = 26;
+    showStages = false;
+    syncScreen();
+  };
+}
+
+function refreshLoadout() {
+  const profile = readProfile(storage);
+  $('loadout-dna').textContent = String(profile.dna);
+  for (const [kind, items, holder] of [
+    ['weapon', WEAPONS, $('weapon-list')], ['organ', ORGANS, $('organ-list')],
+  ]) {
+    holder.replaceChildren();
+    for (const item of items) {
+      const owned = (kind === 'weapon' ? profile.weapons : profile.organs).includes(item.id);
+      const equipped = kind === 'weapon' ? profile.equippedWeapon === item.id
+        : profile.equippedOrgans.includes(item.id);
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = `loadout-item ${equipped ? 'equipped' : ''}`;
+      button.disabled = !owned && profile.dna < item.cost;
+      const body = document.createElement('span');
+      const name = document.createElement('strong'); name.textContent = item.name;
+      const desc = document.createElement('small'); desc.textContent = item.description;
+      body.append(name, desc);
+      const action = document.createElement('b');
+      action.textContent = equipped ? '已裝備' : owned ? '裝備' : `◆ ${item.cost}`;
+      button.append(body, action);
+      button.addEventListener('click', () => {
+        if (owned) equipItem(storage, kind, item.id);
+        else buyItem(storage, item.id);
+        refreshLoadout();
+        refreshResearch();
+      });
+      holder.append(button);
+    }
   }
 }
 
@@ -85,8 +182,11 @@ function makeCards() {
     button.type = 'button';
     button.className = `upgrade-card rarity-${item.rarity} tone-${item.tone}`;
     button.setAttribute('aria-label', `${item.name}：${item.description}`);
-    const icon = document.createElement('span');
-    icon.className = 'upgrade-icon'; icon.textContent = item.icon;
+    const icon = document.createElement('canvas');
+    icon.className = 'upgrade-icon'; icon.width = 112; icon.height = 112;
+    const iconContext = icon.getContext('2d');
+    iconContext.scale(2, 2);
+    drawSkillIcon(iconContext, { id, x: 28, y: 28, size: 52 });
     const rarity = document.createElement('span');
     rarity.className = 'upgrade-rarity'; rarity.textContent = rarityName[item.rarity];
     const text = document.createElement('span');
@@ -126,18 +226,29 @@ function setResult() {
   resultScreen.classList.toggle('is-defeat', !won);
   $('result-kicker').textContent = won ? 'MISSION COMPLETE' : 'SIGNAL LOST';
   $('result-emblem').textContent = won ? '✦' : '◇';
-  $('result-title').textContent = won ? '星核守住了' : '防線失守';
-  $('result-copy').textContent = won ? '你讓這片星空繼續發光。' : '重新調整火力，下一次守住它。';
+  $('result-title').textContent = won ? '防線守住了' : '防線失守';
+  $('result-copy').textContent = won ? '這片培養區暫時安全了。' : '調整武器與器官，下一次守住它。';
   $('final-score').textContent = game.score.toLocaleString('zh-TW');
   $('best-score').textContent = best.toLocaleString('zh-TW');
   $('dna-gained').textContent = `+${reward.gained}`;
+  if (reward.firstClear) {
+    $('result-copy').textContent = game.chapter === 25
+      ? '無盡挑戰已解鎖。準備迎接不斷變強的母巢。'
+      : `已解鎖第 ${reward.profile.unlockedStage} 關。下一關有新的路線與機制。`;
+    selectedChapter = game.chapter === 25 ? 26 : reward.profile.unlockedStage;
+    selectedZone = Math.min(4, Math.floor((selectedChapter - 1) / 5));
+    $('retry-button').firstElementChild.textContent = '挑戰下一關';
+  } else $('retry-button').firstElementChild.textContent = '再戰一次';
   refreshResearch();
+  refreshStages();
 }
 
 function syncScreen() {
-  menu.hidden = !!game || showResearch;
+  menu.hidden = !!game || showResearch || showStages || showLoadout;
   $('boss-warning').hidden = !game || game.phase !== 'playing';
   researchScreen.hidden = !showResearch;
+  stageScreen.hidden = !showStages;
+  loadoutScreen.hidden = !showLoadout;
   hud.hidden = !game;
   hint.hidden = !game || game.phase !== 'playing' || paused;
   upgradeScreen.hidden = !game || game.phase !== 'upgrade';
@@ -148,11 +259,16 @@ function syncScreen() {
   if (game && ['victory', 'defeat'].includes(game.phase)) setResult();
   refreshHud();
   refreshResearch();
+  if (!game) refreshStages();
+  if (showLoadout) refreshLoadout();
 }
 
 function beginNew() {
+  const profile = readProfile(storage);
+  if (selectedChapter === 26 ? !profile.endlessUnlocked
+    : selectedChapter > profile.unlockedStage) return;
   clearCheckpoint(storage);
-  game = startRun(Math.floor(Math.random() * 0xffffffff), readProfile(storage), selectedChapter);
+  game = startRun(Math.floor(Math.random() * 0xffffffff), profile, selectedChapter);
   paused = false;
   handledResult = false;
   targetX = game.player.x;
@@ -182,16 +298,10 @@ $('reroll-button').addEventListener('click', () => {
 });
 $('research-button').addEventListener('click', () => { showResearch = true; syncScreen(); });
 $('research-back').addEventListener('click', () => { showResearch = false; syncScreen(); });
-for (const button of document.querySelectorAll('[data-chapter]')) {
-  button.addEventListener('click', () => {
-    selectedChapter = Number(button.dataset.chapter);
-    for (const option of document.querySelectorAll('[data-chapter]')) {
-      const active = Number(option.dataset.chapter) === selectedChapter;
-      option.classList.toggle('selected', active);
-      option.setAttribute('aria-pressed', String(active));
-    }
-  });
-}
+$('stage-button').addEventListener('click', () => { showStages = true; syncScreen(); });
+$('stage-back').addEventListener('click', () => { showStages = false; syncScreen(); });
+$('loadout-button').addEventListener('click', () => { showLoadout = true; syncScreen(); });
+$('loadout-back').addEventListener('click', () => { showLoadout = false; syncScreen(); });
 for (const button of researchScreen.querySelectorAll('[data-research]')) {
   button.addEventListener('click', () => {
     buyResearch(storage, button.dataset.research);

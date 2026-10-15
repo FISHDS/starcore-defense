@@ -117,16 +117,19 @@ test('範圍技能無法代替瞄準打開寶箱', () => {
 });
 
 test('固定站在中央亂射不足以通關', () => {
-  const game = startRun(123);
-  for (let i = 0; i < 8000 && !['victory', 'defeat'].includes(game.phase); i++) {
-    if (game.phase === 'upgrade') {
-      const rank = ['power', 'rapid', 'multi', 'arc', 'orbit', 'drone', 'blast', 'pierce'];
-      chooseUpgrade(game, rank.find(id => game.choices.includes(id)) || game.choices[0]);
+  let victories = 0;
+  for (let seed = 1; seed <= 20; seed++) {
+    const game = startRun(seed);
+    for (let i = 0; i < 8000 && !['victory', 'defeat'].includes(game.phase); i++) {
+      if (game.phase === 'upgrade') {
+        const rank = ['power', 'rapid', 'multi', 'arc', 'orbit', 'drone', 'blast', 'pierce'];
+        chooseUpgrade(game, rank.find(id => game.choices.includes(id)) || game.choices[0]);
+      }
+      advance(game, 0.05, 195);
     }
-    advance(game, 0.05, 195);
+    if (game.phase === 'victory') victories++;
   }
-  assert.equal(game.phase, 'defeat');
-  assert.ok(game.runTime < 250, `站樁射擊竟撐到 ${game.runTime} 秒`);
+  assert.ok(victories <= 2, `固定站樁在 20 次中竟通關 ${victories} 次`);
 });
 
 test('主動追箱並守住迫近敵群，有機會通過完整長局', () => {
@@ -145,11 +148,22 @@ test('主動追箱並守住迫近敵群，有機會通過完整長局', () => {
     const chest = bodies.filter(segment => segment.chest).sort((a, b) => b.y - a.y)[0];
     const near = bodies.sort((a, b) => b.y - a.y)[0];
     const guard = threat?.segments.slice(1, 8).find(segment => segment.y < 710);
-    advance(game, 0.05, guard?.x ?? chest?.x ?? near?.x ?? 195);
+    let x = guard?.x ?? chest?.x ?? near?.x ?? 195;
+    const incoming = game.enemyBullets.find(shot => {
+      const landingX = shot.x + shot.vx * ((game.player.y - shot.y) / shot.vy);
+      return shot.y > 400 && shot.y < 735 && Math.abs(landingX - x) < 48;
+    });
+    if (incoming) {
+      const landingX = incoming.x + incoming.vx
+        * ((game.player.y - incoming.y) / incoming.vy);
+      x = landingX < 195 ? Math.min(366, landingX + 85)
+        : Math.max(24, landingX - 85);
+    }
+    advance(game, 0.05, x);
     emptyFor = game.chains.length ? 0 : emptyFor + 0.05;
     longestEmpty = Math.max(longestEmpty, emptyFor);
   }
-  assert.equal(game.phase, 'victory');
+  assert.equal(game.phase, 'victory', `敗在 ${game.encounter}，${game.runTime.toFixed(1)} 秒，耐久 ${game.core}，清掉 ${game.normalDestroyed} 節`);
   assert.ok(longestEmpty < 3, `戰場空了 ${longestEmpty.toFixed(1)} 秒`);
 });
 

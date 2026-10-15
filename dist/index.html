@@ -6,8 +6,9 @@
   <meta name="theme-color" content="#061126">
   <meta name="description" content="星核防線：原創手機直式長鏈防線遊戲。擊破身體讓頭部後退，打開藏在敵群中的寶箱進化武器。">
   <title>星核防線 · Starcore Defense</title>
+  <link rel="icon" type="image/svg+xml" href="./assets/icon.svg">
   <link rel="stylesheet" href="./style.css">
-  <script type="module" src="./src/main.js?v=20261015-singlechain"></script>
+  <script type="module" src="./src/main.js?v=20261015-campaign"></script>
 </head>
 <body>
   <main class="game-shell" aria-label="星核防線遊戲">
@@ -32,25 +33,38 @@
     <section id="menu" class="screen menu-screen" aria-labelledby="game-title">
       <div class="menu-top"><span class="eyebrow">ORIGINAL ARCADE · 001</span><span class="tiny-diamond">✧</span></div>
       <div class="menu-hero">
-        <div class="brand-orbit"><span class="brand-core">✦</span></div>
+        <img class="menu-art" src="./assets/menu-key-art.png" alt="守衛細胞對抗帶著寶箱的連綿怪物">
         <p class="kicker">守住最後一道光</p>
         <h1 id="game-title">星核<span>防線</span></h1>
         <p class="english-title">STARCORE DEFENSE</p>
         <p class="menu-copy">一條長鏈從畫面外持續進場，越後段越強。<br>擊破身體讓頭部退後，打開寶箱進化武器。<br>清空長鏈後迎戰雙頭目；頭部碰底線即敗。</p>
       </div>
       <div class="menu-actions">
-        <div class="chapter-picker" role="group" aria-label="選擇關卡">
-          <button class="chapter-option selected" data-chapter="1" type="button" aria-pressed="true"><strong>星核邊境</strong><small>入門</small></button>
-          <button class="chapter-option" data-chapter="2" type="button" aria-pressed="false"><strong>斷層裂縫</strong><small>進階</small></button>
-          <button class="chapter-option" data-chapter="3" type="button" aria-pressed="false"><strong>旋潮深域</strong><small>嚴峻</small></button>
-        </div>
+        <button id="stage-button" class="stage-shortcut" type="button"><span>目前關卡 <strong id="selected-stage">第 1 關 · 孢子初潮</strong></span><span>選擇關卡 ›</span></button>
         <button id="start-button" class="primary-button" type="button"><span>開始作戰</span><span aria-hidden="true">↗</span></button>
         <div class="menu-secondary-row">
           <button id="continue-button" class="secondary-button" type="button" hidden>繼續進度</button>
           <button id="research-button" class="secondary-button" type="button">細胞研究 <span id="menu-dna">◆ 0</span></button>
+          <button id="loadout-button" class="secondary-button" type="button">戰前裝備</button>
         </div>
         <p class="menu-foot">單人 · 無課金 · 無廣告</p>
       </div>
+    </section>
+
+    <section id="stage-screen" class="screen collection-screen" aria-labelledby="stage-title" hidden>
+      <div class="collection-head"><span class="eyebrow">25 STAGES · 5 BIOMES</span><h2 id="stage-title">選擇關卡</h2><p>通過前一關才能解鎖下一關；已通過的關卡可重玩。</p></div>
+      <div id="stage-zones" class="stage-zones" role="group" aria-label="選擇區域"></div>
+      <div id="stage-summary" class="stage-summary"></div>
+      <div id="stage-grid" class="stage-grid"></div>
+      <button id="endless-button" class="endless-button" type="button" hidden>無盡挑戰 · 完成第 25 關解鎖</button>
+      <button id="stage-back" class="primary-button" type="button">返回主畫面 <span aria-hidden="true">↗</span></button>
+    </section>
+
+    <section id="loadout-screen" class="screen collection-screen" aria-labelledby="loadout-title" hidden>
+      <div class="collection-head"><span class="eyebrow">PERMANENT GROWTH</span><h2 id="loadout-title">戰前裝備</h2><p>研究點可解鎖新裝備；通過每區最後一關也會獲得獎勵。可裝備一把武器和兩個器官。</p></div>
+      <div class="dna-balance">研究點 <strong id="loadout-dna">0</strong></div>
+      <div class="loadout-scroll"><h3>武器</h3><div id="weapon-list" class="loadout-list"></div><h3>器官</h3><div id="organ-list" class="loadout-list"></div></div>
+      <button id="loadout-back" class="primary-button" type="button">返回主畫面 <span aria-hidden="true">↗</span></button>
     </section>
 
     <section id="upgrade-screen" class="screen upgrade-screen" aria-labelledby="upgrade-title" hidden>

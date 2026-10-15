@@ -1,20 +1,44 @@
-import { startRun, WAVES, UPGRADE_BY_ID } from './game.js?v=20261015-singlechain';
+import { startRun, WAVES, UPGRADE_BY_ID } from './game.js?v=20261015-campaign';
+import { META_BY_ID, MILESTONE_REWARDS, ORGANS, WEAPONS } from './meta.js';
 
 const CHECKPOINT = 'starcore.checkpoint.v5';
 const BEST = 'starcore.best.v1';
-const PROFILE = 'starcore.profile.v1';
+const PROFILE = 'starcore.profile.v2';
+const LEGACY_PROFILE = 'starcore.profile.v1';
 const RESEARCH = ['fire', 'guard', 'scavenge'];
 
 export function readProfile(storage) {
-  const empty = { dna: 0, fire: 0, guard: 0, scavenge: 0 };
+  const empty = {
+    dna: 0, fire: 0, guard: 0, scavenge: 0,
+    unlockedStage: 1, cleared: [], endlessUnlocked: false,
+    weapons: ['capsule'], organs: [], equippedWeapon: 'capsule',
+    equippedOrgans: [], bestEndless: 0,
+  };
   try {
-    const raw = JSON.parse(storage.getItem(PROFILE) || 'null');
+    const raw = JSON.parse(storage.getItem(PROFILE)
+      || storage.getItem(LEGACY_PROFILE) || 'null');
     if (!raw || typeof raw !== 'object') return empty;
     const result = { ...empty };
     result.dna = Number.isInteger(raw.dna) ? Math.max(0, Math.min(999999, raw.dna)) : 0;
     for (const id of RESEARCH) {
       result[id] = Number.isInteger(raw[id]) ? Math.max(0, Math.min(4, raw[id])) : 0;
     }
+    result.unlockedStage = Number.isInteger(raw.unlockedStage)
+      ? Math.max(1, Math.min(25, raw.unlockedStage)) : 1;
+    result.cleared = Array.isArray(raw.cleared) ? [...new Set(raw.cleared.filter(id =>
+      Number.isInteger(id) && id >= 1 && id <= 25))] : [];
+    result.endlessUnlocked = raw.endlessUnlocked === true || result.cleared.includes(25);
+    result.weapons = Array.isArray(raw.weapons)
+      ? [...new Set(['capsule', ...raw.weapons.filter(id => WEAPONS.some(item => item.id === id))])]
+      : ['capsule'];
+    result.organs = Array.isArray(raw.organs)
+      ? [...new Set(raw.organs.filter(id => ORGANS.some(item => item.id === id)))] : [];
+    result.equippedWeapon = result.weapons.includes(raw.equippedWeapon)
+      ? raw.equippedWeapon : 'capsule';
+    result.equippedOrgans = Array.isArray(raw.equippedOrgans)
+      ? [...new Set(raw.equippedOrgans.filter(id => result.organs.includes(id)))].slice(0, 2) : [];
+    result.bestEndless = Number.isInteger(raw.bestEndless)
+      ? Math.max(0, raw.bestEndless) : 0;
     return result;
   } catch { return empty; }
 }
@@ -38,12 +62,54 @@ export function buyResearch(storage, id) {
   return { success: true, profile };
 }
 
+export function buyItem(storage, id) {
+  const profile = readProfile(storage);
+  const item = META_BY_ID[id];
+  if (!item || id === 'capsule' || profile.weapons.includes(id)
+    || profile.organs.includes(id) || profile.dna < item.cost) {
+    return { success: false, profile };
+  }
+  profile.dna -= item.cost;
+  (WEAPONS.includes(item) ? profile.weapons : profile.organs).push(id);
+  writeProfile(storage, profile);
+  return { success: true, profile };
+}
+
+export function equipItem(storage, kind, id) {
+  const profile = readProfile(storage);
+  if (kind === 'weapon' && profile.weapons.includes(id)) {
+    profile.equippedWeapon = id;
+  } else if (kind === 'organ' && profile.organs.includes(id)) {
+    profile.equippedOrgans = profile.equippedOrgans.includes(id)
+      ? profile.equippedOrgans.filter(item => item !== id)
+      : [...profile.equippedOrgans.slice(-1), id];
+  } else return { success: false, profile };
+  writeProfile(storage, profile);
+  return { success: true, profile };
+}
+
 export function awardRun(storage, game) {
   const profile = readProfile(storage);
   const gained = 25 + game.wave * 9 + Math.floor(game.score / 100);
+  const firstClear = game.phase === 'victory' && game.chapter >= 1
+    && game.chapter <= 25 && !profile.cleared.includes(game.chapter);
+  if (firstClear) {
+    profile.cleared.push(game.chapter);
+    profile.unlockedStage = Math.max(profile.unlockedStage,
+      Math.min(25, game.chapter + 1));
+    if (game.chapter === 25) profile.endlessUnlocked = true;
+    const reward = MILESTONE_REWARDS[game.chapter];
+    if (reward) {
+      const collection = reward.kind === 'weapon' ? profile.weapons : profile.organs;
+      if (!collection.includes(reward.id)) collection.push(reward.id);
+    }
+  }
+  if (game.chapter === 26) profile.bestEndless = Math.max(profile.bestEndless,
+    game.endlessTier || 1);
+  if (profile.equippedOrgans.includes('salvage')) profile.dna += Math.ceil(gained * 0.15);
   profile.dna += gained;
   writeProfile(storage, profile);
-  return { gained, profile };
+  return { gained, profile, firstClear };
 }
 
 export function saveCheckpoint(storage, game) {
@@ -52,6 +118,10 @@ export function saveCheckpoint(storage, game) {
     version: 5,
     seed: game.seed,
     chapter: game.chapter,
+    endlessTier: game.endlessTier,
+    equippedWeapon: game.equippedWeapon,
+    equippedOrgans: game.equippedOrgans,
+    shotCount: game.shotCount,
     phase: game.phase,
     wave: game.wave,
     waveTime: game.waveTime,
@@ -65,6 +135,9 @@ export function saveCheckpoint(storage, game) {
     fireTimer: game.fireTimer,
     specialTimers: game.specialTimers,
     bossShotTimer: game.bossShotTimer,
+    normalShotTimer: game.normalShotTimer,
+    hazardTimer: game.hazardTimer,
+    hazards: game.hazards,
     chains: game.chains,
     bullets: game.bullets,
     enemyBullets: game.enemyBullets,
@@ -95,9 +168,16 @@ export function loadCheckpoint(storage) {
       || data.chains.some(chain => !Array.isArray(chain.segments)
         || chain.segments.length > WAVES[0].segments
         || !Number.isFinite(chain.travel))) return null;
-    const game = startRun(data.seed, data.profileLevels || readProfile(storage), data.chapter);
+    const game = startRun(data.seed, {
+      ...(data.profileLevels || readProfile(storage)),
+      equippedWeapon: data.equippedWeapon,
+      equippedOrgans: data.equippedOrgans,
+    }, data.chapter);
     if (data.core > game.maxCore) return null;
     game.wave = data.wave;
+    game.endlessTier = Number.isInteger(data.endlessTier)
+      ? Math.max(1, Math.min(999, data.endlessTier)) : 1;
+    game.shotCount = Number.isInteger(data.shotCount) ? Math.max(0, data.shotCount) : 0;
     game.phase = data.phase;
     game.runTime = data.runTime;
     game.waveTime = Number.isFinite(data.waveTime) ? data.waveTime : 0;
@@ -111,6 +191,10 @@ export function loadCheckpoint(storage) {
     game.specialTimers = data.specialTimers && typeof data.specialTimers === 'object'
       ? data.specialTimers : {};
     game.bossShotTimer = Number.isFinite(data.bossShotTimer) ? data.bossShotTimer : 0;
+    game.normalShotTimer = Number.isFinite(data.normalShotTimer)
+      ? data.normalShotTimer : 0;
+    game.hazardTimer = Number.isFinite(data.hazardTimer) ? data.hazardTimer : 0;
+    game.hazards = Array.isArray(data.hazards) ? data.hazards.slice(0, 8) : [];
     game.chains = data.chains;
     game.bullets = Array.isArray(data.bullets) ? data.bullets.slice(0, 150) : [];
     game.enemyBullets = Array.isArray(data.enemyBullets)

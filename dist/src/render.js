@@ -1,5 +1,7 @@
-import { WIDTH, HEIGHT } from './game.js?v=20261015-singlechain';
-import { routePosition } from './routes.js?v=20261015-singlechain';
+import { WIDTH, HEIGHT } from './game.js?v=20261015-campaign';
+import { routePosition } from './routes.js?v=20261015-campaign';
+import { drawBiome, drawChestFocus, drawConnector, drawGuardian,
+  drawProjectile, drawSegment } from './art.js';
 
 const TAU = Math.PI * 2;
 const BACKGROUND_TONES = [
@@ -236,23 +238,19 @@ function segment(ctx, piece, chain, time) {
   ctx.restore();
 }
 
-function chain(ctx, item, time) {
+function chain(ctx, item, time, zone = 0) {
   if (item.dead) return;
-  const p = PALETTES[item.tint] || PALETTES.violet;
-  ctx.lineCap = 'round';
   for (let i = item.segments.length - 1; i > 0; i--) {
     const a = item.segments[i];
     const b = item.segments[i - 1];
     if (a.hp <= 0 || b.hp <= 0 || a.y < -20 || b.y < -20
       || (a.x < -35 && b.x < -35) || (a.x > WIDTH + 35 && b.x > WIDTH + 35)) continue;
-    ctx.strokeStyle = p.edge;
-    ctx.lineWidth = item.boss ? 31 : 27;
-    ctx.beginPath();
-    ctx.moveTo(a.x, a.y);
-    ctx.lineTo(b.x, b.y);
-    ctx.stroke();
+    drawConnector(ctx, { from: a, to: b, zone, boss: item.boss,
+      lane: item.lane, shielded: item.shielded, time });
   }
-  for (let i = item.segments.length - 1; i >= 0; i--) segment(ctx, item.segments[i], item, time);
+  for (let i = item.segments.length - 1; i >= 0; i--) {
+    drawSegment(ctx, { piece: item.segments[i], chain: item, time, zone });
+  }
 }
 
 function drawEffect(ctx, effect) {
@@ -332,34 +330,17 @@ function chestHighlights(ctx, chests, time) {
   ctx.textBaseline = 'middle';
   for (let index = 0; index < chests.length; index++) {
     const chest = chests[index];
-    const color = chest.gold ? '#ffe080' : '#9ff7ff';
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 3;
-    ctx.shadowColor = color;
-    ctx.shadowBlur = 17 + 4 * Math.sin(time * 7);
-    ctx.beginPath();
-    ctx.arc(chest.x, chest.y, chest.radius + 5, 0, TAU);
-    ctx.stroke();
-    ctx.shadowBlur = 0;
-    if (index >= 3) continue;
-    const labelX = Math.max(32, Math.min(WIDTH - 32, chest.x));
-    ctx.fillStyle = 'rgba(10,25,42,.9)';
-    ctx.fillRect(labelX - 25, chest.y - 47, 50, 16);
-    ctx.font = '900 11px system-ui';
-    ctx.fillStyle = color;
-    ctx.fillText('寶箱', labelX, chest.y - 39);
-    ctx.fillStyle = 'rgba(10,25,42,.9)';
-    ctx.fillRect(chest.x - 22, chest.y + 28, 44, 8);
-    ctx.fillStyle = color;
-    ctx.fillRect(chest.x - 20, chest.y + 30,
-      40 * Math.max(0, chest.hp / chest.maxHp), 4);
+    drawChestFocus(ctx, { x: chest.x, y: chest.y, gold: chest.gold,
+      time, hpRatio: chest.hp / chest.maxHp });
   }
   ctx.restore();
 }
 
 export function render(ctx, game, time) {
   ctx.clearRect(0, 0, WIDTH, HEIGHT);
-  background(ctx, time, game?.wave || 1);
+  const zone = game ? Math.min(4, Math.floor((game.chapter === 26
+    ? 20 + (game.endlessTier - 1) % 5 : game.chapter - 1) / 5)) : 0;
+  drawBiome(ctx, { zone, time, width: WIDTH, height: HEIGHT });
   if (!game) {
     const preview = {
       tint: 'violet',
@@ -374,36 +355,37 @@ export function render(ctx, game, time) {
         };
       }),
     };
-    chain(ctx, preview, time);
+    chain(ctx, preview, time, zone);
     healthNumbers(ctx, selectHealthLabels([preview]));
     chestHighlights(ctx, visibleChests([preview]), time);
     rail(ctx, 100, time);
-    guardian(ctx, WIDTH / 2, 744, time);
+    drawGuardian(ctx, { x: WIDTH / 2, y: 744, time });
     return;
   }
   const chests = visibleChests(game.chains);
-  for (const item of game.chains) chain(ctx, item, time);
-  for (const bullet of game.bullets) {
+  for (const hazard of game.hazards || []) {
     ctx.save();
-    ctx.shadowColor = '#88f3f7';
-    ctx.shadowBlur = 12;
-    ctx.strokeStyle = '#b9ffff';
-    ctx.lineWidth = 5;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(bullet.x, bullet.y + 10);
-    ctx.lineTo(bullet.x, bullet.y - 9);
-    ctx.stroke();
+    ctx.fillStyle = hazard.phase === 'warning' ? 'rgba(255,216,119,.16)'
+      : 'rgba(255,104,110,.38)';
+    ctx.fillRect(hazard.x - 38, 100, 76, 650);
+    ctx.strokeStyle = hazard.phase === 'warning' ? '#ffe18a' : '#ff696f';
+    ctx.lineWidth = hazard.phase === 'warning' ? 2 : 8;
+    ctx.setLineDash(hazard.phase === 'warning' ? [8, 9] : []);
+    ctx.beginPath(); ctx.moveTo(hazard.x, 90); ctx.lineTo(hazard.x, 748); ctx.stroke();
     ctx.restore();
   }
+  for (const item of game.chains) chain(ctx, item, time, zone);
+  for (const bullet of game.bullets) {
+    drawProjectile(ctx, { x: bullet.x, y: bullet.y, time });
+  }
   for (const bullet of game.enemyBullets) {
-    circle(ctx, bullet.x, bullet.y, bullet.radius + 3, 'rgba(255,105,160,.28)');
-    circle(ctx, bullet.x, bullet.y, bullet.radius, '#ff9bab');
+    drawProjectile(ctx, { x: bullet.x, y: bullet.y, time, enemy: true });
   }
   for (const effect of game.effects) drawEffect(ctx, effect);
   healthNumbers(ctx, selectHealthLabels(game.chains));
   damageNumbers(ctx, selectDamagePopups(game.popups, chests));
   rail(ctx, game.core / game.maxCore * 100, time);
   chestHighlights(ctx, chests, time);
-  guardian(ctx, game.player.x, game.player.y, time, game.invulnerable);
+  drawGuardian(ctx, { x: game.player.x, y: game.player.y, time,
+    invulnerable: game.invulnerable });
 }
