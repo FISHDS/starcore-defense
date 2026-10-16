@@ -1,5 +1,6 @@
 // 全部魔王共用的畫法；外型差異由資料提供，路線與碰撞仍由遊戲管理。
 import { resolveBossEquipmentPose } from './boss-rig.js';
+import { knifeShieldGuarded } from './knife-shield.js';
 
 const TAU = Math.PI * 2;
 const INK = '#172235';
@@ -177,6 +178,17 @@ function drawKnifeShield(ctx, { piece, chain, time, profile, pose, head, r }) {
     const pathAngle = ahead && here
       ? Math.atan2(ahead.y - here.y, ahead.x - here.x) - Math.PI / 2 : 0;
     drawShibaPart(ctx, 'body', 0, 0, r * 2.2, tilt + pathAngle);
+    if (knifeShieldGuarded(chain, piece)) {
+      ctx.save();
+      ctx.shadowColor = '#94ecff';
+      ctx.shadowBlur = 12;
+      ctx.strokeStyle = '#c2f6ff';
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.arc(0, 0, r + 5, -2.3, 0.8);
+      ctx.stroke();
+      ctx.restore();
+    }
     if (piece.armorHp > 0) {
       ctx.beginPath(); ctx.arc(0, 0, r + 3, -2.8, -.2);
       ctx.strokeStyle = '#d1e9ed'; ctx.lineWidth = 3; ctx.stroke();

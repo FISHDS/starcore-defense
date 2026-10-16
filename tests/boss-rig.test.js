@@ -50,7 +50,7 @@ test('半數身體擊破後進第二階段；預警、攻擊、死亡有獨立�
 });
 
 test('實戰雙頭目各帶共用骨架，發射前會明顯預警', () => {
-  const game = startRun(7);
+  const game = startRun(7, {}, 2);
   game.encounter = 'boss';
   advance(game, 0.1);
   assert.equal(game.bosses.length, 2);
@@ -60,18 +60,19 @@ test('實戰雙頭目各帶共用骨架，發射前會明顯預警', () => {
 });
 
 test('頭目預警開始即鎖定落點，最後一刻移動也不會被重新追蹤', () => {
-  const game = startRun(29);
+  const game = startRun(29, {}, 2);
   game.encounter = 'boss';
   for (let step = 0; step < 40; step++) advance(game, 0.1, 195);
-  const boss = game.bosses[0];
+  const boss = game.bosses[1];
   // 等待下一次預警；前一次飛彈可能仍在空中。
   game.enemyBullets = [];
   while (boss.rig.telegraphFor <= 0) advance(game, 0.1, 195);
   const lockedX = boss.rig.targetX;
   while (boss.rig.telegraphFor > 0) advance(game, 0.1, 300);
   assert.equal(lockedX, 195);
-  assert.ok(game.enemyBullets.length >= 2);
-  const landing = game.enemyBullets.slice(0, 2)
+  const genericShots = game.enemyBullets.filter(shot => shot.kind !== 'knifeSlash');
+  assert.ok(genericShots.length >= 2);
+  const landing = genericShots.slice(0, 2)
     .map(shot => shot.x + shot.vx * ((game.player.y - shot.y) / shot.vy))
     .sort((a, b) => a - b);
   assert.ok(Math.abs(landing[0] - 155) < 4, `左彈落點 ${landing[0]}`);

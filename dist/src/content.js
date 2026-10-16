@@ -1,4 +1,4 @@
-// 一條普通長鏈會依擊破進度跨越五段感染區，清空後進入雙頭目。
+// 一條普通長鏈會依擊破進度跨越五段感染區，清空後進入該關頭目。
 export const WAVES = [
   { name: '孢子潮汐', startsAt: 0, duration: 48, spawnGap: 0, segments: 220, hp: 50, speed: 32, tint: 'mint', path: 'sine' },
   { name: '鏡像夾擊', startsAt: 48, duration: 48, spawnGap: 1.5, segments: 66, hp: 990, speed: 60, tint: 'violet', path: 'mirror' },
@@ -8,7 +8,7 @@ export const WAVES = [
   { name: '交錯雙母體', startsAt: 250, duration: 50, spawnGap: 0, segments: 42, hp: 14000, speed: 27, tint: 'coral', path: 'cross', boss: true },
 ];
 
-export { CHAPTERS } from './campaign.js?v=20261015-pressure-art-audio';
+export { CHAPTERS } from './campaign.js?v=20261016-shiba-combat-1';
 
 export const UPGRADES = [
   { id: 'power', name: '高能藥丸', description: '藥丸傷害 +35%', icon: '✦', tone: 'coral', rarity: 'common', category: 'bullet', max: 5 },

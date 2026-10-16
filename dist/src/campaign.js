@@ -1,4 +1,4 @@
-// 每區五關：先介紹新機制，再變形、組合，最後由雙頭目考核。
+// 每區五關：逐步介紹路線與機制；頭目出場數由關卡決定。
 const ZONES = [
   { name: '培養皿邊陲', tint: 'mint' },
   { name: '黏液沼槽', tint: 'amber' },
@@ -15,7 +15,7 @@ const MECHANIC_NAMES = {
 };
 
 const LEVELS = [
-  ['孢子初潮', 'tide', [], 'cover'],
+  ['孢子初潮', 'tide', [], 'knife-shield'],
   ['窄膜通道', 'narrow', ['narrow'], 'cover'],
   ['回折潮汐', 'weave', ['switchback'], 'cover'],
   ['甲殼試煉', 'mirror', ['armor'], 'armor'],
@@ -50,8 +50,8 @@ export const CHAPTERS = LEVELS.map(([name, path, mechanics, bossMode], index) =>
   return {
     id, zone, name, region: zoneInfo.name,
     difficulty: id <= 5 ? '入門' : id <= 10 ? '進階' : id <= 20 ? '挑戰' : '深域',
-    mechanics, bossMode, path,
-    summary: id === 1 ? '中央護膜無法擊破 · 左右追擊'
+    mechanics, bossMode, path, bossCount: id === 1 ? 1 : 2,
+    summary: id === 1 ? '單頭長鏈 · 舉盾後斜斬 · 換手反擊'
       : mechanics.length ? mechanics.map(rule => MECHANIC_NAMES[rule]).join(' · ')
       : '連綿長鏈 · 基礎瞄準',
     paths: [path, path, path, path, path, 'cross'],

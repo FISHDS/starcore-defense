@@ -118,6 +118,19 @@ test('連射音效有節流，靜音後不建立新的聲音', () => {
   assert.equal(audio.playSfx('chest'), false);
 });
 
+test('我的刀盾舉盾與斜斬有不同的提示音', () => {
+  const { FakeContext, instances } = fakeAudio();
+  const audio = createAudioEngine({ AudioContextClass: FakeContext });
+  audio.setScene('boss');
+  audio.unlockFromGesture();
+  const ctx = instances[0];
+  assert.equal(audio.playSfx('guard'), true);
+  const afterGuard = ctx.oscillators.length;
+  assert.ok(afterGuard > 0);
+  assert.equal(audio.playSfx('slash'), true);
+  assert.ok(ctx.oscillators.length > afterGuard);
+});
+
 test('首次點開始時，即使播放裝置仍在恢復也先排入開戰音', () => {
   const { FakeContext, instances } = fakeAudio();
   class PendingContext extends FakeContext {

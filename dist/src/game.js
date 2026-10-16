@@ -1,9 +1,10 @@
-import { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID } from './content.js?v=20261016-boss-evolution';
+import { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID } from './content.js?v=20261016-shiba-combat-1';
 import { routePosition } from './routes.js?v=20261015-pressure-art-audio';
 import { assignTraits, chainSpeed, chestGuarded, steerBullet,
   updateBossShields, updateHazards, updateWeakpoints } from './mechanics.js';
 import { createBossRig, updateBossRig } from './boss-rig.js';
 import { bossProfileFor } from './boss-profiles.js?v=20261016-shiba-boss-1';
+import { knifeShieldDamageMultiplier, knifeShieldSlash } from './knife-shield.js';
 
 export { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID };
 export const WIDTH = 390;
@@ -43,6 +44,7 @@ export function startRun(seed = Date.now(), profile = {}, chapter = 1) {
     profileLevels, score: 0, player: { x: WIDTH / 2, y: RAIL_Y },
     chains: [], chest: null, bullets: [], enemyBullets: [], effects: [], popups: [],
     pickups: [], chargeFor: 0, comboCount: 0, comboTimer: 0,
+    audioCues: [],
     boss: null, bosses: [], invulnerable: 0, upgrades: {}, choices: [],
     rerollsLeft: 0, upgradeSource: null,
   };
@@ -68,7 +70,9 @@ export function getShotDamage(game) {
 export function getRunProgress(game) {
   if (game.phase === 'victory') return 1;
   const normal = Math.min(1, game.normalDestroyed / game.normalTotal);
-  const bossTotal = 2 * (WAVES.at(-1).segments - 1);
+  const bossTotal = Math.max(activeStage(game).bossCount,
+    game.encounter === 'boss' ? game.spawnCount : 0)
+    * (WAVES.at(-1).segments - 1);
   const boss = Math.min(1, game.bossDestroyed / bossTotal);
   return normal * 0.8 + boss * 0.2;
 }
@@ -179,6 +183,7 @@ export function hitSegment(game, chain, segment, amount, options = {}) {
     * (segment.chest ? 1 + (game.upgrades.focus || 0) * 0.6 : 1)
     * (1 + segment.mark) * (bossGuarded ? 0.66 : 1)
     * (chain.shielded ? 0.25 : 1)
+    * knifeShieldDamageMultiplier(chain, segment)
     * (supplyGuarded ? 0.35 : 1)
     * (segment.weakpoint ? (segment.weakOpen ? 1.6 : 0.28) : 1)));
   const armor = Math.min(segment.armorHp || 0, damage);
@@ -521,12 +526,16 @@ function updateBossShots(game, dt) {
   const bossInterval = (game.chapter <= 5 ? 3.1
     : game.chapter <= 10 ? 2.7 : 2.2)
     * (phaseTwo ? (game.chapter <= 5 ? 0.94 : 0.82) : 1);
-  if (game.bossShotTimer >= bossInterval - 0.55) {
+  const isKnifeShield = game.bosses.some(boss => !boss.dead
+    && boss.rig?.profileId === 'meme-knife-shield');
+  const warningTime = isKnifeShield ? 0.85 : 0.55;
+  if (game.bossShotTimer >= bossInterval - warningTime) {
     for (const boss of game.bosses) {
       if (boss.dead || boss.segments[0].y < 120 || !boss.rig) continue;
       if (!boss.rig.telegraphLocked) {
         boss.rig.targetX = game.player.x;
         boss.rig.telegraphLocked = true;
+        if (boss.rig.profileId === 'meme-knife-shield') game.audioCues.push('guard');
       }
       boss.rig.telegraphFor = Math.max(0, bossInterval - game.bossShotTimer);
     }
@@ -539,7 +548,13 @@ function updateBossShots(game, dt) {
       if (boss.rig) {
         boss.rig.telegraphFor = 0;
         boss.rig.telegraphLocked = false;
-        boss.rig.strikeFor = 0.32;
+        boss.rig.strikeFor = boss.rig.profileId === 'meme-knife-shield' ? 0.65 : 0.32;
+      }
+      if (boss.rig?.profileId === 'meme-knife-shield') {
+        game.enemyBullets.push(knifeShieldSlash(head,
+          boss.rig.targetX ?? game.player.x, boss.rig.phase));
+        game.audioCues.push('slash');
+        continue;
       }
       const vy = phaseTwo ? (game.chapter <= 5 ? 226 : 245) : 220;
       const flight = Math.max(0.6, (game.player.y - head.y - 25) / vy);
@@ -609,6 +624,7 @@ export function rerollUpgrades(game) {
 
 export function advance(game, dt, targetX = game.player.x) {
   if (game.phase !== 'playing') return;
+  game.audioCues = [];
   dt = Math.max(0, Math.min(0.1, dt));
   game.player.x = Math.max(24, Math.min(WIDTH - 24, targetX));
   updatePickups(game, dt);
@@ -617,9 +633,9 @@ export function advance(game, dt, targetX = game.player.x) {
   if (game.encounter === 'boss') {
     if (game.spawnCount === 0) {
       const wave = configuredWave(game, WAVES.length - 1);
-      spawnChain(game, wave, 0);
-      spawnChain(game, wave, 1);
-      game.spawnCount = 2;
+      const bossCount = activeStage(game).bossCount;
+      for (let lane = 0; lane < bossCount; lane++) spawnChain(game, wave, lane);
+      game.spawnCount = bossCount;
     }
   } else if (game.spawnCount === 0) {
     spawnChain(game, configuredWave(game, 0), 0);
@@ -651,7 +667,7 @@ export function advance(game, dt, targetX = game.player.x) {
     }
   }
   if (game.phase === 'playing' && game.encounter === 'boss'
-    && game.spawnCount >= 2 && game.bosses.length > 0
+    && game.spawnCount >= activeStage(game).bossCount && game.bosses.length > 0
     && game.bosses.every(boss => boss.dead)) {
     if (game.chapter === 26) {
       game.endlessTier++;

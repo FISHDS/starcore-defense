@@ -1,10 +1,10 @@
-import { WIDTH, HEIGHT } from './game.js?v=20261016-shiba-boss-1';
+import { WIDTH, HEIGHT } from './game.js?v=20261016-shiba-combat-1';
 import { routePosition } from './routes.js?v=20261015-pressure-art-audio';
 import { drawBiome, drawChestFocus, drawConnector, drawGuardian,
   drawProjectile, drawSegment } from './art.js?v=20261016-boss-evolution';
 import { BOSS_PROFILES, bossProfileFor } from './boss-profiles.js?v=20261016-shiba-boss-1';
 import { resolveBossPose } from './boss-rig.js';
-import { drawBossConnector, drawBossSegment } from './boss-art.js?v=20261016-shiba-boss-1';
+import { drawBossConnector, drawBossSegment } from './boss-art.js?v=20261016-shiba-combat-1';
 
 const TAU = Math.PI * 2;
 const BACKGROUND_TONES = [
@@ -251,12 +251,23 @@ function chain(ctx, item, time, zone = 0) {
     ctx.setLineDash([9, 8]);
     ctx.strokeStyle = profile.colors.glow;
     ctx.lineWidth = 3 + Math.sin(time * 22) * .8;
-    for (const spread of [-40, 40]) {
+    const knifeShield = item.rig.profileId === 'meme-knife-shield';
+    const spreads = knifeShield ? [item.rig.phase === 2 ? -32 : 32] : [-40, 40];
+    for (const spread of spreads) {
       const landingX = (item.rig.targetX ?? source.x) + spread;
+      if (knifeShield) {
+        ctx.globalAlpha = 0.18;
+        ctx.lineWidth = 42;
+        ctx.beginPath(); ctx.moveTo(source.x, source.y + 22);
+        ctx.lineTo(landingX, 740); ctx.stroke();
+        ctx.globalAlpha = 1;
+        ctx.lineWidth = 4;
+      }
       ctx.beginPath(); ctx.moveTo(source.x, source.y + 22);
       ctx.lineTo(landingX, 740); ctx.stroke();
       ctx.fillStyle = `${profile.colors.glow}55`;
-      ctx.fillRect(landingX - 13, 724, 26, 20);
+      ctx.fillRect(landingX - (knifeShield ? 24 : 13), 724,
+        knifeShield ? 48 : 26, 20);
     }
     ctx.setLineDash([]);
     ctx.restore();
@@ -450,7 +461,21 @@ export function render(ctx, game, time) {
     drawProjectile(ctx, { x: bullet.x, y: bullet.y, time });
   }
   for (const bullet of game.enemyBullets) {
-    drawProjectile(ctx, { x: bullet.x, y: bullet.y, time, enemy: true });
+    if (bullet.kind === 'knifeSlash') {
+      ctx.save();
+      ctx.translate(bullet.x, bullet.y);
+      ctx.rotate(Math.atan2(bullet.vy, bullet.vx) - Math.PI / 2);
+      ctx.shadowColor = '#ffe8a0';
+      ctx.shadowBlur = 14;
+      ctx.strokeStyle = '#fff2c6';
+      ctx.lineWidth = 8;
+      ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.arc(0, 0, 15, -2.6, 0.55); ctx.stroke();
+      ctx.strokeStyle = '#d66c55';
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(0, 0, 21, -2.4, 0.35); ctx.stroke();
+      ctx.restore();
+    } else drawProjectile(ctx, { x: bullet.x, y: bullet.y, time, enemy: true });
   }
   for (const effect of game.effects) drawEffect(ctx, effect, time);
   for (const pickup of game.pickups || []) {

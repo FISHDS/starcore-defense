@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { advance, chooseUpgrade, hitSegment, startRun } from '../dist/src/game.js';
 import * as gameplay from '../dist/src/game.js';
 
-test('長局進度根據實際清掉的身體而不是經過的時間', () => {
-  const game = startRun(40);
+test('雙頭關卡進度根據實際清掉的身體而不是經過的時間', () => {
+  const game = startRun(40, {}, 2);
   game.runTime = 200;
   assert.equal(typeof gameplay.getRunProgress, 'function');
   assert.equal(gameplay.getRunProgress(game), 0);
@@ -99,7 +99,7 @@ test('畫面外等待進場的尾部不會被自動武器提前打掉', () => {
     .every(piece => piece.hp === before.get(piece.id)));
 });
 
-test('補給箱沿整條身體分布，打光後立即進入雙頭目', () => {
+test('補給箱沿整條身體分布，打光後立即進入該關頭目', () => {
   const game = startRun(44);
   advance(game, 0.05);
   const chain = game.chains[0];
@@ -113,7 +113,7 @@ test('補給箱沿整條身體分布，打光後立即進入雙頭目', () => {
   }
   assert.equal(chain.dead, true);
   advance(game, 0.05);
-  assert.equal(game.chains.filter(item => !item.dead && item.boss).length, 2);
+  assert.equal(game.chains.filter(item => !item.dead && item.boss).length, 1);
   const boss = game.bosses[0];
   const segment = boss.segments[1];
   hitSegment(game, boss, segment, segment.hp + 1);

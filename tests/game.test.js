@@ -3,6 +3,25 @@ import assert from 'node:assert/strict';
 import { advance, chooseUpgrade, hitSegment, rerollUpgrades, startRun, UPGRADES, WAVES } from '../dist/src/game.js';
 import { routeLength } from '../dist/src/routes.js';
 
+function avoidKnifeWarning(game, targetX) {
+  const incoming = game.encounter === 'boss' ? game.enemyBullets.filter(shot =>
+    shot.y > 350 && shot.y < 765) : [];
+  if (incoming.length) {
+    const landings = incoming.map(shot => shot.x + shot.vx
+      * ((game.player.y - shot.y) / shot.vy));
+    return [24, 105, 195, 285, 366]
+      .sort((a, b) => Math.min(...landings.map(x => Math.abs(x - b)))
+        - Math.min(...landings.map(x => Math.abs(x - a))))[0];
+  }
+  const boss = game.bosses.find(item => !item.dead
+    && item.rig?.profileId === 'meme-knife-shield' && item.rig.telegraphFor > 0);
+  if (!boss) return targetX;
+  const landingX = boss.rig.targetX + (boss.rig.phase === 2 ? -32 : 32);
+  if (Math.abs(landingX - targetX) >= 48) return targetX;
+  return landingX < 195 ? Math.min(366, landingX + 85)
+    : Math.max(24, landingX - 85);
+}
+
 test('長鏈頭部不受傷，身體被打爆會使頭部沿路後退', () => {
   const game = startRun(7);
   advance(game, 0.05);
@@ -159,7 +178,7 @@ test('主動追箱並守住迫近敵群，有機會通過完整長局', () => {
       x = landingX < 195 ? Math.min(366, landingX + 85)
         : Math.max(24, landingX - 85);
     }
-    advance(game, 0.05, x);
+    advance(game, 0.05, avoidKnifeWarning(game, x));
     emptyFor = game.chains.length ? 0 : emptyFor + 0.05;
     longestEmpty = Math.max(longestEmpty, emptyFor);
   }
@@ -191,7 +210,8 @@ test('完成局外研究後，最難關卡仍有可通關路徑', () => {
     const chest = bodies.filter(segment => segment.chest).sort((a, b) => b.y - a.y)[0];
     const near = bodies.sort((a, b) => b.y - a.y)[0];
     const guard = threat?.segments.slice(1, 8).find(segment => segment.y < 710);
-    advance(game, 0.05, guard?.x ?? chest?.x ?? near?.x ?? 195);
+    advance(game, 0.05, avoidKnifeWarning(game,
+      guard?.x ?? chest?.x ?? near?.x ?? 195));
   }
   assert.equal(game.phase, 'victory');
 });

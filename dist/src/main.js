@@ -1,10 +1,10 @@
-import { advance, CHAPTERS, chooseUpgrade, getRunProgress, HEIGHT, rerollUpgrades, startRun, UPGRADE_BY_ID, WAVES, WIDTH } from './game.js?v=20261016-shiba-boss-1';
+import { advance, CHAPTERS, chooseUpgrade, getRunProgress, HEIGHT, rerollUpgrades, startRun, UPGRADE_BY_ID, WAVES, WIDTH } from './game.js?v=20261016-shiba-combat-1';
 import { pointerToWorldX } from './input.js';
-import { render } from './render.js?v=20261016-shiba-boss-1';
+import { render } from './render.js?v=20261016-shiba-combat-1';
 import { awardRun, buyResearch, buyItem, equipItem, clearCheckpoint, loadCheckpoint, readProfile, researchCost, saveCheckpoint, updateBest } from './storage.js?v=20261016-boss-evolution';
 import { ORGANS, WEAPONS } from './meta.js';
 import { drawSkillIcon } from './art.js?v=20261016-boss-evolution';
-import { createAudioEngine } from './audio.js?v=20261015-pressure-art-audio';
+import { createAudioEngine } from './audio.js?v=20261016-shiba-combat-1';
 import { getBattleHint } from './tutorial.js';
 
 const $ = id => document.getElementById(id);
@@ -87,7 +87,9 @@ function refreshHud() {
   hint.classList.toggle('persistent-tutorial', game.chapter === 1 && game.normalDestroyed === 0);
   $('wave-number').textContent = game.chapter === 26
     ? `無盡 ${game.endlessTier}` : `第${game.chapter}關`;
-  $('wave-name').textContent = `${game.chapter === 26 ? '無盡挑戰' : CHAPTERS[game.chapter - 1].name} · ${wave.name}`;
+  const encounterName = game.encounter === 'boss' && activeChapter.bossMode === 'knife-shield'
+    ? '我的刀盾' : wave.name;
+  $('wave-name').textContent = `${game.chapter === 26 ? '無盡挑戰' : CHAPTERS[game.chapter - 1].name} · ${encounterName}`;
   $('core-value').textContent = String(Math.ceil(game.core));
   $('score-value').textContent = game.score.toLocaleString('zh-TW');
   const progress = getRunProgress(game);
@@ -97,7 +99,9 @@ function refreshHud() {
   $('boss-warning').hidden = game.phase !== 'playing' || !nearBoss;
   if (game.phase === 'playing' && nearBoss && !bossWarningActive) audio.playSfx('warning');
   bossWarningActive = game.phase === 'playing' && nearBoss;
-  $('boss-warning').textContent = activeChapter.bossMode === 'final'
+  $('boss-warning').textContent = activeChapter.bossMode === 'knife-shield'
+    ? '我的刀盾舉盾時改打亮盾以外的身體；揮刀後是反擊機會'
+    : activeChapter.bossMode === 'final'
     ? '雙母體輪流亮起護盾 · 改打沒發光的長鏈'
     : '雙母體逼近 · 瞄準身體讓頭部後退';
 }
@@ -421,6 +425,7 @@ function frame(timestamp) {
     const oldDestroyed = game.normalDestroyed + game.bossDestroyed;
     const priorEffects = new Set(game.effects);
     advance(game, dt, targetX);
+    for (const cue of game.audioCues || []) audio.playSfx(cue);
     if (game.shotCount > oldShots) audio.playSfx('shot');
     const destroyed = game.normalDestroyed + game.bossDestroyed > oldDestroyed;
     if (destroyed) {
