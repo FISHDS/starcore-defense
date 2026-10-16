@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createBossRig, updateBossRig, resolveBossPose, validateBossProfile } from '../dist/src/boss-rig.js';
-import { advance, startRun } from '../dist/src/game.js';
+import { advance, CHAPTERS, startRun } from '../dist/src/game.js';
 
 const profile = {
   id: 'test', name: '測試母體', silhouette: 'mantis',
@@ -58,6 +58,32 @@ test('實戰雙頭目各帶共用骨架，發射前會明顯預警', () => {
   game.bossShotTimer = 2.2;
   advance(game, 0.02);
   assert.ok(game.bosses.some(boss => boss.rig.telegraphFor > 0));
+});
+
+test('中央守點頭目不會發射攻擊或累積攻擊預警，底線頭目仍照常攻擊', () => {
+  const centerChapters = CHAPTERS.filter(stage => stage.positionMode === 'center');
+  for (const stage of centerChapters) {
+    const center = startRun(81 + stage.id, {}, stage.id);
+    center.encounter = 'boss';
+    center.fireTimer = -100000;
+    advance(center, 0.05);
+    center.enemyBullets = [];
+    center.bossShotTimer = 20;
+    advance(center, 0.05);
+    assert.equal(center.enemyBullets.length, 0, `第${stage.id}關不能發射頭目攻擊`);
+    assert.ok(center.bosses.every(boss => boss.rig.telegraphFor === 0),
+      `第${stage.id}關不能顯示頭目攻擊預警`);
+    assert.ok(center.bosses.every(boss => !boss.rig.telegraphLocked));
+    assert.ok(center.bosses.every(boss => !boss.rig.loadingFollowup));
+  }
+
+  const bottom = startRun(82, {}, 1);
+  bottom.encounter = 'boss';
+  advance(bottom, 0.05);
+  bottom.bosses[0].segments[0].y = 300;
+  bottom.bossShotTimer = 2.2;
+  advance(bottom, 0.05);
+  assert.ok(bottom.bosses.some(boss => boss.rig.telegraphFor > 0));
 });
 
 test('頭目預警鎖定固定核心，玩家最後一刻轉向也不會改變彈道', () => {

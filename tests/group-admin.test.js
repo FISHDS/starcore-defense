@@ -6,6 +6,8 @@ function enterGroupAdmin() {
   const game = startRun(307, {}, 3);
   game.encounter = 'boss';
   advance(game, 0.05);
+  // 第三關實戰為中央守點；此處切到測試用底線場地檢查招式資料。
+  game.chapter = 1;
   game.enemyBullets = [];
   game.bullets = [];
   return game;

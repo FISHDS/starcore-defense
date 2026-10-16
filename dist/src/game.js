@@ -677,9 +677,17 @@ function updateCombatTimers(game, dt) {
 }
 
 function updateBossShots(game, dt) {
+  const bossAttacksDisabled = activeStage(game).positionMode === 'center';
   for (const boss of game.bosses) {
     const followup = boss.rig?.loadingFollowup;
     if (!followup) continue;
+    if (bossAttacksDisabled) {
+      boss.rig.loadingFollowup = null;
+      boss.rig.telegraphFor = 0;
+      boss.rig.telegraphLocked = false;
+      boss.rig.strikeFor = 0;
+      continue;
+    }
     if (boss.dead) {
       boss.rig.loadingFollowup = null;
       continue;
@@ -713,6 +721,17 @@ function updateBossShots(game, dt) {
           vx: dx / length * vy, vy: dy / length * vy, radius: 6, damage: 7 });
       }
     }
+  }
+  if (bossAttacksDisabled) {
+    game.bossShotTimer = 0;
+    for (const boss of game.bosses) {
+      if (!boss.rig) continue;
+      boss.rig.telegraphFor = 0;
+      boss.rig.telegraphLocked = false;
+      boss.rig.strikeFor = 0;
+      boss.rig.loadingFollowup = null;
+    }
+    return;
   }
   if (!game.bosses.some(boss => !boss.dead)) return;
   const pattern = activeStage(game).bossMode;

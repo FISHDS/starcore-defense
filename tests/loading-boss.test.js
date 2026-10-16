@@ -11,6 +11,8 @@ function startLoadingBoss() {
   game.enemyBullets = [];
   game.fireTimer = -10000;
   game.bossShotTimer = 0;
+  // 第六關實戰為中央守點；此處切到測試用底線場地檢查招式資料。
+  game.chapter = 1;
   return game;
 }
 

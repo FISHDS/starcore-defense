@@ -8,6 +8,8 @@ function enterBoss(chapter, seed = chapter) {
   const game = startRun(seed, {}, chapter);
   game.encounter = 'boss';
   advance(game, 0.05);
+  // 招式測試在底線場地執行；正式中央關卡另有不攻擊測試。
+  game.chapter = chapter === 15 ? 21 : 1;
   game.player.aimAngle = Math.PI / 2;
   game.bullets = [];
   game.enemyBullets = [];
@@ -36,7 +38,7 @@ test('甲殼型頭目用三向扇形彈迫使玩家轉向攔截', () => {
 test('護衛型雙頭目各自瞄準固定核心，玩家需轉向攔截', () => {
   const game = enterBoss(9);
   game.bullets = [];
-  const shots = triggerAttack(game, 2.7);
+  const shots = triggerAttack(game, 3.1);
   const expected = game.bosses.reduce((count, boss) => count
     + bossVolleyFor(boss.rig.attackStyle, { x: 0, y: 0 }, 0).length, 0);
   assert.equal(shots.length, expected);
