@@ -1,6 +1,6 @@
-import { advance, CHAPTERS, chooseUpgrade, getRunProgress, HEIGHT, rerollUpgrades, startRun, UPGRADE_BY_ID, WAVES, WIDTH } from './game.js?v=20261016-boss-evolution';
+import { advance, CHAPTERS, chooseUpgrade, getRunProgress, HEIGHT, rerollUpgrades, startRun, UPGRADE_BY_ID, WAVES, WIDTH } from './game.js?v=20261016-shiba-boss-1';
 import { pointerToWorldX } from './input.js';
-import { render } from './render.js?v=20261016-boss-evolution';
+import { render } from './render.js?v=20261016-shiba-boss-1';
 import { awardRun, buyResearch, buyItem, equipItem, clearCheckpoint, loadCheckpoint, readProfile, researchCost, saveCheckpoint, updateBest } from './storage.js?v=20261016-boss-evolution';
 import { ORGANS, WEAPONS } from './meta.js';
 import { drawSkillIcon } from './art.js?v=20261016-boss-evolution';

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96" fill="none">
+ <defs>
+  <linearGradient id="steel" x1="13" y1="10" x2="71" y2="76" gradientUnits="userSpaceOnUse"><stop stop-color="#7894A0"/><stop offset=".45" stop-color="#486273"/><stop offset="1" stop-color="#293F50"/></linearGradient>
+  <linearGradient id="fur" x1="50" y1="62" x2="75" y2="94" gradientUnits="userSpaceOnUse"><stop stop-color="#DFA05C"/><stop offset="1" stop-color="#8A472C"/></linearGradient>
+  <radialGradient id="brass" cx="30%" cy="25%" r="75%"><stop stop-color="#F0D18C"/><stop offset=".72" stop-color="#9B7145"/><stop offset="1" stop-color="#43372E"/></radialGradient>
+ </defs>
+ <!-- single heavy shield scale; chain strap exits behind the plate -->
+ <path d="M67 51c11 1 12 9 23 11" stroke="#25343C" stroke-width="9" stroke-linecap="round"/>
+ <path d="M68 51c11 1 12 9 22 11" stroke="#75878C" stroke-width="3" stroke-linecap="round"/>
+ <path d="M36 5 71 17v27c0 20-12 34-35 46C13 78 2 64 2 44V17L36 5Z" fill="url(#steel)" stroke="#202F37" stroke-width="4" stroke-linejoin="round"/>
+ <path d="M36 11 65 21v23c0 16-9 28-29 39C17 72 8 60 8 44V21l28-10Z" stroke="#AABBC0" stroke-width="2" stroke-linejoin="round"/>
+ <path d="M36 13v68M10 43h52" stroke="#9DB1B8" stroke-width="1.7" opacity=".62"/>
+ <path d="m14 23 18-6m11 8 15 5" stroke="#D1DDDC" stroke-width="2.5" stroke-linecap="round" opacity=".84"/>
+ <path d="m20 50 9-5 6 5-5 8-9-1-1-7Z" fill="#253A47" stroke="#ADC0C5" stroke-width="1.5"/>
+ <path d="m47 65 5-7m-27-43 5-2" stroke="#D2DFDF" stroke-width="2" stroke-linecap="round" opacity=".75"/>
+ <path d="m17 31 6-4-2 5 4 1-7 4m27 20 5-4-1 5 4 1-6 3" stroke="#E4DFCA" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity=".88"/>
+ <circle cx="36" cy="47" r="9" fill="#263B47" stroke="#202F37" stroke-width="2"/><circle cx="36" cy="47" r="6" fill="#809398" stroke="#CAB486" stroke-width="1.4"/><circle cx="36" cy="47" r="2.5" fill="#354B54"/>
+ <circle cx="36" cy="13" r="2.8" fill="url(#brass)" stroke="#29343A" stroke-width="1"/><circle cx="13" cy="29" r="2.5" fill="url(#brass)" stroke="#29343A" stroke-width="1"/>
+ <circle cx="60" cy="29" r="2.5" fill="url(#brass)" stroke="#29343A" stroke-width="1"/><circle cx="13" cy="60" r="2.5" fill="url(#brass)" stroke="#29343A" stroke-width="1"/>
+ <circle cx="60" cy="60" r="2.5" fill="url(#brass)" stroke="#29343A" stroke-width="1"/><circle cx="36" cy="79" r="2.5" fill="url(#brass)" stroke="#29343A" stroke-width="1"/>
+ <!-- one small paw overlaps the lower rim, anchoring this segment to the dog -->
+ <path d="M57 62c6-4 13-3 18 2l12 14c4 5 2 10-4 12l-17 5c-6 2-10-1-12-7l-4-13c-1-5 1-10 7-13Z" fill="url(#fur)" stroke="#41271F" stroke-width="3.5" stroke-linejoin="round"/>
+ <path d="m59 81 5-2m7 8 5-2" stroke="#F3CF99" stroke-width="2" stroke-linecap="round"/>
+</svg>

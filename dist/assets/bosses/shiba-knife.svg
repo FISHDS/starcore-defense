@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" fill="none">
+ <defs>
+  <linearGradient id="blade" x1="24" y1="100" x2="101" y2="27" gradientUnits="userSpaceOnUse"><stop stop-color="#657681"/><stop offset=".36" stop-color="#BAC8CC"/><stop offset=".67" stop-color="#EAF0EC"/><stop offset="1" stop-color="#8B9BA1"/></linearGradient>
+  <linearGradient id="spine" x1="35" y1="91" x2="100" y2="28" gradientUnits="userSpaceOnUse"><stop stop-color="#485A64"/><stop offset="1" stop-color="#73858C"/></linearGradient>
+  <linearGradient id="handle" x1="9" y1="117" x2="35" y2="90" gradientUnits="userSpaceOnUse"><stop stop-color="#593127"/><stop offset=".5" stop-color="#A3613A"/><stop offset="1" stop-color="#D18A51"/></linearGradient>
+ </defs>
+ <!-- shortened, broad-backed heavy blade with a distinct bevel -->
+ <path d="m29 94 54-58c10-11 22-19 34-24l-2 12c-2 11-8 22-16 31L42 112 29 94Z" fill="url(#blade)" stroke="#24333B" stroke-width="5" stroke-linejoin="round"/>
+ <path d="m39 96 51-55c7-8 14-13 23-18-2 8-6 16-12 23l-55 60-7-10Z" fill="#EDF4F1"/>
+ <path d="m86 36 22-17" stroke="url(#spine)" stroke-width="4" stroke-linecap="round"/>
+ <path d="m47 91 47-51" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" opacity=".9"/>
+ <path d="m58 65 7-5m-5 9 6-4m18-23 6-6m-37 45 5-5" stroke="#58636A" stroke-width="1.6" stroke-linecap="round" opacity=".65"/>
+ <path d="m77 52 4-4m-29 39 4-4m28-41 3-3" stroke="#F8F1DC" stroke-width="1.5" stroke-linecap="round" opacity=".72"/>
+ <!-- thick guard and wrapped short grip -->
+ <path d="M18 77 50 105 39 119 7 90l11-13Z" fill="#9EADB0" stroke="#24333B" stroke-width="5" stroke-linejoin="round"/>
+ <path d="m12 91 22 20-8 10-22-20 8-10Z" fill="url(#handle)" stroke="#34241F" stroke-width="4" stroke-linejoin="round"/>
+ <path d="m11 95 17 15m-10-22 18 15" stroke="#E0A66B" stroke-width="2.5" stroke-linecap="round"/>
+ <circle cx="12" cy="95" r="2.5" fill="#A57A4A" stroke="#29363B" stroke-width="1.2"/><circle cx="29" cy="110" r="2.5" fill="#A57A4A" stroke="#29363B" stroke-width="1.2"/>
+</svg>

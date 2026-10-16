@@ -1,4 +1,4 @@
-import { BOSS_PROFILES_A } from './boss-profiles-a.js';
+import { BOSS_PROFILES_A } from './boss-profiles-a.js?v=20261016-shiba-boss-1';
 import { BOSS_PROFILES_B } from './boss-profiles-b.js';
 
 export const BOSS_PROFILES = [...BOSS_PROFILES_A, ...BOSS_PROFILES_B];

@@ -37,6 +37,22 @@ export function updateBossRig(chain, dt) {
   chain.rig.phase = remaining <= (chain.originalBodyCount || remaining) / 2 ? 2 : 1;
 }
 
+// 刀、盾、身體各有獨立的動作量；第二階段把揮刀方向鏡射。
+export function resolveBossEquipmentPose(state, phase = 1, time = 0) {
+  const weaponSide = phase === 2 ? -1 : 1;
+  const motion = Math.sin(time * 5);
+  const poses = {
+    idle: { shieldLift: 0.08, knifeSwing: -0.25, recoil: 0, fall: 0, bob: motion * 1.2 },
+    move: { shieldLift: 0.13, knifeSwing: -0.18 + motion * 0.12, recoil: 0, fall: 0, bob: motion * 2.8 },
+    telegraph: { shieldLift: 0.86, knifeSwing: -0.5, recoil: 0, fall: 0, bob: -2 },
+    strike: { shieldLift: 0.3, knifeSwing: 1.35, recoil: 0, fall: 0, bob: 3 },
+    hurt: { shieldLift: 0.04, knifeSwing: -0.55, recoil: 8, fall: 0, bob: -3 },
+    dying: { shieldLift: -0.45, knifeSwing: -1.2, recoil: 5, fall: 1, bob: 9 },
+  };
+  const current = poses[state] || poses.idle;
+  return { ...current, weaponSide, knifeSwing: current.knifeSwing * weaponSide };
+}
+
 export function resolveBossPose(chain, profile, time = 0) {
   if (validateBossProfile(profile).length) throw new Error(`魔王外型資料無效：${profile?.id || '?'}`);
   if (!chain?.segments?.length) throw new Error('魔王骨架缺少身體節點');

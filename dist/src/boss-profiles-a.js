@@ -1,12 +1,14 @@
 // 第一、二區魔王外型：只提供外觀資料，不改變戰鬥判定。
 export const BOSS_PROFILES_A = [
   {
-    id: 'zone-1-ironback',
-    name: '鐵脊破陣者',
+    id: 'meme-knife-shield',
+    name: '我的刀盾',
     silhouette: 'ram',
-    colors: { shell: '#c9583c', shadow: '#542e38', glow: '#ffbd55', eye: '#fff1c9' },
-    anatomy: { headScale: 1.18, bodyScale: 1.16, hornLength: 21, jawWidth: 20, finLength: 9 },
-    motion: { sway: 1.4, pulse: 0.035, attackReach: 15, hurtKick: 5 },
+    colors: { shell: '#b67a43', shadow: '#514756', glow: '#ffe087', eye: '#fff4d8' },
+    anatomy: { headScale: 1.18, bodyScale: 1.08, hornLength: 21, jawWidth: 20, finLength: 9 },
+    motion: { sway: 1.8, pulse: 0.035, attackReach: 15, hurtKick: 7 },
+    parts: { head: 'shiba-head.png', knife: 'shiba-props.png',
+      shield: 'shiba-props.png', body: 'shiba-body.svg' },
   },
   {
     id: 'zone-1-dreamweaver',

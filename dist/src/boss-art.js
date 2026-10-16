@@ -1,6 +1,51 @@
 // 全部魔王共用的畫法；外型差異由資料提供，路線與碰撞仍由遊戲管理。
+import { resolveBossEquipmentPose } from './boss-rig.js';
+
 const TAU = Math.PI * 2;
 const INK = '#172235';
+const SHIBA_ASSETS = {};
+if (typeof Image !== 'undefined') {
+  const files = {
+    head: 'shiba-head.png', props: 'shiba-props.png', body: 'shiba-body.svg',
+    headFallback: 'shiba-head.svg', knifeFallback: 'shiba-knife.svg',
+    shieldFallback: 'shiba-shield.svg',
+  };
+  for (const [part, file] of Object.entries(files)) {
+    const image = new Image();
+    image.decoding = 'async';
+    image.src = new URL(`../assets/bosses/${file}?v=20261016-shiba-2`, import.meta.url).href;
+    SHIBA_ASSETS[part] = image;
+  }
+}
+
+function drawShibaPart(ctx, part, x, y, size, angle = 0) {
+  const image = SHIBA_ASSETS[part]?.complete && SHIBA_ASSETS[part].naturalWidth
+    ? SHIBA_ASSETS[part] : SHIBA_ASSETS[`${part}Fallback`];
+  if (!image?.complete || !image.naturalWidth) return false;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle);
+  ctx.drawImage(image, -size / 2, -size / 2, size, size);
+  ctx.restore();
+  return true;
+}
+
+function drawShibaProp(ctx, part, x, y, width, height, angle, mirror = false) {
+  const atlas = SHIBA_ASSETS.props;
+  if (!atlas?.complete || !atlas.naturalWidth) {
+    return drawShibaPart(ctx, part, x, y, Math.max(width, height), angle);
+  }
+  const sourceWidth = atlas.naturalWidth / 2;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle);
+  if (mirror) ctx.scale(-1, 1);
+  ctx.drawImage(atlas, part === 'knife' ? 0 : sourceWidth, 0,
+    sourceWidth, atlas.naturalHeight,
+    -width / 2, -height / 2, width, height);
+  ctx.restore();
+  return true;
+}
 
 function ellipse(ctx, x, y, rx, ry, fill, stroke = INK, width = 2.5) {
   ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, TAU);
@@ -85,6 +130,66 @@ function antenna(ctx, shape, side, length, bend, colors, r) {
   }
 }
 
+function drawKnifeShield(ctx, { piece, chain, time, profile, pose, head, r }) {
+  const part = head ? 'head' : 'body';
+  const image = SHIBA_ASSETS[part]?.complete && SHIBA_ASSETS[part].naturalWidth
+    ? SHIBA_ASSETS[part] : SHIBA_ASSETS[`${part}Fallback`];
+  if (!image?.complete || !image.naturalWidth) return false;
+  if (head) {
+    const equipment = resolveBossEquipmentPose(pose.state, pose.phase, time);
+    const side = equipment.weaponSide;
+    const headSize = r * 3.35;
+    ctx.save();
+    ctx.translate(0, equipment.bob + equipment.recoil);
+    if (equipment.fall) ctx.rotate(-equipment.fall * 0.55);
+    if (pose.state === 'telegraph') {
+      ctx.shadowColor = profile.colors.glow;
+      ctx.shadowBlur = 20;
+    } else if (pose.state === 'hurt') {
+      ctx.shadowColor = '#ffffff';
+      ctx.shadowBlur = 18;
+      ctx.filter = 'brightness(1.55) saturate(0.6)';
+    }
+    drawShibaProp(ctx, 'knife', side * r * 1.42, -6,
+      r * 1.36, r * 2.18, equipment.knifeSwing, side > 0);
+    drawShibaPart(ctx, 'head', 0, 0, headSize);
+    ctx.shadowBlur = 0;
+    drawShibaProp(ctx, 'shield', -side * r * (pose.state === 'telegraph' ? 0.55 : 1.25),
+      8 - equipment.shieldLift * 20, r * 1.48, r * 1.85,
+      -side * equipment.shieldLift * 0.32);
+    if (pose.state === 'strike') {
+      ctx.strokeStyle = '#fff1b6';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(side * r * 1.1, -r * 0.3, r * 1.12,
+        side > 0 ? -1.15 : 2.1, side > 0 ? .5 : 3.75);
+      ctx.stroke();
+    }
+    if (chain.shielded) {
+      ctx.beginPath(); ctx.arc(0, 0, r + 9, 0, TAU);
+      ctx.strokeStyle = '#a4f5ff'; ctx.lineWidth = 4; ctx.stroke();
+    }
+    ctx.restore();
+  } else {
+    const tilt = (piece.index % 2 ? 1 : -1) * 0.18;
+    const ahead = pose.spine[piece.index - 1];
+    const here = pose.spine[piece.index];
+    const pathAngle = ahead && here
+      ? Math.atan2(ahead.y - here.y, ahead.x - here.x) - Math.PI / 2 : 0;
+    drawShibaPart(ctx, 'body', 0, 0, r * 2.2, tilt + pathAngle);
+    if (piece.armorHp > 0) {
+      ctx.beginPath(); ctx.arc(0, 0, r + 3, -2.8, -.2);
+      ctx.strokeStyle = '#d1e9ed'; ctx.lineWidth = 3; ctx.stroke();
+    }
+    if (piece.guard || piece.weakpoint || piece.magnet || piece.haste) {
+      ellipse(ctx, 0, 0, 7, piece.guard ? '#ffe08a'
+        : piece.weakpoint ? (piece.weakOpen ? '#fff0a0' : '#6a5b85')
+          : piece.magnet ? '#7be6ed' : '#fff2a1', INK, 2);
+    }
+  }
+  return true;
+}
+
 export function drawBossSegment(ctx, { piece, chain, time, profile, pose }) {
   if (!piece || piece.hp <= 0 || piece.y < -60 || piece.y > 900
     || piece.x < -60 || piece.x > 450) return;
@@ -98,6 +203,11 @@ export function drawBossSegment(ctx, { piece, chain, time, profile, pose }) {
   if (head) ctx.rotate(pose.angle);
   if (head && (pose.state === 'telegraph' || pose.phase === 2)) {
     ctx.shadowColor = colors.glow; ctx.shadowBlur = pose.state === 'telegraph' ? 27 : 13;
+  }
+  if (profile.id === 'meme-knife-shield'
+    && drawKnifeShield(ctx, { piece, chain, time, profile, pose, head, r })) {
+    ctx.restore();
+    return;
   }
   if (!head) {
     const fin = pose.fin * (piece.index % 3 === 0 ? 1 : .65);
