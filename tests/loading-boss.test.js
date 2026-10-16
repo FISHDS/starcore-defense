@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { advance, CHAPTERS, createBossShowcase, hitSegment } from '../dist/src/game.js';
 import { bossProfileFor } from '../dist/src/boss-profiles.js';
+import { routeLength, routePosition } from '../dist/src/routes.js';
 
 function startLoadingBoss() {
   const game = createBossShowcase(996, 6);
@@ -19,7 +20,10 @@ test('第六關以轉圈載入獸沿核心螺旋路線單頭守關', () => {
   assert.equal(bossProfileFor(6, 0).id, 'meme-loading-99');
   assert.equal(stage.positionMode, 'center');
   assert.equal(stage.paths.at(-1), 'coil');
-  assert.equal(game.boss.path, 'center-coil');
+  assert.equal(game.boss.path, 'center-boss-route-5');
+  assert.ok(routeLength(game.boss.path, true) > 1800);
+  assert.notDeepEqual(routePosition(game.boss.path, true, 0, 600),
+    routePosition(game.boss.path, true, 0, 900));
   assert.equal(game.bosses.length, 1);
 });
 
@@ -92,9 +96,10 @@ test('快速試打可直接進入轉圈載入獸，並顯示專屬外型資產',
 test('手機快速體驗可選轉圈載入獸並讀到專屬玩法提示', () => {
   const html = readFileSync(new URL('../dist/index.html', import.meta.url), 'utf8');
   const main = readFileSync(new URL('../dist/src/main.js', import.meta.url), 'utf8');
-  assert.match(html, /id="showcase-loading99"/);
+  assert.match(html, /class="showcase-loading99"/);
   assert.match(html, /loading-99-showcase\.svg/);
-  assert.match(main, /showcaseQuery === 'loading-99' \? 6/);
+  assert.match(main, /'loading-99': 6/);
   assert.match(main, /bossMode === 'loading-99'/);
-  assert.match(main, /轉圈載入獸/);
+  assert.equal(bossProfileFor(6, 0).name, '百分之九十九・轉圈載入獸');
+  assert.match(main, /chapter === 6/);
 });

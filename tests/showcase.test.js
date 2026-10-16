@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { advance, chooseUpgrade, createBossShowcase, getRunProgress, hitSegment, startRun } from '../dist/src/game.js';
 import { awardRun, loadCheckpoint, readProfile, saveCheckpoint } from '../dist/src/storage.js';
+import { bossProfileFor } from '../dist/src/boss-profiles.js';
 
 function memoryStorage() {
   const data = new Map();
@@ -47,6 +48,14 @@ test('快速體驗第五關實際生成棺材舞領隊與可打抬棺手節', ()
   assert.equal(game.bosses.length, 1);
 });
 
+test('快速體驗可直接選擇前20關的各自頭目', () => {
+  for (let chapter = 1; chapter <= 20; chapter++) {
+    const game = createBossShowcase(200 + chapter, chapter);
+    assert.equal(game.bosses[0].rig.profileId, bossProfileFor(chapter, 0).id,
+      `第${chapter}關快速試打應使用該關主頭目`);
+  }
+});
+
 test('快速體驗無法覆蓋續玩、研究點與關卡解鎖', () => {
   const storage = memoryStorage();
   const regular = startRun(91);
@@ -88,12 +97,10 @@ test('首頁及直接連結都能進入快速體驗介紹', () => {
   assert.match(html, /id="showcase-button"/);
   assert.match(html, /id="showcase-screen"/);
   assert.match(html, /id="showcase-play"/);
-  assert.match(main, /\$\('showcase-admin'\)\.addEventListener\('click', \(\) => selectShowcase\(3\)\)/);
-  assert.match(html, /id="showcase-coffin"/);
-  assert.match(html, /last-shift-coffin-leader-showcase\.svg/);
-  assert.match(main, /\$\('showcase-coffin'\)\.addEventListener\('click', \(\) => selectShowcase\(5\)\)/);
-  assert.match(main, /chapter === 3 \? '已讀不回群組長'/);
-  assert.match(main, /showcaseQuery === 'coffin-dance' \? 5/);
+  assert.match(html, /id="showcase-boss-select"/);
+  assert.match(main, /CHAPTERS\.slice\(0, 20\)/);
+  assert.match(main, /bossProfileFor\(chapter, 0\)/);
+  assert.match(main, /showcaseQuery/);
   assert.match(main, /game\.preview\s*&&\s*game\.encounter === 'boss'\s*\?\s*encounterName/);
   assert.match(main, /game\.preview \? '頭目'/);
   assert.match(main, /URLSearchParams\(window\.location\.search\)/);

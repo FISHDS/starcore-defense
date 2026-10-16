@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { advance, hitSegment, startRun } from '../dist/src/game.js';
 import { lastShiftPartForIndex } from '../dist/src/boss-art.js';
+import { bossVolleyFor } from '../dist/src/boss-attacks.js';
 
 function enterBoss(chapter, seed = chapter) {
   const game = startRun(seed, {}, chapter);
@@ -36,7 +37,9 @@ test('護衛型雙頭目各自瞄準固定核心，玩家需轉向攔截', () =>
   const game = enterBoss(9);
   game.bullets = [];
   const shots = triggerAttack(game, 2.7);
-  assert.equal(shots.length, 2);
+  const expected = game.bosses.reduce((count, boss) => count
+    + bossVolleyFor(boss.rig.attackStyle, { x: 0, y: 0 }, 0).length, 0);
+  assert.equal(shots.length, expected);
   assert.ok(shots.every(shot => shot.radius >= 8));
   for (const shot of shots) {
     const dx = game.player.x - shot.x;
@@ -52,7 +55,8 @@ test('輪替型雙頭目分次出手，核心位置不變且兩側輪流攻擊',
   game.fireTimer = -10000;
   const fixedPlayer = { x: game.player.x, y: game.player.y };
   const first = triggerAttack(game, 2.2);
-  assert.equal(first.length, 2);
+  assert.equal(first.length, bossVolleyFor(game.bosses[0].rig.attackStyle,
+    { x: 0, y: 0 }, 0).length);
   const firstSource = first[0].x;
   const firstTarget = game.bosses.map((boss, index) => ({ index,
     distance: Math.abs(boss.segments[0].x - firstSource) }))
@@ -63,7 +67,8 @@ test('輪替型雙頭目分次出手，核心位置不變且兩側輪流攻擊',
   game.bullets = [];
   game.fireTimer = -10000;
   const second = triggerAttack(game, 2.2);
-  assert.equal(second.length, 2);
+  assert.equal(second.length, bossVolleyFor(game.bosses[1].rig.attackStyle,
+    { x: 0, y: 0 }, 0).length);
   const secondSource = second[0].x;
   const secondTarget = game.bosses.map((boss, index) => ({ index,
     distance: Math.abs(boss.segments[0].x - secondSource) }))

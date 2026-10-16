@@ -50,6 +50,9 @@ test('測試瞄準策略在群組長手機亮起時會優先打斷攻擊', () =>
   const phone = boss.segments.find(piece => piece.id === boss.rig.weakpointId);
   phone.weakOpen = true;
   phone.x = 80; phone.y = 260;
+  for (const piece of boss.segments) {
+    if (piece !== phone && piece.weakpoint) piece.weakOpen = false;
+  }
   for (const chest of boss.segments.filter(piece => piece.chest)) chest.x = 500;
   const expected = Math.atan2(phone.y - game.player.y, phone.x - game.player.x);
   assert.ok(Math.abs(fixedAimAngle(game) - expected) < 0.01);

@@ -1,0 +1,145 @@
+{
+  "assetBatch": "batch-creature-b",
+  "created": "2026-10-17",
+  "status": "generated-pending-main-ai-validation",
+  "files": [
+    {
+      "path": "D:\\Roguelike\\sites\\star-core-defense\\dist\\assets\\bosses\\batch-creature-b\\coral-eclipse\\DESIGN.md",
+      "sha256": "5acd01c71192c0036b154813e09210fc1a2c807cb82d635b6eb6538cdb260645",
+      "role": "DESIGN.md"
+    },
+    {
+      "path": "D:\\Roguelike\\sites\\star-core-defense\\dist\\assets\\bosses\\batch-creature-b\\coral-eclipse\\head.svg",
+      "sha256": "479f595c0f5cb93bdba612fd33c81e5ab6240a50c940daf87acde6af06d7edb2",
+      "role": "head.svg"
+    },
+    {
+      "path": "D:\\Roguelike\\sites\\star-core-defense\\dist\\assets\\bosses\\batch-creature-b\\coral-eclipse\\poses.svg",
+      "sha256": "ea2393c8df84fbd59f0fe017a51b7f6859491c538ad8042152b9b433d703bf1f",
+      "role": "poses.svg"
+    },
+    {
+      "path": "D:\\Roguelike\\sites\\star-core-defense\\dist\\assets\\bosses\\batch-creature-b\\coral-eclipse\\segment.svg",
+      "sha256": "95abdbc98bb52169e66d288338381d5befbc27b79550d2678de9cde794eed0d1",
+      "role": "segment.svg"
+    },
+    {
+      "path": "D:\\Roguelike\\sites\\star-core-defense\\dist\\assets\\bosses\\batch-creature-b\\coral-eclipse\\signature.svg",
+      "sha256": "80ec5aab244548bb760be69a510ca14f89c5160f80cccc38582d3bc772fe9cf7",
+      "role": "signature.svg"
+    },
+    {
+      "path": "D:\\Roguelike\\sites\\star-core-defense\\dist\\assets\\bosses\\batch-creature-b\\fracture-tide-king\\DESIGN.md",
+      "sha256": "1998aac25f6ae8e75cf90993939ed9d8e8c264537df8cd3abb1035d67ee74e95",
+      "role": "DESIGN.md"
+    },
+    {
+      "path": "D:\\Roguelike\\sites\\star-core-defense\\dist\\assets\\bosses\\batch-creature-b\\fracture-tide-king\\head.svg",
+      "sha256": "c61ebeba1864a30aa679a4c03bca4a219e92b10301d17e3522667f0f904ae75f",
+      "role": "head.svg"
+    },
+    {
+      "path": "D:\\Roguelike\\sites\\star-core-defense\\dist\\assets\\bosses\\batch-creature-b\\fracture-tide-king\\poses.svg",
+      "sha256": "729d85c0347f0ec6841c530eee9dedc5f1e6724a266ca10448c0f0de579f58aa",
+      "role": "poses.svg"
+    },
+    {
+      "path": "D:\\Roguelike\\sites\\star-core-defense\\dist\\assets\\bosses\\batch-creature-b\\fracture-tide-king\\segment.svg",
+      "sha256": "20762efbdabf1b0ba195fd2afc8f8c64b28a247fde36fe49e0f05ec95d95eab3",
+      "role": "segment.svg"
+    },
+    {
+      "path": "D:\\Roguelike\\sites\\star-core-defense\\dist\\assets\\bosses\\batch-creature-b\\fracture-tide-king\\signature.svg",
+      "sha256": "f78f356693dab7bc57c84c4f9568da929404dbf33b4f537b397cd8ddc85a6828",
+      "role": "signature.svg"
+    },
+    {
+      "path": "D:\\Roguelike\\sites\\star-core-defense\\dist\\assets\\bosses\\batch-creature-b\\prism-mantis\\DESIGN.md",
+      "sha256": "09835e9680bdeb7000edcc58c0db033d991fed67d6129cd322aebc5c45cab8da",
+      "role": "DESIGN.md"
+    },
+    {
+      "path": "D:\\Roguelike\\sites\\star-core-defense\\dist\\assets\\bosses\\batch-creature-b\\prism-mantis\\head.svg",
+      "sha256": "921ac250b6106276538e99f6d1fb65ab8e0e18ab79da6afce57f633a0d38fe69",
+      "role": "head.svg"
+    },
+    {
+      "path": "D:\\Roguelike\\sites\\star-core-defense\\dist\\assets\\bosses\\batch-creature-b\\prism-mantis\\poses.svg",
+      "sha256": "d0b96927a31fac17e89576d3326d4635131720ea0982aeaaa9a3bae98b9194de",
+      "role": "poses.svg"
+    },
+    {
+      "path": "D:\\Roguelike\\sites\\star-core-defense\\dist\\assets\\bosses\\batch-creature-b\\prism-mantis\\segment.svg",
+      "sha256": "ed547c687c00c5ebaf41fc3f06e79386f25492c2eddd565836d51c37a9f79d55",
+      "role": "segment.svg"
+    },
+    {
+      "path": "D:\\Roguelike\\sites\\star-core-defense\\dist\\assets\\bosses\\batch-creature-b\\prism-mantis\\signature.svg",
+      "sha256": "c34ae60196453a92b00be6a91e8f02f6c0fdc2b2cffecaa02bd320710657dd31",
+      "role": "signature.svg"
+    },
+    {
+      "path": "D:\\Roguelike\\sites\\star-core-defense\\dist\\assets\\bosses\\batch-creature-b\\reefback-warden\\DESIGN.md",
+      "sha256": "c0ac90f768febefb2a73f84bdf3f47518aabed31cebfc1e7899c888b90da784f",
+      "role": "DESIGN.md"
+    },
+    {
+      "path": "D:\\Roguelike\\sites\\star-core-defense\\dist\\assets\\bosses\\batch-creature-b\\reefback-warden\\head.svg",
+      "sha256": "66c3fa4ebf412fa28b8adc9959d633ff27e8cab3c5c2281b3c1e487405df900f",
+      "role": "head.svg"
+    },
+    {
+      "path": "D:\\Roguelike\\sites\\star-core-defense\\dist\\assets\\bosses\\batch-creature-b\\reefback-warden\\poses.svg",
+      "sha256": "b87988f8c0c8f023a7662cae506d7053743d6f17ced356a4256628f79ab57dd1",
+      "role": "poses.svg"
+    },
+    {
+      "path": "D:\\Roguelike\\sites\\star-core-defense\\dist\\assets\\bosses\\batch-creature-b\\reefback-warden\\segment.svg",
+      "sha256": "3651c10ded9a1ce129a566f32d14d4eff425c46307f04512ea61d10d36cefe58",
+      "role": "segment.svg"
+    },
+    {
+      "path": "D:\\Roguelike\\sites\\star-core-defense\\dist\\assets\\bosses\\batch-creature-b\\reefback-warden\\signature.svg",
+      "sha256": "a9f0424754188cbb8ff6eb3e77aae723b9f7973c27f4858c886644322cf54f6d",
+      "role": "signature.svg"
+    },
+    {
+      "path": "D:\\Roguelike\\sites\\star-core-defense\\dist\\assets\\bosses\\batch-creature-b\\spore-dreamweaver\\DESIGN.md",
+      "sha256": "f63e1acd102676841f1fd111d5e334b67abc7c60a87110172612d05e50e26c40",
+      "role": "DESIGN.md"
+    },
+    {
+      "path": "D:\\Roguelike\\sites\\star-core-defense\\dist\\assets\\bosses\\batch-creature-b\\spore-dreamweaver\\head.svg",
+      "sha256": "5e97281ce64cc412b61d816ff3f5999a417162dfaf9b45c75baf85ad76d2511e",
+      "role": "head.svg"
+    },
+    {
+      "path": "D:\\Roguelike\\sites\\star-core-defense\\dist\\assets\\bosses\\batch-creature-b\\spore-dreamweaver\\poses.svg",
+      "sha256": "fbfbfdcdf1316c04f90b04e0b93d75dea660e722a54217f3c0c34686a77c73d8",
+      "role": "poses.svg"
+    },
+    {
+      "path": "D:\\Roguelike\\sites\\star-core-defense\\dist\\assets\\bosses\\batch-creature-b\\spore-dreamweaver\\segment.svg",
+      "sha256": "4ceee71b19eed98175e38800a4b6331631bf5e12e673f3e87e3c9de3b0546ca2",
+      "role": "segment.svg"
+    },
+    {
+      "path": "D:\\Roguelike\\sites\\star-core-defense\\dist\\assets\\bosses\\batch-creature-b\\spore-dreamweaver\\signature.svg",
+      "sha256": "3c5bac60fbec5490594c67c651715c3d9546950856c33765dfa1357f72b2a5f9",
+      "role": "signature.svg"
+    },
+    {
+      "path": "D:\\Roguelike\\sites\\star-core-defense\\dist\\assets\\bosses\\batch-creature-b\\contact-sheet.svg",
+      "sha256": "1c3481862335188316b0a8250643e214279970d1686894c4bd58c14d08f01413",
+      "role": "thumbnail-preview-svg"
+    },
+    {
+      "path": "D:\\Roguelike\\sites\\star-core-defense\\dist\\assets\\bosses\\batch-creature-b\\contact-sheet.png",
+      "sha256": "238aa02040f13f83d213b02d94940c1b4e823963653393346983cb23185665bf",
+      "role": "thumbnail-preview-png"
+    }
+  ],
+  "knownLimitations": [
+    "尚未接入遊戲或手機戰鬥；目前只驗證素材檔、SVG尺寸及縮小縮圖預覽。"
+  ]
+}

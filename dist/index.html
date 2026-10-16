@@ -7,8 +7,8 @@
   <meta name="description" content="星核防線：原創手機直式長鏈防線遊戲。擊破身體讓頭部後退，打開藏在敵群中的寶箱進化武器。">
   <title>星核防線 · Starcore Defense</title>
   <link rel="icon" type="image/svg+xml" href="./assets/icon.svg">
-  <link rel="stylesheet" href="./style.css?v=20261017-starcore-4">
-  <script type="module" src="./src/main.js?v=20261017-starcore-5"></script>
+  <link rel="stylesheet" href="./style.css?v=20261017-starcore-7">
+  <script type="module" src="./src/main.js?v=20261017-starcore-7"></script>
 </head>
 <body>
   <main class="game-shell" aria-label="星核防線遊戲">
@@ -54,8 +54,10 @@
 
     <section id="showcase-screen" class="screen showcase-screen" aria-labelledby="showcase-title" hidden>
       <div class="showcase-heading"><span class="eyebrow" id="showcase-index">BOSS SHOWCASE · 01</span><h2 id="showcase-title">我的刀盾</h2><p>免解鎖 · 直接進頭目戰</p></div>
-      <div class="showcase-selector"><button id="showcase-shiba" type="button" class="selected">刀盾</button><button id="showcase-cat" type="button">破音貓</button><button id="showcase-admin" type="button">群組長</button><button id="showcase-coffin" type="button">棺材舞</button><button id="showcase-loading99" type="button">99%載入</button></div>
-      <div class="showcase-art" aria-hidden="true"><img class="showcase-shield" src="./assets/bosses/shiba-shield.svg" alt=""><img class="showcase-doge" src="./assets/bosses/shiba-head.png" alt=""><img class="showcase-knife" src="./assets/bosses/shiba-knife.svg" alt=""><img class="showcase-cat" src="./assets/bosses/screech-cat-head.png" alt="" hidden><img class="showcase-admin" src="./assets/bosses/prototypes/seen-zone-group-admin.svg" alt="" hidden><img class="showcase-coffin" src="./assets/bosses/prototypes/last-shift-coffin-leader-showcase.svg" alt="" hidden><img class="showcase-loading99" src="./assets/bosses/loading-99-showcase.svg" alt="" hidden></div>
+      <label class="showcase-selector" for="showcase-boss-select">選擇頭目
+        <select id="showcase-boss-select" aria-label="選擇要試打的頭目"></select>
+      </label>
+      <div class="showcase-art" aria-hidden="true"><img class="showcase-shield" src="./assets/bosses/shiba-shield.svg" alt=""><img class="showcase-doge" src="./assets/bosses/shiba-head.png" alt=""><img class="showcase-knife" src="./assets/bosses/shiba-knife.svg" alt=""><img class="showcase-cat" src="./assets/bosses/screech-cat-head.png" alt="" hidden><img class="showcase-admin" src="./assets/bosses/prototypes/seen-zone-group-admin.svg" alt="" hidden><img class="showcase-coffin" src="./assets/bosses/prototypes/last-shift-coffin-leader-showcase.svg" alt="" hidden><img class="showcase-loading99" src="./assets/bosses/loading-99-showcase.svg" alt="" hidden><img id="showcase-custom" class="showcase-custom" alt="" hidden></div>
       <div class="showcase-moves" id="showcase-moves"><div><strong>01 舉盾</strong><span>盾牌遮住部分身體，轉向瞄準露出的節點或寶箱</span></div><div><strong>02 斜斬</strong><span>預警亮起時集火刀臂，打斷斬擊；揮刀後可反擊</span></div><div><strong>03 換手</strong><span>身體打掉一半後，刀臂與可攻擊側改變</span></div></div>
       <p class="showcase-note">短篇試打有預設火力與兩個寶箱。練習不消耗進度，也不發放獎勵。</p>
       <div class="showcase-actions"><button id="showcase-play" class="primary-button" type="button"><span>立即試打</span><span aria-hidden="true">↗</span></button><button id="showcase-back" class="text-button" type="button">返回主畫面</button></div>

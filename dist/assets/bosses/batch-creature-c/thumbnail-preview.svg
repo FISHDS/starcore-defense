@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 210" role="img" aria-labelledby="title desc">
+<title id="title">星核防線四隻頭目手機尺寸剪影預覽</title><desc id="desc">四隻頭目頭部各以 72 像素寬度顯示，旁邊展示 20 像素身節</desc>
+<rect width="640" height="210" rx="18" fill="#101723"/>
+<g font-family="sans-serif" text-anchor="middle" fill="#F5F1E8">
+ <g transform="translate(8 14)"><rect width="148" height="180" rx="12" fill="#183448"/><image href="abyss-bell-matriarch/head.svg" x="32" y="20" width="84" height="84"/><image href="abyss-bell-matriarch/segment.svg" x="62" y="107" width="24" height="24"/><text x="74" y="158" font-size="14">深淵鐘母</text><text x="74" y="177" font-size="10" fill="#B8FCF3">鐘罩・脈衝囊</text></g>
+ <g transform="translate(166 14)"><rect width="148" height="180" rx="12" fill="#27313D"/><image href="iron-jaw-breaker/head.svg" x="32" y="20" width="84" height="84"/><image href="iron-jaw-breaker/segment.svg" x="62" y="107" width="24" height="24"/><text x="74" y="158" font-size="14">鐵顎破陣者</text><text x="74" y="177" font-size="10" fill="#E5B457">鋼鉗・破城錐</text></g>
+ <g transform="translate(324 14)"><rect width="148" height="180" rx="12" fill="#282742"/><image href="eclipse-core/head.svg" x="32" y="20" width="84" height="84"/><image href="eclipse-core/segment.svg" x="62" y="107" width="24" height="24"/><text x="74" y="158" font-size="14">蝕日核心</text><text x="74" y="177" font-size="10" fill="#F4B64D">環蝕・日冕</text></g>
+ <g transform="translate(482 14)"><rect width="148" height="180" rx="12" fill="#29263D"/><image href="night-bloom-eater/head.svg" x="32" y="20" width="84" height="84"/><image href="night-bloom-eater/segment.svg" x="62" y="107" width="24" height="24"/><text x="74" y="158" font-size="14">夜幕花噬者</text><text x="74" y="177" font-size="10" fill="#B5D568">尖瓣・種莢</text></g>
+</g></svg>

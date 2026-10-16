@@ -27,6 +27,8 @@ function rowBounds(path, row, boss, lane) {
 
 function makeCoreRoute(path, boss, lane) {
   const style = path.slice('center-'.length);
+  if (style.startsWith('boss-route-'))
+    return makeBossRoute(Number(style.slice('boss-route-'.length)), true, lane);
   const reverse = style === 'mirror' || style === 'cross' && lane % 2 === 1;
   const start = -Math.PI / 2 + (boss && lane % 2 ? Math.PI : 0);
   const turns = style === 'tide' ? 1.7 : style === 'fork' ? 2.25
@@ -59,8 +61,47 @@ function makeCoreRoute(path, boss, lane) {
   return { points, lengths, length: lengths.at(-1) };
 }
 
+function makeBossRoute(index, center, lane) {
+  const routeId = Math.max(0, Math.floor(index) || 0);
+  const points = [];
+  const steps = 320;
+  const direction = routeId % 2 ? -1 : 1;
+  const lanePhase = lane % 2 ? Math.PI : 0;
+  const turns = 2.2 + (routeId % 7) * 0.38;
+  const waveCount = 1 + routeId % 6;
+  const amplitude = 72 + (routeId % 4) * 18;
+  for (let step = 0; step <= steps; step++) {
+    const t = step / steps;
+    if (center) {
+      const angle = lanePhase + direction * turns * Math.PI * 2 * t
+        + Math.sin(t * Math.PI * 2 * (2 + routeId % 3)) * 0.08;
+      const radius = 1 - t;
+      const xRadius = 165 * radius + 20 + Math.sin(t * Math.PI * 4) * (routeId % 5) * 1.6;
+      const yRadius = 285 * radius + 24;
+      points.push({ x: 195 + Math.cos(angle) * xRadius,
+        y: 422 + Math.sin(angle) * yRadius });
+    } else {
+      const phase = routeId * 0.29 + lanePhase;
+      const x = 195 + Math.sin(t * Math.PI * 2 * waveCount + phase) * amplitude
+        + Math.sin(t * Math.PI * 2 * (waveCount + 2 + routeId % 3) - phase) * 21;
+      const y = 105 + 640 * t + Math.sin(t * Math.PI * 2 * waveCount + phase) * 9;
+      points.push({ x: Math.max(29, Math.min(361, x)), y });
+    }
+  }
+  if (center) points.push({ x: 195, y: 422 });
+  else points.push({ x: points.at(-1).x, y: 760 });
+  const lengths = [0];
+  for (let index = 1; index < points.length; index++) {
+    lengths.push(lengths[index - 1] + Math.hypot(points[index].x - points[index - 1].x,
+      points[index].y - points[index - 1].y));
+  }
+  return { points, lengths, length: lengths.at(-1) };
+}
+
 function makeRoute(path, boss, lane) {
   if (path.startsWith('center-')) return makeCoreRoute(path, boss, lane);
+  if (path.startsWith('boss-route-'))
+    return makeBossRoute(Number(path.slice('boss-route-'.length)), false, lane);
   const reverse = path === 'mirror' || (path === 'cross' && lane % 2 === 1);
   const yOffset = boss && path === 'cross' && lane % 2 ? 30 : 0;
   const points = [];

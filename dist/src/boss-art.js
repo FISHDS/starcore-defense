@@ -1,6 +1,7 @@
 // 全部魔王共用的畫法；外型差異由資料提供，路線與碰撞仍由遊戲管理。
 import { resolveBossEquipmentPose } from './boss-rig.js';
 import { knifeShieldGuarded } from './knife-shield.js';
+import { BOSS_PROFILES } from './boss-profiles.js?v=20261017-starcore-7';
 
 const TAU = Math.PI * 2;
 const INK = '#172235';
@@ -9,6 +10,7 @@ const CAT_ASSETS = {};
 const ADMIN_ASSETS = {};
 const COFFIN_ASSETS = {};
 const LOADING99_ASSETS = {};
+const BATCH_BOSS_ASSETS = new Map();
 const smallSprites = new WeakMap();
 function mobileSprite(image, size = 112) {
   if (!image?.complete || !image.naturalWidth) return null;
@@ -82,7 +84,7 @@ if (typeof Image !== 'undefined') {
   }, { once: true });
   const loading99Atlas = new Image();
   loading99Atlas.decoding = 'async';
-  loading99Atlas.src = new URL('../assets/bosses/loading-99-atlas.svg?v=20261017-starcore-4', import.meta.url).href;
+  loading99Atlas.src = new URL('../assets/bosses/loading-99-atlas.svg?v=20261017-starcore-7', import.meta.url).href;
   loading99Atlas.addEventListener('load', () => {
     const parts = {
       head: [0, 0, 100, 104], ring: [105, 16, 72, 72],
@@ -97,6 +99,16 @@ if (typeof Image !== 'undefined') {
       LOADING99_ASSETS[part] = canvas;
     }
   }, { once: true });
+  for (const profile of BOSS_PROFILES.filter(item => item.parts?.signature)) {
+    const assets = {};
+    BATCH_BOSS_ASSETS.set(profile.id, assets);
+    for (const part of ['head', 'body', 'signature']) {
+      const image = new Image();
+      image.decoding = 'async';
+      image.src = new URL(`../assets/bosses/${profile.parts[part]}?v=20261017-boss-roster-2`, import.meta.url).href;
+      assets[part] = image;
+    }
+  }
 }
 
 function drawShibaPart(ctx, part, x, y, size, angle = 0) {
@@ -420,6 +432,53 @@ function drawLoading99(ctx, { piece, chain, time, pose, head, r }) {
   return true;
 }
 
+function drawBatchBoss(ctx, { piece, chain, time, profile, pose, head, r }) {
+  const assets = BATCH_BOSS_ASSETS.get(profile.id);
+  const key = head ? 'head' : 'body';
+  const image = assets?.[key];
+  if (!image?.complete || !image.naturalWidth) return false;
+  ctx.save();
+  if (head) {
+    const moveBob = Math.sin(time * (profile.motion.sway + 2)) * 2.2;
+    const alarm = profile.attackStyle === 'alarm-rush';
+    const lift = pose.state === 'telegraph' ? (alarm ? -5 : -2) : moveBob;
+    ctx.translate(0, lift + (pose.state === 'hurt' ? -4 : 0));
+    if (pose.state === 'hurt') ctx.filter = 'brightness(1.65)';
+    if (pose.state === 'strike') ctx.scale(1.06, 0.94);
+    const size = r * (profile.id === 'meme-clock-in-executioner' ? 3.15 : 3.35);
+    ctx.drawImage(mobileSprite(image, 128), -size / 2, -size / 2, size, size);
+    if (pose.state === 'telegraph') {
+      ctx.beginPath();
+      ctx.arc(0, 0, r * (1.65 + Math.sin(time * 16) * 0.05), 0, TAU);
+      ctx.strokeStyle = profile.colors.glow;
+      ctx.lineWidth = 3;
+      ctx.setLineDash([5, 4]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  } else {
+    const ahead = pose.spine[piece.index - 1];
+    const here = pose.spine[piece.index];
+    const angle = ahead && here
+      ? Math.atan2(ahead.y - here.y, ahead.x - here.x) - Math.PI / 2 : 0;
+    ctx.rotate(angle + Math.sin(time * 4 + piece.index * 0.72) * 0.045);
+    const size = r * (piece.chest ? 2.7 : 2.3);
+    ctx.drawImage(mobileSprite(image, 64), -size / 2, -size / 2, size, size);
+    const signature = assets.signature;
+    if (piece.index % 5 === 2 && signature?.complete && signature.naturalWidth) {
+      const mark = r * 1.35;
+      ctx.drawImage(mobileSprite(signature, 56), -mark / 2, -mark / 2, mark, mark);
+    }
+    if (piece.weakpoint && piece.weakOpen) {
+      ctx.beginPath(); ctx.arc(0, 0, r * 1.15, 0, TAU);
+      ctx.strokeStyle = profile.colors.glow; ctx.lineWidth = 3;
+      ctx.shadowColor = profile.colors.glow; ctx.shadowBlur = 10; ctx.stroke();
+    }
+  }
+  ctx.restore();
+  return true;
+}
+
 function drawLastShiftCoffin(ctx, { piece, chain, time, pose, head, r }) {
   const part = head ? COFFIN_ASSETS.head
     : piece.chest ? COFFIN_ASSETS.chest
@@ -495,6 +554,11 @@ export function drawBossSegment(ctx, { piece, chain, time, profile, pose }) {
   }
   if (profile.id === 'meme-loading-99'
     && drawLoading99(ctx, { piece, chain, time, profile, pose, head, r })) {
+    ctx.restore();
+    return;
+  }
+  if (BATCH_BOSS_ASSETS.has(profile.id)
+    && drawBatchBoss(ctx, { piece, chain, time, profile, pose, head, r })) {
     ctx.restore();
     return;
   }

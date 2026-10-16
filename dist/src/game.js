@@ -1,9 +1,10 @@
-import { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID } from './content.js?v=20261017-starcore-4';
-import { routePosition } from './routes.js?v=20261017-starcore-4';
+import { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID } from './content.js?v=20261017-starcore-7';
+import { routePosition } from './routes.js?v=20261017-starcore-7';
 import { assignTraits, chainSpeed, chestGuarded, steerBullet,
   updateBossShields, updateHazards, updateWeakpoints } from './mechanics.js';
 import { createBossRig, updateBossRig } from './boss-rig.js';
-import { bossProfileFor } from './boss-profiles.js?v=20261017-starcore-4';
+import { bossProfileFor, bossRosterIndexFor } from './boss-profiles.js?v=20261017-starcore-7';
+import { bossVolleyFor } from './boss-attacks.js';
 import { knifeShieldDamageMultiplier, knifeShieldSlash } from './knife-shield.js';
 
 export { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID };
@@ -112,8 +113,11 @@ export function createBossShowcase(seed = Date.now(), chapter = 1) {
 function configuredWave(game, index) {
   const source = WAVES[index];
   const chapter = activeStage(game);
-  const path = game.chapter !== 26 && chapter.positionMode === 'center'
-    ? `center-${chapter.paths[index]}` : chapter.paths[index];
+  const bossRoute = source.boss ? `boss-route-${bossRosterIndexFor(game.chapter)}` : null;
+  const path = source.boss
+    ? chapter.positionMode === 'center' ? `center-${bossRoute}` : bossRoute
+    : game.chapter !== 26 && chapter.positionMode === 'center'
+      ? `center-${chapter.paths[index]}` : chapter.paths[index];
   return {
     ...source,
     path,
@@ -170,7 +174,10 @@ function spawnChain(game, wave, lane = game.spawnCount) {
     originalBodyCount: boss ? count - 1 : 0,
     rig: boss ? createBossRig(bossProfileFor(game.chapter, lane).id) : null,
   };
-  if (chain.rig) chain.rig.attackPattern = stage.bossMode;
+  if (chain.rig) {
+    chain.rig.attackPattern = stage.bossMode;
+    chain.rig.attackStyle = bossProfileFor(game.chapter, lane).attackStyle;
+  }
   const chestIndices = boss ? [5, 15, 26, 38]
     : [5, 18, 36, 60, 84, 110, 138, 168, 198];
   for (let index = 0; index < count; index++) {
@@ -869,25 +876,13 @@ function updateBossShots(game, dt) {
         continue;
       }
       if (pattern === 'alternating' && liveBosses.length > 1) game.bossAttackCount++;
-      const shapes = {
-        armor: { spreads: [-72, 0, 72], speed: 220, radius: 7, damage: 26 },
-        guard: { spreads: [0], speed: 250, radius: 9, damage: 11 },
-        weakpoint: { spreads: [-20, 20], speed: 245, radius: 6, damage: 8 },
-        speed: { spreads: [-32, 32], speed: 280, radius: 6, damage: 7 },
-      };
-      const shape = shapes[pattern] || {
-        spreads: [-40, 40], speed: phaseTwo
-          ? (game.chapter <= 5 ? 226 : 245) : 220, radius: 7, damage: 9,
-      };
-      const speed = shape.speed * (phaseTwo && pattern !== 'speed' ? 1.08 : 1);
       const aimAngle = boss.rig?.targetAngle ?? Math.atan2(
         game.player.y - head.y, game.player.x - head.x);
-      for (const spread of shape.spreads) {
-        const angle = aimAngle + spread * Math.PI / 180;
-        game.enemyBullets.push({ x: head.x, y: head.y + 25,
-          vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
-          radius: shape.radius, damage: shape.damage });
-      }
+      const style = boss.rig?.attackStyle || 'spore-bloom';
+      game.enemyBullets.push(...bossVolleyFor(style,
+        { x: head.x, y: head.y + 25 }, aimAngle,
+        boss.rig?.phase || (phaseTwo ? 2 : 1), boss.rig?.attackCount || 0));
+      if (boss.rig) boss.rig.attackCount = (boss.rig.attackCount || 0) + 1;
     }
   }
 }
@@ -898,6 +893,11 @@ function updateEnemyBullets(game, dt) {
     const shot = game.enemyBullets[i];
     shot.x += shot.vx * dt;
     shot.y += shot.vy * dt;
+    if ((shot.ricochets || 0) > 0 && (shot.x < shot.radius || shot.x > WIDTH - shot.radius)) {
+      shot.x = Math.max(shot.radius, Math.min(WIDTH - shot.radius, shot.x));
+      shot.vx *= -1;
+      shot.ricochets--;
+    }
     if (Math.abs(shot.x - game.player.x) < shot.radius + 15
       && Math.abs(shot.y - game.player.y) < shot.radius + 15 && game.invulnerable === 0) {
       game.enemyBullets.splice(i, 1);

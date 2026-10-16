@@ -1,11 +1,12 @@
-import { advance, CHAPTERS, chooseUpgrade, createBossShowcase, getRunProgress, HEIGHT, rerollUpgrades, startRun, UPGRADE_BY_ID, WAVES, WIDTH } from './game.js?v=20261017-starcore-4';
+import { advance, CHAPTERS, chooseUpgrade, createBossShowcase, getRunProgress, HEIGHT, rerollUpgrades, startRun, UPGRADE_BY_ID, WAVES, WIDTH } from './game.js?v=20261017-starcore-7';
 import { pointerToAimAngle } from './input.js';
-import { render } from './render.js?v=20261017-starcore-4';
-import { awardRun, buyResearch, buyItem, equipItem, clearCheckpoint, loadCheckpoint, readProfile, researchCost, saveCheckpoint, updateBest } from './storage.js?v=20261017-starcore-4';
+import { render } from './render.js?v=20261017-starcore-7';
+import { awardRun, buyResearch, buyItem, equipItem, clearCheckpoint, loadCheckpoint, readProfile, researchCost, saveCheckpoint, updateBest } from './storage.js?v=20261017-starcore-7';
 import { ORGANS, WEAPONS } from './meta.js';
-import { drawSkillIcon } from './art.js?v=20261017-starcore-4';
+import { drawSkillIcon } from './art.js?v=20261017-starcore-7';
 import { createAudioEngine, musicThemeForChapter } from './audio.js?v=20261017-starcore-5';
 import { getBattleHint } from './tutorial.js';
+import { bossProfileFor } from './boss-profiles.js?v=20261017-starcore-7';
 
 const $ = id => document.getElementById(id);
 const canvas = $('arena');
@@ -64,12 +65,13 @@ let showResearch = false;
 let showStages = false;
 let showLoadout = false;
 const showcaseQuery = new URLSearchParams(window.location.search).get('showcase');
-let selectedShowcase = showcaseQuery === 'screech-cat' ? 2
-  : showcaseQuery === 'group-admin' ? 3
-    : showcaseQuery === 'coffin-dance' ? 5
-      : showcaseQuery === 'loading-99' ? 6 : 1;
-let showShowcase = ['knife-shield', 'screech-cat', 'group-admin',
-  'coffin-dance', 'loading-99'].includes(showcaseQuery);
+const showcaseAliases = { 'knife-shield': 1, 'screech-cat': 2, 'group-admin': 3,
+  'coffin-dance': 5, 'loading-99': 6 };
+const showcaseNumber = showcaseAliases[showcaseQuery] ?? Number(showcaseQuery);
+const validShowcaseQuery = Number.isInteger(showcaseNumber)
+  && showcaseNumber >= 1 && showcaseNumber <= 20;
+let selectedShowcase = validShowcaseQuery ? showcaseNumber : 1;
+let showShowcase = validShowcaseQuery;
 let lastSavedAt = 0;
 let selectedChapter = readProfile(storage).unlockedStage;
 let selectedZone = Math.floor((selectedChapter - 1) / 5);
@@ -100,14 +102,8 @@ function refreshHud() {
   hint.classList.toggle('persistent-tutorial', game.chapter === 1 && game.normalDestroyed === 0);
   $('wave-number').textContent = game.preview ? '頭目' : game.chapter === 26
     ? `無盡 ${game.endlessTier}` : `第${game.chapter}關`;
-  const encounterName = game.encounter === 'boss' && activeChapter.bossMode === 'knife-shield'
-    ? '我的刀盾' : game.encounter === 'boss' && activeChapter.bossMode === 'screech-cat'
-      ? '破音貓' : game.encounter === 'boss' && activeChapter.bossMode === 'group-admin'
-        ? '已讀不回群組長' : game.encounter === 'boss'
-          && activeChapter.bossMode === 'coffin-dance'
-          ? '棺材舞領隊・最後一班' : game.encounter === 'boss'
-            && activeChapter.bossMode === 'loading-99'
-            ? '百分之九十九・轉圈載入獸' : wave.name;
+  const currentBossProfile = bossProfileFor(game.chapter, 0);
+  const encounterName = game.encounter === 'boss' ? currentBossProfile.name : wave.name;
   $('wave-name').textContent = game.preview && game.encounter === 'boss'
     ? encounterName
     : `${game.chapter === 26 ? '無盡挑戰' : CHAPTERS[game.chapter - 1].name} · ${encounterName}`;
@@ -138,7 +134,7 @@ function refreshHud() {
     ? '載入卡在 99% · 轉向打破紅色故障節，中斷狹幅掃描'
     : activeChapter.bossMode === 'final'
     ? '雙母體輪流亮起護盾 · 改打沒發光的長鏈'
-    : '雙母體逼近 · 瞄準身體讓頭部後退';
+    : currentBossProfile.attackHint;
 }
 
 function refreshResearch() {
@@ -404,22 +400,22 @@ $('showcase-button').addEventListener('click', () => {
   audio.playSfx('click');
 });
 function selectShowcase(chapter) {
+  const boss = bossProfileFor(chapter, 0);
   selectedShowcase = chapter;
-  $('showcase-shiba').classList.toggle('selected', chapter === 1);
-  $('showcase-cat').classList.toggle('selected', chapter === 2);
-  $('showcase-admin').classList.toggle('selected', chapter === 3);
-  $('showcase-coffin').classList.toggle('selected', chapter === 5);
-  $('showcase-loading99').classList.toggle('selected', chapter === 6);
-  $('showcase-index').textContent = `BOSS SHOWCASE · 0${chapter}`;
-  $('showcase-title').textContent = chapter === 1 ? '我的刀盾'
-    : chapter === 2 ? '破音貓' : chapter === 3 ? '已讀不回群組長'
-      : chapter === 5 ? '棺材舞領隊・最後一班' : '百分之九十九・轉圈載入獸';
+  $('showcase-boss-select').value = String(chapter);
+  $('showcase-index').textContent = `BOSS SHOWCASE · ${String(chapter).padStart(2, '0')}`;
+  $('showcase-title').textContent = boss.name;
   for (const item of showcaseScreen.querySelectorAll('.showcase-shield,.showcase-doge,.showcase-knife'))
     item.hidden = chapter !== 1;
   showcaseScreen.querySelector('.showcase-cat').hidden = chapter !== 2;
   showcaseScreen.querySelector('.showcase-admin').hidden = chapter !== 3;
   showcaseScreen.querySelector('.showcase-coffin').hidden = chapter !== 5;
   showcaseScreen.querySelector('.showcase-loading99').hidden = chapter !== 6;
+  const customArt = $('showcase-custom');
+  customArt.hidden = [1, 2, 3, 5, 6].includes(chapter);
+  if (!customArt.hidden && boss.parts?.head) {
+    customArt.src = `./assets/bosses/${boss.parts.head}?v=20261017-boss-roster-2`;
+  }
   $('showcase-moves').innerHTML = chapter === 1
     ? '<div><strong>01 舉盾</strong><span>盾牌遮住部分身體，轉向瞄準露出的節點或寶箱</span></div><div><strong>02 斜斬</strong><span>舉刀後會沿預警斜線揮擊；轉向開火可攔截斬線</span></div><div><strong>03 換手</strong><span>身體打掉一半後，刀盾換手並改變護盾側</span></div>'
     : chapter === 2
@@ -428,13 +424,19 @@ function selectShowcase(chapter) {
         ? '<div><strong>01 手機亮起</strong><span>通知風暴前會打開手機弱點</span></div><div><strong>02 打斷通知</strong><span>轉向集火手機可取消整輪攻擊</span></div><div><strong>03 擊落紅泡泡</strong><span>來不及打手機時，仍可逐顆射掉通知彈</span></div>'
         : chapter === 5
           ? '<div><strong>01 抬棺預警</strong><span>領隊舉棺時，承重手節會亮起並預告出牌方向</span></div><div><strong>02 左右交替</strong><span>每輪只飛出一張斜向節拍牌，轉向迎擊可將它擊落</span></div><div><strong>03 失步打斷</strong><span>打破發光手節可中斷本輪；半血後牌速加快</span></div>'
-          : '<div><strong>01 卡在 99%</strong><span>載入長鏈沿核心螺旋逼近，打爆身節會拉回頭部</span></div><div><strong>02 找出錯碼</strong><span>紅色故障節亮起時，轉向集火可中斷載入掃描</span></div><div><strong>03 半血反轉</strong><span>頭環反向旋轉，主掃描後延遲追加側掃</span></div>';
+          : chapter === 6
+            ? '<div><strong>01 卡在 99%</strong><span>載入長鏈沿核心螺旋逼近，打爆身節會拉回頭部</span></div><div><strong>02 找出錯碼</strong><span>紅色故障節亮起時，轉向集火可中斷載入掃描</span></div><div><strong>03 半血反轉</strong><span>頭環反向旋轉，主掃描後延遲追加側掃</span></div>'
+            : `<div><strong>01 行軍</strong><span>${boss.routeStyle}；長鏈沿路線逐節靠近</span></div><div><strong>02 招牌攻擊</strong><span>${boss.attackHint}</span></div><div><strong>03 試打方式</strong><span>角色固定守點，原地轉向瞄準；擊破身節可拉回頭部</span></div>`;
 }
-$('showcase-shiba').addEventListener('click', () => selectShowcase(1));
-$('showcase-cat').addEventListener('click', () => selectShowcase(2));
-$('showcase-admin').addEventListener('click', () => selectShowcase(3));
-$('showcase-coffin').addEventListener('click', () => selectShowcase(5));
-$('showcase-loading99').addEventListener('click', () => selectShowcase(6));
+for (const stage of CHAPTERS.slice(0, 20)) {
+  const boss = bossProfileFor(stage.id, 0);
+  const option = document.createElement('option');
+  option.value = String(stage.id);
+  option.textContent = `第${stage.id}關 · ${boss.name}`;
+  $('showcase-boss-select').append(option);
+}
+$('showcase-boss-select').addEventListener('change', event =>
+  selectShowcase(Number(event.currentTarget.value)));
 selectShowcase(selectedShowcase);
 $('showcase-play').addEventListener('click', beginShowcase);
 $('showcase-back').addEventListener('click', () => { showShowcase = false; syncScreen(); });

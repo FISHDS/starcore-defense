@@ -68,6 +68,17 @@ export const CHAPTERS = LEVELS.map(([name, path, mechanics, bossMode], index) =>
   const zoneInfo = ZONES[zone];
   const tint = zoneInfo.tint;
   const bossCount = BOSS_COUNTS[index];
+  const difficulty = id === 4
+    ? { hp: 1.47, speed: 1.1, bossHp: 1.5 }
+    : id === 5
+      ? { hp: 1.55, speed: 1.2, bossHp: 1.25 }
+      : id === 3
+        ? { hp: 1.38, speed: 1.09, bossHp: 1.6 }
+        : id < 4
+          ? { hp: 1 + index * 0.06,
+            speed: (id === 1 ? 0.84 : 1) + index * 0.016 }
+          : { hp: 1.55 + (id - 5) * 0.045,
+            speed: 1.2 + (id - 5) * 0.008 };
   const details = id === 1 ? '舉盾後斜斬 · 換手反擊'
     : id === 2 ? '聲浪安全帶 · 半血變奏'
       : id === 5 ? '棺材舞長鏈 · 承重手可打斷交替節拍牌'
@@ -79,13 +90,14 @@ export const CHAPTERS = LEVELS.map(([name, path, mechanics, bossMode], index) =>
     mechanics, bossMode, path, bossCount,
     positionMode: POSITION_MODES[index],
     bossSegments: bossCount === 1 ? 54 : 42,
-    bossHpScale: bossCount === 1 ? 1.2 : 1,
+    bossHpScale: id === 19 ? 0.6 : id === 25 ? 0.6
+      : difficulty.bossHp ?? (bossCount === 1 ? 1.25 : 1.02),
     summary: `${positionModeName(POSITION_MODES[index])} · ${details} · ${bossCount === 1 ? '單頭長戰' : '雙頭交疊'}`,
     paths: [path, path, path, path, path,
       id === 6 ? 'coil' : BOSS_PATHS[index % BOSS_PATHS.length]],
     tints: [tint, tint, tint, tint, tint, zone === 4 ? 'coral' : tint],
-    hpScale: 1 + index * 0.055,
-    speedScale: (id === 1 ? 0.84 : 1) + index * 0.014,
+    hpScale: difficulty.hp,
+    speedScale: difficulty.speed,
     gapScale: 1,
   };
 });

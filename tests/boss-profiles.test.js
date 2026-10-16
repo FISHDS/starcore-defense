@@ -4,8 +4,8 @@ import { BOSS_PROFILES, bossProfileFor } from '../dist/src/boss-profiles.js';
 import { validateBossProfile } from '../dist/src/boss-rig.js';
 
 test('五區雙頭目各有可用且不同的外型', () => {
-  assert.equal(BOSS_PROFILES.length, 14);
-  assert.equal(new Set(BOSS_PROFILES.map(item => item.id)).size, 14);
+  assert.equal(BOSS_PROFILES.length, 20);
+  assert.equal(new Set(BOSS_PROFILES.map(item => item.id)).size, 20);
   for (let zone = 0; zone < 5; zone++) {
     const left = bossProfileFor(zone * 5 + 1, 0);
     const right = bossProfileFor(zone * 5 + 1, 1);
@@ -14,6 +14,13 @@ test('五區雙頭目各有可用且不同的外型', () => {
     assert.notEqual(left.silhouette, right.silhouette);
     assert.notEqual(left.colors.shell, right.colors.shell);
   }
+});
+
+test('新增美術頭目都指向獨立頭部、身節與招牌部件素材', () => {
+  const added = BOSS_PROFILES.filter(item => item.parts?.signature);
+  assert.equal(added.length, 15);
+  assert.ok(added.every(item => item.parts.head && item.parts.body));
+  assert.equal(new Set(added.map(item => item.parts.head)).size, 15);
 });
 
 test('已讀不回群組長的專屬手機弱點只在第三關出現', () => {

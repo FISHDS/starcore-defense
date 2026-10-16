@@ -1,10 +1,11 @@
-import { WIDTH, HEIGHT } from './game.js?v=20261017-starcore-4';
-import { routePosition } from './routes.js?v=20261017-starcore-4';
+import { WIDTH, HEIGHT } from './game.js?v=20261017-starcore-7';
+import { routePosition } from './routes.js?v=20261017-starcore-7';
 import { drawBiome, drawChestFocus, drawConnector, drawGuardian,
-  drawProjectile, drawSegment } from './art.js?v=20261017-starcore-4';
-import { BOSS_PROFILES, bossProfileFor } from './boss-profiles.js?v=20261017-starcore-4';
+  drawProjectile, drawSegment } from './art.js?v=20261017-starcore-7';
+import { BOSS_PROFILES, bossProfileFor } from './boss-profiles.js?v=20261017-starcore-7';
 import { resolveBossPose } from './boss-rig.js';
-import { drawBossConnector, drawBossSegment } from './boss-art.js?v=20261017-starcore-4';
+import { bossVolleyFor } from './boss-attacks.js';
+import { drawBossConnector, drawBossSegment } from './boss-art.js?v=20261017-starcore-7';
 
 const TAU = Math.PI * 2;
 const BACKGROUND_TONES = [
@@ -285,9 +286,23 @@ function chain(ctx, item, time, zone = 0) {
       (item.rig.targetX ?? source.x) - source.x);
     const reach = Math.hypot((item.rig.targetX ?? source.x) - source.x,
       (item.rig.targetY ?? 744) - source.y);
-    for (const spread of spreads) {
-      const endX = source.x + Math.cos(angle + spread) * reach;
-      const endY = source.y + Math.sin(angle + spread) * reach;
+    const customBoss = groupAdmin || screechCat || coffinLeader || loading99 || knifeShield;
+    const previewShots = customBoss ? null : bossVolleyFor(item.rig.attackStyle,
+      { x: source.x, y: source.y + 22 }, angle, item.rig.phase, item.rig.attackCount || 0);
+    const warningLines = previewShots
+      ? previewShots.map(shot => ({
+        x: shot.x + shot.vx * Math.min(1.6, reach / Math.hypot(shot.vx, shot.vy)),
+        y: shot.y + shot.vy * Math.min(1.6, reach / Math.hypot(shot.vx, shot.vy)),
+        radius: shot.radius,
+      }))
+      : spreads.map(spread => ({
+        x: source.x + Math.cos(angle + spread) * reach,
+        y: source.y + Math.sin(angle + spread) * reach,
+        radius: screechCat ? 8 : 7,
+      }));
+    for (const line of warningLines) {
+      const endX = line.x;
+      const endY = line.y;
       if (knifeShield) {
         ctx.globalAlpha = 0.2;
         ctx.lineWidth = 34;
@@ -302,7 +317,7 @@ function chain(ctx, item, time, zone = 0) {
       ctx.fillStyle = screechCat ? '#7af4ff' : coffinLeader ? '#ffe17a'
         : loading99 ? '#ff796e' : '#ff9d8f';
       if (groupAdmin) ctx.fillStyle = '#ff596b';
-      circle(ctx, endX, endY, screechCat ? 8 : 7, ctx.fillStyle);
+      circle(ctx, endX, endY, line.radius, ctx.fillStyle);
       ctx.setLineDash([9, 8]);
     }
     ctx.setLineDash([]);
