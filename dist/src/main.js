@@ -1,10 +1,10 @@
-import { advance, CHAPTERS, chooseUpgrade, createBossShowcase, getRunProgress, HEIGHT, rerollUpgrades, startRun, UPGRADE_BY_ID, WAVES, WIDTH } from './game.js?v=20261016-shiba-fix-1';
+import { advance, CHAPTERS, chooseUpgrade, createBossShowcase, getRunProgress, HEIGHT, rerollUpgrades, startRun, UPGRADE_BY_ID, WAVES, WIDTH } from './game.js?v=20261016-stage-variety-1';
 import { pointerToWorldX } from './input.js';
-import { render } from './render.js?v=20261016-shiba-fix-1';
-import { awardRun, buyResearch, buyItem, equipItem, clearCheckpoint, loadCheckpoint, readProfile, researchCost, saveCheckpoint, updateBest } from './storage.js?v=20261016-boss-evolution';
+import { render } from './render.js?v=20261016-stage-variety-1';
+import { awardRun, buyResearch, buyItem, equipItem, clearCheckpoint, loadCheckpoint, readProfile, researchCost, saveCheckpoint, updateBest } from './storage.js?v=20261016-stage-variety-1';
 import { ORGANS, WEAPONS } from './meta.js';
-import { drawSkillIcon } from './art.js?v=20261016-boss-evolution';
-import { createAudioEngine } from './audio.js?v=20261016-shiba-fix-1';
+import { drawSkillIcon } from './art.js?v=20261016-stage-variety-1';
+import { createAudioEngine } from './audio.js?v=20261016-stage-variety-1';
 import { getBattleHint } from './tutorial.js';
 
 const $ = id => document.getElementById(id);

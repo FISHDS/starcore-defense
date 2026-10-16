@@ -8,7 +8,7 @@ export const WAVES = [
   { name: '交錯雙母體', startsAt: 250, duration: 50, spawnGap: 0, segments: 42, hp: 14000, speed: 27, tint: 'coral', path: 'cross', boss: true },
 ];
 
-export { CHAPTERS } from './campaign.js?v=20261016-shiba-fix-1';
+export { CHAPTERS } from './campaign.js?v=20261016-stage-variety-1';
 
 export const UPGRADES = [
   { id: 'power', name: '高能藥丸', description: '藥丸傷害 +35%', icon: '✦', tone: 'coral', rarity: 'common', category: 'bullet', max: 5 },

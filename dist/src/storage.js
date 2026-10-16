@@ -1,7 +1,7 @@
-import { startRun, WAVES, UPGRADE_BY_ID } from './game.js?v=20261016-shiba-fix-1';
+import { startRun, WAVES, UPGRADE_BY_ID } from './game.js?v=20261016-stage-variety-1';
 import { META_BY_ID, MILESTONE_REWARDS, ORGANS, WEAPONS } from './meta.js';
 import { createBossRig } from './boss-rig.js';
-import { bossProfileFor } from './boss-profiles.js?v=20261016-shiba-fix-1';
+import { bossProfileFor } from './boss-profiles.js?v=20261016-stage-variety-1';
 
 const CHECKPOINT = 'starcore.checkpoint.v5';
 const BEST = 'starcore.best.v1';

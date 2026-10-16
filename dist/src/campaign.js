@@ -42,19 +42,32 @@ const LEVELS = [
   ['母巢終局', 'cross', ['armor', 'haste', 'weakpoint', 'guard', 'hazard'], 'final'],
 ];
 
+// 雙頭集中在每區決戰；其餘關卡由單一頭目帶較長身體與更完整的第二階段。
+const BOSS_COUNTS = [
+  1, 1, 2, 1, 2,
+  1, 2, 1, 2, 2,
+  1, 2, 1, 2, 2,
+  1, 2, 1, 2, 2,
+  1, 2, 1, 1, 2,
+];
+
 export const CHAPTERS = LEVELS.map(([name, path, mechanics, bossMode], index) => {
   const id = index + 1;
   const zone = Math.floor(index / 5);
   const zoneInfo = ZONES[zone];
   const tint = zoneInfo.tint;
+  const bossCount = BOSS_COUNTS[index];
+  const details = id === 1 ? '舉盾後斜斬 · 換手反擊'
+    : id === 2 ? '聲浪安全帶 · 半血變奏'
+      : mechanics.length ? mechanics.map(rule => MECHANIC_NAMES[rule]).join(' · ')
+        : '連綿長鏈 · 基礎瞄準';
   return {
     id, zone, name, region: zoneInfo.name,
     difficulty: id <= 5 ? '入門' : id <= 10 ? '進階' : id <= 20 ? '挑戰' : '深域',
-    mechanics, bossMode, path, bossCount: id <= 2 ? 1 : 2,
-    summary: id === 1 ? '單頭長鏈 · 舉盾後斜斬 · 換手反擊'
-      : id === 2 ? '破音貓 · 聲浪安全帶 · 半血變奏'
-      : mechanics.length ? mechanics.map(rule => MECHANIC_NAMES[rule]).join(' · ')
-      : '連綿長鏈 · 基礎瞄準',
+    mechanics, bossMode, path, bossCount,
+    bossSegments: bossCount === 1 ? 54 : 42,
+    bossHpScale: bossCount === 1 ? 1.2 : 1,
+    summary: `${details} · ${bossCount === 1 ? '單頭長戰' : '雙頭交疊'}`,
     paths: [path, path, path, path, path, 'cross'],
     tints: [tint, tint, tint, tint, tint, zone === 4 ? 'coral' : tint],
     hpScale: 1 + index * 0.055,

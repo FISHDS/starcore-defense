@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { advance, CHAPTERS, chooseUpgrade, getShotDamage, startRun } from '../dist/src/game.js';
+import { advance, CHAPTERS, chooseUpgrade, getRunProgress, getShotDamage, startRun } from '../dist/src/game.js';
 import { routeLength, routePosition } from '../dist/src/routes.js';
+import { bossProfileFor } from '../dist/src/boss-profiles.js';
 import { awardRun, readProfile } from '../dist/src/storage.js';
 
 function memoryStorage() {
@@ -20,6 +21,52 @@ test('戰役有 25 個正式關卡，分成五區且每關有自己的機制配�
   assert.ok(CHAPTERS.every(stage => Array.isArray(stage.mechanics)));
   assert.ok(new Set(CHAPTERS.map(stage => stage.mechanics.join(','))).size >= 14);
   assert.equal(startRun(25, {}, 25).chapter, 25);
+});
+
+test('守關頭目編制會在單頭與雙頭之間變化，雙頭集中在區域決戰', () => {
+  assert.deepEqual(CHAPTERS.map(stage => stage.bossCount), [
+    1, 1, 2, 1, 2, 1, 2, 1, 2, 2, 1, 2, 1,
+    2, 2, 1, 2, 1, 2, 2, 1, 2, 1, 1, 2,
+  ]);
+  for (const id of [5, 10, 15, 20, 25]) assert.equal(CHAPTERS[id - 1].bossCount, 2);
+  assert.ok(CHAPTERS.filter(stage => stage.bossCount === 1).length >= 10);
+});
+
+test('相鄰關卡會輪換行進路線，五區都至少出現三種實際路徑', () => {
+  assert.ok(CHAPTERS.slice(1).every((stage, index) =>
+    stage.path !== CHAPTERS[index].path), '相鄰關卡不可沿用同一路線');
+  for (let zone = 0; zone < 5; zone++) {
+    const routes = new Set(CHAPTERS.filter(stage => stage.zone === zone)
+      .map(stage => stage.path));
+    assert.ok(routes.size >= 3, `第 ${zone + 1} 區路線只有 ${routes.size} 種`);
+  }
+});
+
+test('單頭決戰有較長身體，進度條會依該關實際頭目長度計算', () => {
+  const solo = startRun(31, {}, 4);
+  solo.encounter = 'boss';
+  advance(solo, 0.05);
+  assert.equal(solo.bosses.length, 1);
+  assert.equal(solo.bosses[0].segments.length - 1, CHAPTERS[3].bossSegments - 1);
+  solo.normalDestroyed = solo.normalTotal;
+  solo.bossDestroyed = CHAPTERS[3].bossSegments - 1;
+  assert.equal(getRunProgress(solo), 1);
+
+  const duo = startRun(32, {}, 5);
+  duo.encounter = 'boss';
+  advance(duo, 0.05);
+  assert.equal(duo.bosses.length, 2);
+  assert.equal(duo.bosses[0].segments.length - 1, CHAPTERS[4].bossSegments - 1);
+});
+
+test('相鄰關卡的頭目外型不會重複，雙頭關各有不同輪廓', () => {
+  const signatures = CHAPTERS.map(stage => Array.from(
+    { length: stage.bossCount }, (_, lane) => bossProfileFor(stage.id, lane).id,
+  ).sort().join('|'));
+  assert.ok(signatures.slice(1).every((signature, index) =>
+    signature !== signatures[index]), '相鄰關卡應讓玩家遇到不同頭目組合');
+  assert.ok(CHAPTERS.filter(stage => stage.bossCount === 2).every(stage =>
+    bossProfileFor(stage.id, 0).id !== bossProfileFor(stage.id, 1).id));
 });
 
 test('同一擊破進度下，空等不會增加武器傷害', () => {

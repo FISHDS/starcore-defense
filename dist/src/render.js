@@ -1,10 +1,10 @@
-import { WIDTH, HEIGHT } from './game.js?v=20261016-shiba-fix-1';
+import { WIDTH, HEIGHT } from './game.js?v=20261016-stage-variety-1';
 import { routePosition } from './routes.js?v=20261015-pressure-art-audio';
 import { drawBiome, drawChestFocus, drawConnector, drawGuardian,
-  drawProjectile, drawSegment } from './art.js?v=20261016-boss-evolution';
-import { BOSS_PROFILES, bossProfileFor } from './boss-profiles.js?v=20261016-shiba-fix-1';
+  drawProjectile, drawSegment } from './art.js?v=20261016-stage-variety-1';
+import { BOSS_PROFILES, bossProfileFor } from './boss-profiles.js?v=20261016-stage-variety-1';
 import { resolveBossPose } from './boss-rig.js';
-import { drawBossConnector, drawBossSegment } from './boss-art.js?v=20261016-shiba-fix-1';
+import { drawBossConnector, drawBossSegment } from './boss-art.js?v=20261016-stage-variety-1';
 
 const TAU = Math.PI * 2;
 const BACKGROUND_TONES = [
@@ -267,7 +267,12 @@ function chain(ctx, item, time, zone = 0) {
       ctx.setLineDash([]);
       ctx.restore();
     } else {
-      const spreads = knifeShield ? [item.rig.phase === 2 ? -32 : 32] : [-40, 40];
+      const mode = item.rig.attackPattern;
+      const spreads = knifeShield ? [item.rig.phase === 2 ? -32 : 32]
+        : mode === 'armor' ? [-72, 0, 72]
+          : mode === 'guard' ? [0]
+            : mode === 'weakpoint' ? [-20, 20]
+              : mode === 'speed' ? [-32, 32] : [-40, 40];
       for (const spread of spreads) {
         const landingX = (item.rig.targetX ?? source.x) + spread;
         if (knifeShield) {

@@ -1,9 +1,9 @@
-import { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID } from './content.js?v=20261016-shiba-combat-1';
+import { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID } from './content.js?v=20261016-stage-variety-1';
 import { routePosition } from './routes.js?v=20261015-pressure-art-audio';
 import { assignTraits, chainSpeed, chestGuarded, steerBullet,
   updateBossShields, updateHazards, updateWeakpoints } from './mechanics.js';
 import { createBossRig, updateBossRig } from './boss-rig.js';
-import { bossProfileFor } from './boss-profiles.js?v=20261016-shiba-fix-1';
+import { bossProfileFor } from './boss-profiles.js?v=20261016-stage-variety-1';
 import { knifeShieldDamageMultiplier, knifeShieldSlash } from './knife-shield.js';
 
 export { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID };
@@ -35,7 +35,7 @@ export function startRun(seed = Date.now(), profile = {}, chapter = 1) {
     wave: 1, waveTime: 0, runTime: 0,
     encounter: 'normal', normalTotal: WAVES[0].segments - 1,
     normalDestroyed: 0, bossDestroyed: 0,
-    spawnCount: 0, nextId: 1,
+    spawnCount: 0, bossAttackCount: 0, nextId: 1,
     fireTimer: 0, specialTimers: {}, bossShotTimer: 0, normalShotTimer: 0,
     regenTimer: 0,
     hazardTimer: 0, hazards: [],
@@ -71,9 +71,10 @@ export function getRunProgress(game) {
   if (game.phase === 'victory') return 1;
   if (game.preview) return Math.min(1, game.bossDestroyed / game.previewBodyTotal);
   const normal = Math.min(1, game.normalDestroyed / game.normalTotal);
-  const bossTotal = Math.max(activeStage(game).bossCount,
-    game.encounter === 'boss' ? game.spawnCount : 0)
-    * (WAVES.at(-1).segments - 1);
+  const stage = activeStage(game);
+  const bossBodyLength = stage.bossSegments - 1;
+  const bossTotal = Math.max(stage.bossCount,
+    game.encounter === 'boss' ? game.spawnCount : 0) * bossBodyLength;
   const boss = Math.min(1, game.bossDestroyed / bossTotal);
   return normal * 0.8 + boss * 0.2;
 }
@@ -109,8 +110,10 @@ function configuredWave(game, index) {
     ...source,
     path,
     tint: chapter.tints[index],
+    segments: source.boss ? chapter.bossSegments : source.segments,
     hp: Math.round(source.hp * chapter.hpScale * (game.chapter === 26
-      ? 1 + (game.endlessTier - 1) * 0.18 : 1)),
+      ? 1 + (game.endlessTier - 1) * 0.18 : 1)
+      * (source.boss ? chapter.bossHpScale : 1)),
     speed: source.speed * chapter.speedScale * (game.chapter === 26
       ? 1 + (game.endlessTier - 1) * 0.04 : 1),
   };
@@ -158,6 +161,7 @@ function spawnChain(game, wave, lane = game.spawnCount) {
     originalBodyCount: boss ? count - 1 : 0,
     rig: boss ? createBossRig(bossProfileFor(game.chapter, lane).id) : null,
   };
+  if (chain.rig) chain.rig.attackPattern = stage.bossMode;
   const chestIndices = boss ? [5, 15, 26, 38]
     : [5, 18, 36, 60, 84, 110, 138, 168, 198];
   for (let index = 0; index < count; index++) {
@@ -545,19 +549,25 @@ function updateBossShots(game, dt) {
     }
   }
   if (!game.bosses.some(boss => !boss.dead)) return;
+  const pattern = activeStage(game).bossMode;
   game.bossShotTimer += dt;
   const phaseTwo = game.bosses.some(boss => !boss.dead && boss.rig?.phase === 2);
   const bossInterval = (game.chapter <= 5 ? 3.1
     : game.chapter <= 10 ? 2.7 : 2.2)
-    * (phaseTwo ? (game.chapter <= 5 ? 0.94 : 0.82) : 1);
+    * (phaseTwo ? (game.chapter <= 5 ? 0.94 : 0.82) : 1)
+    * (pattern === 'speed' ? 0.88 : 1);
   const isKnifeShield = game.bosses.some(boss => !boss.dead
     && boss.rig?.profileId === 'meme-knife-shield');
   const isScreechCat = game.bosses.some(boss => !boss.dead
     && boss.rig?.profileId === 'meme-screech-cat');
   const interval = isScreechCat ? (phaseTwo ? 2.4 : 3.1) : bossInterval;
-  const warningTime = isKnifeShield ? 0.85 : isScreechCat ? 0.9 : 0.55;
+  const warningTime = isKnifeShield ? 0.85 : isScreechCat ? 0.9
+    : pattern === 'armor' ? 0.72 : pattern === 'speed' ? 0.72 : 0.55;
+  const liveBosses = game.bosses.filter(boss => !boss.dead);
+  const attackBosses = pattern === 'alternating' && liveBosses.length > 1
+    ? [liveBosses[(game.bossAttackCount || 0) % liveBosses.length]] : liveBosses;
   if (game.bossShotTimer >= interval - warningTime) {
-    for (const boss of game.bosses) {
+    for (const boss of attackBosses) {
       if (boss.dead || boss.segments[0].y < 120 || !boss.rig) continue;
       if (!boss.rig.telegraphLocked) {
         boss.rig.targetX = game.player.x;
@@ -574,7 +584,7 @@ function updateBossShots(game, dt) {
   }
   while (game.bossShotTimer >= interval) {
     game.bossShotTimer -= interval;
-    for (const boss of game.bosses) {
+    for (const boss of attackBosses) {
       if (boss.dead || boss.segments[0].y < 120) continue;
       const head = boss.segments[0];
       if (boss.rig) {
@@ -600,12 +610,23 @@ function updateBossShots(game, dt) {
         game.audioCues.push('screech');
         continue;
       }
-      const vy = phaseTwo ? (game.chapter <= 5 ? 226 : 245) : 220;
+      if (pattern === 'alternating' && liveBosses.length > 1) game.bossAttackCount++;
+      const shapes = {
+        armor: { spreads: [-72, 0, 72], speed: 190, radius: 7, damage: 8 },
+        guard: { spreads: [0], speed: 250, radius: 9, damage: 11 },
+        weakpoint: { spreads: [-20, 20], speed: 245, radius: 6, damage: 8 },
+        speed: { spreads: [-32, 32], speed: 280, radius: 6, damage: 7 },
+      };
+      const shape = shapes[pattern] || {
+        spreads: [-40, 40], speed: phaseTwo
+          ? (game.chapter <= 5 ? 226 : 245) : 220, radius: 7, damage: 9,
+      };
+      const vy = shape.speed * (phaseTwo && pattern !== 'speed' ? 1.08 : 1);
       const flight = Math.max(0.6, (game.player.y - head.y - 25) / vy);
-      for (const spread of [-40, 40]) {
+      for (const spread of shape.spreads) {
         game.enemyBullets.push({ x: head.x, y: head.y + 25,
           vx: ((boss.rig?.targetX ?? game.player.x) - head.x + spread) / flight,
-          vy, radius: 7 });
+          vy, radius: shape.radius, damage: shape.damage });
       }
     }
   }
