@@ -91,6 +91,7 @@ export function equipItem(storage, kind, id) {
 }
 
 export function awardRun(storage, game) {
+  if (game.preview) return { gained: 0, profile: readProfile(storage), firstClear: false };
   const profile = readProfile(storage);
   const gained = 25 + game.wave * 9 + Math.floor(game.score / 100);
   const firstClear = game.phase === 'victory' && game.chapter >= 1
@@ -115,6 +116,7 @@ export function awardRun(storage, game) {
 }
 
 export function saveCheckpoint(storage, game) {
+  if (game.preview) return;
   if (game.phase !== 'playing' && game.phase !== 'upgrade') return;
   const data = {
     version: 5,

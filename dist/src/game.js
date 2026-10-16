@@ -69,12 +69,36 @@ export function getShotDamage(game) {
 
 export function getRunProgress(game) {
   if (game.phase === 'victory') return 1;
+  if (game.preview) return Math.min(1, game.bossDestroyed / game.previewBodyTotal);
   const normal = Math.min(1, game.normalDestroyed / game.normalTotal);
   const bossTotal = Math.max(activeStage(game).bossCount,
     game.encounter === 'boss' ? game.spawnCount : 0)
     * (WAVES.at(-1).segments - 1);
   const boss = Math.min(1, game.bossDestroyed / bossTotal);
   return normal * 0.8 + boss * 0.2;
+}
+
+export function createBossShowcase(seed = Date.now()) {
+  const game = startRun(seed, {}, 1);
+  game.preview = true;
+  game.encounter = 'boss';
+  game.wave = WAVES.length;
+  // 體驗局只縮短身體與調整試打火力；頭目招式沿用正式戰鬥。
+  game.normalDestroyed = 105;
+  game.upgrades = { power: 1, rapid: 1, focus: 1 };
+  advance(game, 0.01);
+  const boss = game.bosses[0];
+  boss.segments = boss.segments.slice(0, 24);
+  boss.originalBodyCount = boss.segments.length - 1;
+  boss.speed = 35;
+  for (const piece of boss.segments) {
+    if (piece.index === 0) continue;
+    piece.maxHp = Math.round((piece.chest ? 800 : 1550) * (1 + piece.index * 0.045));
+    piece.hp = piece.maxHp;
+    piece.armorHp = 0;
+  }
+  game.previewBodyTotal = boss.originalBodyCount;
+  return game;
 }
 
 function configuredWave(game, index) {

@@ -1,4 +1,4 @@
-import { advance, CHAPTERS, chooseUpgrade, getRunProgress, HEIGHT, rerollUpgrades, startRun, UPGRADE_BY_ID, WAVES, WIDTH } from './game.js?v=20261016-shiba-combat-1';
+import { advance, CHAPTERS, chooseUpgrade, createBossShowcase, getRunProgress, HEIGHT, rerollUpgrades, startRun, UPGRADE_BY_ID, WAVES, WIDTH } from './game.js?v=20261016-showcase-1';
 import { pointerToWorldX } from './input.js';
 import { render } from './render.js?v=20261016-shiba-combat-1';
 import { awardRun, buyResearch, buyItem, equipItem, clearCheckpoint, loadCheckpoint, readProfile, researchCost, saveCheckpoint, updateBest } from './storage.js?v=20261016-boss-evolution';
@@ -12,6 +12,7 @@ const canvas = $('arena');
 const ctx = canvas.getContext('2d', { alpha: false });
 const shell = document.querySelector('.game-shell');
 const menu = $('menu');
+const showcaseScreen = $('showcase-screen');
 const hud = $('hud');
 const hint = $('hint');
 const upgradeScreen = $('upgrade-screen');
@@ -62,6 +63,7 @@ let handledResult = false;
 let showResearch = false;
 let showStages = false;
 let showLoadout = false;
+let showShowcase = new URLSearchParams(window.location.search).get('showcase') === 'knife-shield';
 let lastSavedAt = 0;
 let selectedChapter = readProfile(storage).unlockedStage;
 let selectedZone = Math.floor((selectedChapter - 1) / 5);
@@ -82,10 +84,12 @@ function refreshHud() {
   const wave = WAVES[game.wave - 1];
   const activeChapter = game.chapter === 26 ? CHAPTERS[20 + (game.endlessTier - 1) % 5]
     : CHAPTERS[game.chapter - 1];
-  hint.textContent = getBattleHint(game, activeChapter.summary);
+  hint.textContent = game.preview && game.runTime < 10
+    ? '左右滑動瞄準身體與寶箱；留意舉盾和斜斬預警'
+    : getBattleHint(game, activeChapter.summary);
   hint.hidden = paused || !hint.textContent;
   hint.classList.toggle('persistent-tutorial', game.chapter === 1 && game.normalDestroyed === 0);
-  $('wave-number').textContent = game.chapter === 26
+  $('wave-number').textContent = game.preview ? '頭目試打' : game.chapter === 26
     ? `無盡 ${game.endlessTier}` : `第${game.chapter}關`;
   const encounterName = game.encounter === 'boss' && activeChapter.bossMode === 'knife-shield'
     ? '我的刀盾' : wave.name;
@@ -253,11 +257,24 @@ function makeCards() {
 function setResult() {
   if (!game || handledResult) return;
   handledResult = true;
+  const won = game.phase === 'victory';
+  resultScreen.classList.toggle('is-defeat', !won);
+  $('result-reward').hidden = !!game.preview;
+  $('result-stats').hidden = !!game.preview;
+  $('result-menu').hidden = !game.preview;
+  if (game.preview) {
+    $('result-kicker').textContent = 'BOSS SHOWCASE';
+    $('result-emblem').textContent = won ? '✦' : '◇';
+    $('result-title').textContent = won ? '試打成功' : '再試一次';
+    $('result-copy').textContent = won
+      ? '你看到了舉盾、斜斬和換手。正式關卡仍等你挑戰。'
+      : '這是練習戰。觀察舉盾空隙與斜斬預警，再試一次。';
+    $('retry-label').textContent = '再次試打';
+    return;
+  }
   clearCheckpoint(storage);
   const best = updateBest(storage, game.score);
   const reward = awardRun(storage, game);
-  const won = game.phase === 'victory';
-  resultScreen.classList.toggle('is-defeat', !won);
   $('result-kicker').textContent = won ? 'MISSION COMPLETE' : 'SIGNAL LOST';
   $('result-emblem').textContent = won ? '✦' : '◇';
   $('result-title').textContent = won ? '防線守住了' : '防線失守';
@@ -278,7 +295,8 @@ function setResult() {
 }
 
 function syncScreen() {
-  menu.hidden = !!game || showResearch || showStages || showLoadout;
+  menu.hidden = !!game || showResearch || showStages || showLoadout || showShowcase;
+  showcaseScreen.hidden = !!game || !showShowcase;
   $('boss-warning').hidden = !game || game.phase !== 'playing';
   researchScreen.hidden = !showResearch;
   stageScreen.hidden = !showStages;
@@ -318,6 +336,19 @@ function beginNew() {
   audio.playSfx('start');
 }
 
+function beginShowcase() {
+  audio.unlockFromGesture();
+  game = createBossShowcase(Math.floor(Math.random() * 0xffffffff));
+  showShowcase = false;
+  paused = false;
+  handledResult = false;
+  resultDelayUntil = 0;
+  targetX = game.player.x;
+  lastSavedAt = 0;
+  syncScreen();
+  audio.playSfx('boss');
+}
+
 function continueRun() {
   const loaded = loadCheckpoint(storage);
   if (!loaded) return;
@@ -333,7 +364,15 @@ function continueRun() {
 }
 
 $('start-button').addEventListener('click', beginNew);
-$('retry-button').addEventListener('click', beginNew);
+$('showcase-button').addEventListener('click', () => {
+  showShowcase = true;
+  syncScreen();
+  audio.playSfx('click');
+});
+$('showcase-play').addEventListener('click', beginShowcase);
+$('showcase-back').addEventListener('click', () => { showShowcase = false; syncScreen(); });
+$('retry-button').addEventListener('click', () => game?.preview ? beginShowcase() : beginNew());
+$('result-menu').addEventListener('click', () => { game = null; showShowcase = false; syncScreen(); });
 $('continue-button').addEventListener('click', continueRun);
 $('reroll-button').addEventListener('click', () => {
   if (!game || !rerollUpgrades(game)) return;
@@ -381,7 +420,9 @@ $('resume-button').addEventListener('click', () => {
   syncScreen();
   audio.playSfx('click');
 });
-$('menu-button').addEventListener('click', () => { game = null; paused = false; syncScreen(); });
+$('menu-button').addEventListener('click', () => {
+  game = null; paused = false; showShowcase = false; syncScreen();
+});
 
 canvas.addEventListener('pointerdown', event => {
   if (!game || game.phase !== 'playing' || paused) return;
