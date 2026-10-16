@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" fill="none">
+ <defs>
+  <linearGradient id="bell" x1="22" y1="90" x2="106" y2="37" gradientUnits="userSpaceOnUse"><stop stop-color="#D39C5D"/><stop offset=".52" stop-color="#E7C17A"/><stop offset="1" stop-color="#A86B51"/></linearGradient>
+ </defs>
+ <!-- Independent horn prop, sized and centered for rotation in Canvas -->
+ <path d="M13 52h29l48-28c8-5 17 0 17 10v50c0 10-9 15-17 10L42 66H13c-7 0-11-3-11-7s4-7 11-7Z" fill="url(#bell)" stroke="#302A36" stroke-width="5" stroke-linejoin="round"/>
+ <path d="M91 35c-5 14-5 34 0 48m8-54c-7 18-7 42 0 60" stroke="#F8E0A4" stroke-width="3" stroke-linecap="round" opacity=".8"/>
+ <path d="M30 53v12m8-12v12" stroke="#855846" stroke-width="2"/>
+ <path d="M42 66v28c0 6-4 10-10 10s-10-4-10-10V66" fill="#765666" stroke="#302A36" stroke-width="4" stroke-linejoin="round"/>
+ <path d="M27 91h10" stroke="#D7A875" stroke-width="3" stroke-linecap="round"/>
+ <circle cx="109" cy="59" r="3" fill="#FFF0BE"/>
+</svg>

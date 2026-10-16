@@ -1,0 +1,181 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500 900" role="img" aria-labelledby="title desc">
+  <title id="title">刷卡失敗・全勤處刑官 — Boss 視覺概念</title>
+  <desc id="desc">深色遊戲概念板，展示門禁閘機頭目、三種長鏈身節、可辨識寶箱，以及待機、掃描預警、閘門掃擊與半血過載姿勢。</desc>
+  <defs>
+    <linearGradient id="bg" x2="0" y2="1"><stop stop-color="#111b2b"/><stop offset="1" stop-color="#202a3c"/></linearGradient>
+    <linearGradient id="steel" x2="1" y2="1"><stop stop-color="#697d8e"/><stop offset=".45" stop-color="#34475b"/><stop offset="1" stop-color="#202e40"/></linearGradient>
+    <linearGradient id="amber" x2="0" y2="1"><stop stop-color="#ffe099"/><stop offset="1" stop-color="#e29a36"/></linearGradient>
+    <linearGradient id="red" x2="0" y2="1"><stop stop-color="#ff796d"/><stop offset="1" stop-color="#bd3946"/></linearGradient>
+    <linearGradient id="paper" x2="0" y2="1"><stop stop-color="#f7e6c5"/><stop offset="1" stop-color="#c7b392"/></linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="170%"><feDropShadow dx="0" dy="9" stdDeviation="7" flood-color="#030811" flood-opacity=".65"/></filter>
+    <filter id="glowRed" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="7" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <filter id="glowBlue" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <g id="head">
+      <!-- heavy, recognizable turnstile silhouette -->
+      <path d="M-49 35 L-45-23 Q-43-55-17-62 L26-62 Q48-58 52-34 L58 35 Q59 50 43 53 L-37 53 Q-54 50-49 35Z" fill="url(#steel)" stroke="#111b29" stroke-width="8"/>
+      <path d="M-36-36 Q-33-53-15-54 L25-53 Q41-50 43-34 L42-23 L-37-23Z" fill="#91a8b7" stroke="#172334" stroke-width="5"/>
+      <path d="M-31-31 L30-31 L27-26 L-30-26Z" fill="#d8e2de" opacity=".8"/>
+      <!-- reader slit -->
+      <rect x="-30" y="-10" width="60" height="29" rx="8" fill="#111b2b" stroke="#111722" stroke-width="4"/>
+      <rect x="-23" y="-3" width="46" height="14" rx="4" fill="#182a3a" stroke="#55798a" stroke-width="2"/>
+      <path d="M-15 4h17" stroke="#75e0ce" stroke-width="3" stroke-linecap="round"/>
+      <!-- giant rejected mark -->
+      <circle cx="31" cy="-39" r="13" fill="#261b26" stroke="#111722" stroke-width="4"/>
+      <path d="M25-45L37-33 M37-45L25-33" stroke="#ff665f" stroke-width="5" stroke-linecap="round"/>
+      <!-- little red tie is the human absurdity -->
+      <path d="M-12 23 L0 17 L12 23 L8 43 L0 51 L-8 43Z" fill="#ba4b54" stroke="#182334" stroke-width="4"/>
+      <path d="M-9 26H9" stroke="#f0b57d" stroke-width="2" opacity=".8"/>
+      <!-- gate arms: one cropped arm says turnstile at thumbnail size -->
+      <circle cx="0" cy="36" r="8" fill="#e9b15b" stroke="#162131" stroke-width="4"/>
+      <path d="M-3 36L-61 66" stroke="#d5dce0" stroke-width="11" stroke-linecap="round"/>
+      <path d="M-3 36L-61 66" stroke="#657888" stroke-width="4" stroke-linecap="round"/>
+      <path d="M-56 63l-9 7" stroke="#efbd63" stroke-width="4" stroke-linecap="round"/>
+      <!-- a frustrated swipe is part of the silhouette, not a floating icon -->
+      <path d="M35 14 Q47 22 54 11 L59 1" fill="none" stroke="#172334" stroke-width="11" stroke-linecap="round"/>
+      <path d="M35 14 Q47 22 54 11 L59 1" fill="none" stroke="#d7b487" stroke-width="6" stroke-linecap="round"/>
+      <g transform="translate(61 -12) rotate(19)">
+        <rect x="-10" y="-15" width="20" height="30" rx="3" fill="#e9dec8" stroke="#142131" stroke-width="4"/>
+        <path d="M-5-7H5 M-5 0H4" stroke="#607181" stroke-width="2"/>
+        <path d="M-4 5L4 11M4 5L-4 11" stroke="#d95150" stroke-width="3" stroke-linecap="round"/>
+      </g>
+      <path d="M43-25L57-22 M45-31L59-28" stroke="#ffcd77" stroke-width="3" stroke-linecap="round"/>      <!-- stern slit eyes in reader glow -->
+      <path d="M-17 1l8-3 M9-2l8 3" stroke="#f6f0df" stroke-width="3" stroke-linecap="round"/>
+    </g>
+    <g id="segBadge">
+      <path d="M-14-23 C-20-4-17 5-5 18 L0 23 L5 18 C17 5 20-4 14-23" fill="none" stroke="#d9b365" stroke-width="5"/>
+      <path d="M-21-17 Q0-25 21-17 L18 17 Q0 25-18 17Z" fill="#334c60" stroke="#101a28" stroke-width="5"/>
+      <path d="M-15-12H15V7H-15Z" fill="#e1d5ba" stroke="#1b2938" stroke-width="3"/>
+      <circle cx="0" cy="-3" r="5" fill="#394c5e"/><path d="M-8 5Q0-2 8 5" fill="#394c5e"/>
+      <path d="M-10 12H10" stroke="#ef635c" stroke-width="3"/>
+    </g>
+    <g id="segPunch">
+      <path d="M-21-14 Q0-23 21-14 L18 15 Q0 23-18 15Z" fill="url(#paper)" stroke="#182334" stroke-width="5"/>
+      <path d="M-13-7H13 M-12 0H8 M-10 7H12" stroke="#9b7960" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cx="13" cy="-8" r="4" fill="#cb4a49"/>
+      <path d="M-6 15l5 4 8-9" fill="none" stroke="#de594d" stroke-width="3"/>
+    </g>
+    <g id="segLatch">
+      <path d="M-21 0 Q-21-17-5-17 H8 Q22-17 22 0 Q22 17 8 17 H-5 Q-21 17-21 0Z" fill="url(#steel)" stroke="#101a28" stroke-width="5"/>
+      <path d="M-12-7H12V7H-12Z" rx="3" fill="#182b3c" stroke="#8599a2" stroke-width="2"/>
+      <path d="M-7 0H7" stroke="#72dfce" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="0" cy="-19" r="3" fill="#e8bd71"/>
+    </g>
+    <g id="chest">
+      <path d="M-25-12Q-25-23-14-23H14Q25-23 25-12V17H-25Z" fill="url(#amber)" stroke="#182131" stroke-width="5"/>
+      <path d="M-27-8H27V1H-27Z" fill="#85552e" stroke="#182131" stroke-width="4"/>
+      <path d="M-4-7H4V6H-4Z" fill="#fff0ad" stroke="#182131" stroke-width="3"/>
+      <path d="M-16-19H16" stroke="#fff0ad" stroke-width="3" opacity=".8"/>
+      <path d="M-18 18H18" stroke="#f6c760" stroke-width="3"/>
+    </g>
+    <g id="ray">
+      <path d="M0 0 L0-154" stroke="#fb5558" stroke-width="7" stroke-dasharray="10 9" opacity=".87"/>
+      <path d="M-10-118L0-138L10-118Z" fill="#ff6a5e"/>
+      <circle cy="-155" r="12" fill="#ff514f" stroke="#ffd18c" stroke-width="3"/>
+    </g>
+  </defs>
+  <rect width="1500" height="900" fill="url(#bg)"/>
+  <path d="M0 104H1500" stroke="#34455b" stroke-width="2"/>
+  <text x="52" y="55" fill="#f6e7c9" font-family="Arial,sans-serif" font-size="33" font-weight="800" letter-spacing="2">STARCORE DEFENSE / BOSS CONCEPT</text>
+  <text x="55" y="88" fill="#efbd63" font-family="Arial,sans-serif" font-size="24" font-weight="700">刷卡失敗・全勤處刑官</text>
+  <text x="1145" y="75" text-anchor="end" fill="#8ca0b1" font-family="Arial,sans-serif" font-size="17">VISUAL STUDY  /  2026.10</text>
+
+  <!-- hero silhouette / scale study -->
+  <g transform="translate(190 215) scale(1.17)" filter="url(#shadow)">
+    <!-- chain is deliberately a shallow, readable S-curve -->
+    <path d="M-116 92 C-67 135 10 139 60 95 C112 48 161 72 205 112" fill="none" stroke="#0d1623" stroke-width="25" stroke-linecap="round"/>
+    <path d="M-116 92 C-67 135 10 139 60 95 C112 48 161 72 205 112" fill="none" stroke="#738392" stroke-width="9" stroke-linecap="round"/>
+    <g transform="translate(-88 115) rotate(23)"><use href="#segBadge"/></g>
+    <g transform="translate(-38 132) rotate(8)"><use href="#segPunch"/></g>
+    <g transform="translate(13 124) rotate(-24)"><use href="#segLatch"/></g>
+    <g transform="translate(62 92) rotate(-43)"><use href="#segBadge"/></g>
+    <g transform="translate(109 75) rotate(12)"><use href="#chest"/></g>
+    <g transform="translate(158 88) rotate(26)"><use href="#segPunch"/></g>
+    <g transform="translate(205 113) rotate(35)"><use href="#segLatch"/></g>
+    <g transform="translate(0 -1)"><use href="#head"/></g>
+    <path d="M-32-61Q-9-80 28-65" fill="none" stroke="#a9bfce" stroke-width="3" opacity=".7"/>
+  </g>
+  <g transform="translate(52 401)">
+    <text y="0" fill="#f1e6d2" font-family="Arial,sans-serif" font-size="17" font-weight="700">大頭 90px｜身節 46px｜寶箱 56px</text>
+    <text y="28" fill="#9babb6" font-family="Arial,sans-serif" font-size="15">縮圖先讀出：拒刷紅燈、閘門刀臂、歪領帶；鏈身用工牌與退件單做節奏</text>
+  </g>
+
+  <!-- silhouette key -->
+  <g transform="translate(465 149)">
+    <text x="0" y="0" fill="#efbd63" font-family="Arial,sans-serif" font-size="20" font-weight="800">三個一眼辨識點</text>
+    <g transform="translate(20 52)"><circle r="16" fill="#bd3946"/><path d="M-7-7L7 7M7-7L-7 7" stroke="#fff0d8" stroke-width="4"/><text x="34" y="6" fill="#dce1df" font-size="17" font-family="Arial,sans-serif">刷卡窗亮紅叉：不是一般怪臉</text></g>
+    <g transform="translate(20 104)"><circle r="16" fill="#d5dce0"/><path d="M-7 4L10-6" stroke="#43596a" stroke-width="6" stroke-linecap="round"/><text x="34" y="6" fill="#dce1df" font-size="17" font-family="Arial,sans-serif">單側閘臂像短刀，輪廓不對稱</text></g>
+    <g transform="translate(20 156)"><circle r="16" fill="#ba4b54"/><path d="M-5-9L5-9L3 6L0 11L-3 6Z" fill="#f0b57d"/><text x="34" y="6" fill="#dce1df" font-size="17" font-family="Arial,sans-serif">制服小領帶：一本正經的荒謬感</text></g>
+  </g>
+
+  <!-- segment sheet -->
+  <path d="M42 452H1158" stroke="#3a4b60" stroke-width="2"/>
+  <text x="52" y="488" fill="#efbd63" font-family="Arial,sans-serif" font-size="20" font-weight="800">長鏈身節 / 反覆混排，避免整條變成同一塊色帶</text>
+  <g transform="translate(115 554)"><use href="#segBadge"/><text x="0" y="51" text-anchor="middle" fill="#e4e5df" font-size="15" font-family="Arial,sans-serif">欠薪工牌節</text></g>
+  <g transform="translate(245 554)"><use href="#segPunch"/><text x="0" y="51" text-anchor="middle" fill="#e4e5df" font-size="15" font-family="Arial,sans-serif">退件打卡單</text></g>
+  <g transform="translate(375 554)"><use href="#segLatch"/><text x="0" y="51" text-anchor="middle" fill="#e4e5df" font-size="15" font-family="Arial,sans-serif">門閂轉接節</text></g>
+  <g transform="translate(505 554)"><use href="#chest"/><text x="0" y="51" text-anchor="middle" fill="#e4e5df" font-size="15" font-family="Arial,sans-serif">明亮金色寶箱</text></g>
+  <text x="580" y="534" fill="#93a4b0" font-family="Arial,sans-serif" font-size="15">寶箱尺寸獨立、金色高反差；不使用紅色攻擊色或綠色回血暗示</text>
+  <text x="580" y="560" fill="#93a4b0" font-family="Arial,sans-serif" font-size="15">身節正面有單一符號，密集長鏈仍可分段；外框留深色間隔</text>
+
+  <!-- action storyboard -->
+  <path d="M42 636H1158" stroke="#3a4b60" stroke-width="2"/>
+  <text x="52" y="672" fill="#efbd63" font-family="Arial,sans-serif" font-size="20" font-weight="800">動作節拍 / 固定中央，只靠轉向集火或截斷閘臂</text>
+  <g transform="translate(204 770)">
+    <path d="M-85 33Q0-39 85 33" fill="none" stroke="#607589" stroke-width="6" stroke-dasharray="7 9"/>
+    <g transform="translate(0 -12) scale(.61)"><use href="#head"/></g>
+    <path d="M-67 56Q-44 42-23 52T21 51T66 56" fill="none" stroke="#8996a0" stroke-width="9" stroke-linecap="round"/>
+    <text x="0" y="93" text-anchor="middle" fill="#e9e4d6" font-size="16" font-family="Arial,sans-serif" font-weight="700">① 巡檢待機</text>
+    <text x="0" y="115" text-anchor="middle" fill="#91a2af" font-size="13" font-family="Arial,sans-serif">閘臂貼身收起</text>
+  </g>
+  <g transform="translate(485 770)">
+    <g transform="translate(0 -12) scale(.61)"><use href="#head"/><circle cx="31" cy="-39" r="17" fill="none" stroke="#ff6960" stroke-width="4" filter="url(#glowRed)"/></g>
+    <g transform="translate(0 28)"><use href="#ray"/></g>
+    <path d="M-94 23 Q0-94 94 23" fill="none" stroke="#ff665c" stroke-width="3" stroke-dasharray="5 7" opacity=".8"/>
+    <text x="0" y="93" text-anchor="middle" fill="#e9e4d6" font-size="16" font-family="Arial,sans-serif" font-weight="700">② 拒刷預警</text>
+    <text x="0" y="115" text-anchor="middle" fill="#ff9483" font-size="13" font-family="Arial,sans-serif">紅叉閃爍＋單向掃描線</text>
+  </g>
+  <g transform="translate(766 770)">
+    <g transform="translate(0 -12) scale(.61)"><use href="#head"/><path d="M-3 36L-77 13" stroke="#dbe2e3" stroke-width="12" stroke-linecap="round"/></g>
+    <path d="M-9 43L-78-13" stroke="#ff665c" stroke-width="5" opacity=".85"/>
+    <path d="M-22 30L-3 40L-12 19Z" fill="#ffd07a"/>
+    <text x="0" y="93" text-anchor="middle" fill="#e9e4d6" font-size="16" font-family="Arial,sans-serif" font-weight="700">③ 閘臂掃擊</text>
+    <text x="0" y="115" text-anchor="middle" fill="#91a2af" font-size="13" font-family="Arial,sans-serif">瞄準閘臂軸心可中斷</text>
+  </g>
+  <g transform="translate(1040 770)">
+    <g transform="translate(0 -12) scale(.61)"><use href="#head"/><path d="M-34-38L-22-50M-34-50L-22-38" stroke="#fff2c1" stroke-width="5"/><path d="M32 2L65 13" stroke="#ff574f" stroke-width="6"/></g>
+    <g transform="translate(-58 47) rotate(-25) scale(.78)"><use href="#ray"/></g>
+    <g transform="translate(58 47) rotate(25) scale(.78)"><use href="#ray"/></g>
+    <text x="0" y="93" text-anchor="middle" fill="#e9e4d6" font-size="16" font-family="Arial,sans-serif" font-weight="700">④ 半血：加班過載</text>
+    <text x="0" y="115" text-anchor="middle" fill="#91a2af" font-size="13" font-family="Arial,sans-serif">雙線交替；紅叉間隙可集火</text>
+  </g>
+
+  <!-- exact-size mobile thumbnail: actual inked head height is 86px; segment height is 44px -->
+  <path d="M1205 122V874" stroke="#3a4b60" stroke-width="2"/>
+  <text x="1230" y="155" fill="#efbd63" font-family="Arial,sans-serif" font-size="18" font-weight="800">手機尺寸實際縮圖</text>
+  <text x="1230" y="179" fill="#91a2af" font-family="Arial,sans-serif" font-size="13">同一組向量元件，按戰鬥尺寸縮放</text>
+  <rect x="1250" y="194" width="190" height="142" rx="14" fill="#172337" stroke="#536579" stroke-width="2"/>
+  <g transform="translate(1345 263) scale(.652)"><use href="#head"/></g>
+  <text x="1345" y="322" text-anchor="middle" fill="#f2ead9" font-size="14" font-family="Arial,sans-serif" font-weight="700">頭部實際高度 86px</text>
+  <text x="1230" y="371" fill="#e2e2dc" font-family="Arial,sans-serif" font-size="14" font-weight="700">身節實際高度 44px</text>
+  <g transform="translate(1270 420)"><rect x="-30" y="-30" width="60" height="60" rx="10" fill="#172337" stroke="#536579" stroke-width="2"/><g transform="scale(.96)"><use href="#segBadge"/></g></g>
+  <g transform="translate(1345 420)"><rect x="-30" y="-30" width="60" height="60" rx="10" fill="#172337" stroke="#536579" stroke-width="2"/><g transform="scale(.96)"><use href="#segPunch"/></g></g>
+  <g transform="translate(1420 420)"><rect x="-30" y="-30" width="60" height="60" rx="10" fill="#172337" stroke="#536579" stroke-width="2"/><g transform="scale(1)"><use href="#segLatch"/></g></g>
+  <text x="1270" y="466" text-anchor="middle" fill="#aab8c1" font-size="11" font-family="Arial,sans-serif">工牌</text>
+  <text x="1345" y="466" text-anchor="middle" fill="#aab8c1" font-size="11" font-family="Arial,sans-serif">打卡單</text>
+  <text x="1420" y="466" text-anchor="middle" fill="#aab8c1" font-size="11" font-family="Arial,sans-serif">門閂</text>
+  <rect x="1320" y="493" width="70" height="70" rx="12" fill="#172337" stroke="#536579" stroke-width="2"/>
+  <g transform="translate(1355 528) scale(.94)"><use href="#chest"/></g>
+  <text x="1355" y="584" text-anchor="middle" fill="#f4ca70" font-size="13" font-family="Arial,sans-serif" font-weight="700">寶箱獨立金色 56px</text>
+  <path d="M1230 609H1472" stroke="#34455b" stroke-width="1"/>
+  <text x="1230" y="638" fill="#efbd63" font-family="Arial,sans-serif" font-size="15" font-weight="800">素材切片區域</text>
+  <text x="1230" y="663" fill="#bac5ca" font-family="Arial,sans-serif" font-size="12">頭部：(-76, -74, 152, 152)</text>
+  <text x="1230" y="685" fill="#bac5ca" font-family="Arial,sans-serif" font-size="12">工牌：(-27, -31, 54, 62)</text>
+  <text x="1230" y="707" fill="#bac5ca" font-family="Arial,sans-serif" font-size="12">打卡單：(-28, -28, 56, 56)</text>
+  <text x="1230" y="729" fill="#bac5ca" font-family="Arial,sans-serif" font-size="12">門閂節：(-28, -25, 56, 50)</text>
+  <text x="1230" y="751" fill="#bac5ca" font-family="Arial,sans-serif" font-size="12">寶箱：(-32, -29, 64, 56)</text>
+  <text x="1230" y="793" fill="#91a2af" font-family="Arial,sans-serif" font-size="12">裁切座標以定義群組中心為原點；</text>
+  <text x="1230" y="813" fill="#91a2af" font-family="Arial,sans-serif" font-size="12">保持透明背景，逐件導出即可。</text>
+  <text x="1230" y="850" fill="#9baab5" font-family="Arial,sans-serif" font-size="12">概念用，未接入戰鬥或碰撞。</text>
+</svg>
+
+

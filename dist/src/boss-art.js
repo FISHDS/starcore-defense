@@ -6,15 +6,23 @@ const TAU = Math.PI * 2;
 const INK = '#172235';
 const SHIBA_ASSETS = {};
 const CAT_ASSETS = {};
+const ADMIN_ASSETS = {};
+const COFFIN_ASSETS = {};
+const LOADING99_ASSETS = {};
 const smallSprites = new WeakMap();
 function mobileSprite(image, size = 112) {
   if (!image?.complete || !image.naturalWidth) return null;
-  if (smallSprites.has(image)) return smallSprites.get(image);
+  let variants = smallSprites.get(image);
+  if (!variants) {
+    variants = new Map();
+    smallSprites.set(image, variants);
+  }
+  if (variants.has(size)) return variants.get(size);
   if (typeof document === 'undefined') return image;
   const canvas = document.createElement('canvas');
   canvas.width = size; canvas.height = size;
   canvas.getContext('2d').drawImage(image, 0, 0, size, size);
-  smallSprites.set(image, canvas);
+  variants.set(size, canvas);
   return canvas;
 }
 if (typeof Image !== 'undefined') {
@@ -26,7 +34,7 @@ if (typeof Image !== 'undefined') {
   for (const [part, file] of Object.entries(files)) {
     const image = new Image();
     image.decoding = 'async';
-    image.src = new URL(`../assets/bosses/${file}?v=20261016-shiba-4`, import.meta.url).href;
+    image.src = new URL(`../assets/bosses/${file}?v=20261017-shiba-5`, import.meta.url).href;
     SHIBA_ASSETS[part] = image;
     image.addEventListener('load', () => {
       if (part === 'body') mobileSprite(image, 112);
@@ -35,9 +43,60 @@ if (typeof Image !== 'undefined') {
   for (const part of ['head', 'body']) {
     const image = new Image();
     image.decoding = 'async';
-    image.src = new URL(`../assets/bosses/screech-cat-${part}.png?v=20261016-cat-1`, import.meta.url).href;
+    image.src = new URL(`../assets/bosses/screech-cat-${part}.png?v=20261017-cat-2`, import.meta.url).href;
     CAT_ASSETS[part] = image;
   }
+  const admin = new Image();
+  admin.decoding = 'async';
+  admin.src = new URL('../assets/bosses/prototypes/seen-zone-group-admin.svg?v=20261017-admin-2', import.meta.url).href;
+  admin.addEventListener('load', () => {
+    const parts = {
+      head: [54, 28, 210, 292, 126, 176],
+      body: [330, 90, 165, 145, 96, 84],
+      phone: [580, 70, 160, 220, 80, 110],
+      warning: [775, 95, 155, 165, 78, 83],
+    };
+    for (const [part, [sx, sy, sw, sh, width, height]] of Object.entries(parts)) {
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      canvas.getContext('2d').drawImage(admin, sx, sy, sw, sh, 0, 0, width, height);
+      ADMIN_ASSETS[part] = canvas;
+    }
+  }, { once: true });
+  const coffinAtlas = new Image();
+  coffinAtlas.decoding = 'async';
+  coffinAtlas.src = new URL('../assets/bosses/prototypes/last-shift-coffin-leader-atlas.svg?v=20261017-coffin-2', import.meta.url).href;
+  coffinAtlas.addEventListener('load', () => {
+    const parts = {
+      head: [0, 0, 96, 96], hand: [112, 8, 44, 44],
+      coffin: [168, 8, 44, 44], shoe: [224, 8, 44, 44],
+      chest: [280, 8, 44, 44],
+    };
+    for (const [part, [sx, sy, width, height]] of Object.entries(parts)) {
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      canvas.getContext('2d').drawImage(coffinAtlas, sx, sy, width, height,
+        0, 0, width, height);
+      COFFIN_ASSETS[part] = canvas;
+    }
+  }, { once: true });
+  const loading99Atlas = new Image();
+  loading99Atlas.decoding = 'async';
+  loading99Atlas.src = new URL('../assets/bosses/loading-99-atlas.svg?v=20261017-starcore-4', import.meta.url).href;
+  loading99Atlas.addEventListener('load', () => {
+    const parts = {
+      head: [0, 0, 100, 104], ring: [105, 16, 72, 72],
+      bar: [182, 16, 72, 72], error: [259, 16, 72, 72],
+      chest: [336, 16, 72, 72],
+    };
+    for (const [part, [sx, sy, width, height]] of Object.entries(parts)) {
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      canvas.getContext('2d').drawImage(loading99Atlas, sx, sy, width, height,
+        0, 0, width, height);
+      LOADING99_ASSETS[part] = canvas;
+    }
+  }, { once: true });
 }
 
 function drawShibaPart(ctx, part, x, y, size, angle = 0) {
@@ -47,14 +106,16 @@ function drawShibaPart(ctx, part, x, y, size, angle = 0) {
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(angle);
-  ctx.drawImage(part === 'body' ? mobileSprite(image) : image,
+  ctx.drawImage(mobileSprite(image, part === 'body' ? 112 : 128),
     -size / 2, -size / 2, size, size);
   ctx.restore();
   return true;
 }
 
 function drawShibaProp(ctx, part, x, y, width, height, angle, mirror = false) {
-  const atlas = SHIBA_ASSETS.props;
+  const source = SHIBA_ASSETS.props;
+  const atlas = source?.complete && source.naturalWidth
+    ? mobileSprite(source, 256) : source;
   if (!atlas?.complete || !atlas.naturalWidth) {
     return drawShibaPart(ctx, part, x, y, Math.max(width, height), angle);
   }
@@ -93,6 +154,28 @@ function polygon(ctx, points, fill, width = 2.5) {
 export function drawBossConnector(ctx, { from, to, profile, pose, index }) {
   if (!from || !to || from.hp <= 0 || to.hp <= 0) return;
   ctx.save();
+  if (profile.id === 'meme-last-shift-coffin-leader') {
+    stroke(ctx, [[from.x, from.y], [to.x, to.y]], '#171d29', 28);
+    stroke(ctx, [[from.x, from.y], [to.x, to.y]], '#7355ad', 20);
+    stroke(ctx, [[from.x - 2, from.y - 2], [to.x - 2, to.y - 2]], '#b997ef', 5);
+    const joint = pose.joints[index - 1];
+    if (joint) ellipse(ctx, joint.x, joint.y, 5, 5, '#f5d892', '#171d29', 2);
+    ctx.restore();
+    return;
+  }
+  if (profile.id === 'meme-seen-zone-admin') {
+    stroke(ctx, [[from.x, from.y], [to.x, to.y]], '#202b44', 17);
+    stroke(ctx, [[from.x, from.y], [to.x, to.y]], '#67cfc9', 8);
+    ctx.restore();
+    return;
+  }
+  if (profile.id === 'meme-loading-99') {
+    stroke(ctx, [[from.x, from.y], [to.x, to.y]], '#14283a', 22);
+    stroke(ctx, [[from.x, from.y], [to.x, to.y]], '#45617b', 14);
+    stroke(ctx, [[from.x - 2, from.y - 2], [to.x - 2, to.y - 2]], '#69d9d5', 4);
+    ctx.restore();
+    return;
+  }
   stroke(ctx, [[from.x, from.y], [to.x, to.y]], INK, 32 * profile.anatomy.bodyScale);
   stroke(ctx, [[from.x, from.y], [to.x, to.y]], profile.colors.shadow,
     25 * profile.anatomy.bodyScale);
@@ -256,6 +339,125 @@ function drawScreechCat(ctx, { piece, chain, time, profile, pose, head, r }) {
   return true;
 }
 
+function drawSeenZoneAdmin(ctx, { piece, chain, time, pose, head, r }) {
+  const image = ADMIN_ASSETS[head ? 'head' : 'body'];
+  if (!image) return false;
+  ctx.save();
+  if (head) {
+    ctx.rotate(Math.max(-0.28, Math.min(0.28, pose.angle)));
+    if (pose.state === 'hurt') ctx.filter = 'brightness(1.55)';
+    ctx.drawImage(image, -r * 1.34, -r * 1.68, r * 2.68, r * 3.36);
+    if (pose.state === 'telegraph' && ADMIN_ASSETS.warning) {
+      ctx.drawImage(ADMIN_ASSETS.warning, -r * 0.83, -r * 2.12,
+        r * 1.66, r * 1.72);
+    }
+  } else {
+    const ahead = pose.spine[piece.index - 1];
+    const here = pose.spine[piece.index];
+    const pathAngle = ahead && here
+      ? Math.atan2(ahead.y - here.y, ahead.x - here.x) - Math.PI / 2 : 0;
+    ctx.rotate(pathAngle + Math.sin(time * 4 + piece.index) * 0.045);
+    ctx.drawImage(image, -r * 1.2, -r, r * 2.4, r * 2);
+    if (piece.id === chain.rig?.weakpointId && ADMIN_ASSETS.phone) {
+      ctx.drawImage(ADMIN_ASSETS.phone, r * 0.42, -r * 1.32,
+        r * 0.98, r * 1.68);
+      if (piece.weakOpen) {
+        ctx.beginPath(); ctx.arc(r * 0.9, -r * 0.46, r * 1.25, 0, TAU);
+        ctx.strokeStyle = '#ff6374'; ctx.lineWidth = 3;
+        ctx.shadowColor = '#ff6374'; ctx.shadowBlur = 12; ctx.stroke();
+      }
+    }
+  }
+  ctx.restore();
+  return true;
+}
+
+export function lastShiftPartForIndex(index) {
+  return ['hand', 'coffin', 'shoe'][(index - 1) % 3];
+}
+
+export function loading99PartForIndex(index, weakpoint = false) {
+  if (weakpoint) return 'error';
+  return index % 2 === 0 ? 'ring' : 'bar';
+}
+
+function drawLoading99(ctx, { piece, chain, time, pose, head, r }) {
+  const key = head ? 'head' : loading99PartForIndex(piece.index,
+    piece.id === chain.rig?.weakpointId);
+  const part = LOADING99_ASSETS[key];
+  if (!part) return false;
+  ctx.save();
+  if (head) {
+    const direction = pose.phase === 2 ? -1 : 1;
+    if (pose.state === 'hurt') ctx.filter = 'brightness(1.7)';
+    ctx.drawImage(part, -r * 1.55, -r * 1.55, r * 3.1, r * 3.1);
+    ctx.save();
+    ctx.rotate(pose.state === 'telegraph' ? 0 : time * direction * 1.35);
+    ctx.beginPath();
+    ctx.arc(0, 0, r * 1.7, -0.9, 1.2 + Math.sin(time * 5) * 0.16);
+    ctx.strokeStyle = pose.state === 'telegraph' ? '#ff796e' : '#74e7de';
+    ctx.lineWidth = pose.state === 'telegraph' ? 4 : 2.5;
+    ctx.setLineDash(pose.state === 'telegraph' ? [4, 4] : []);
+    ctx.stroke();
+    ctx.restore();
+  } else {
+    const ahead = pose.spine[piece.index - 1];
+    const here = pose.spine[piece.index];
+    const angle = ahead && here
+      ? Math.atan2(ahead.y - here.y, ahead.x - here.x) - Math.PI / 2 : 0;
+    ctx.rotate(angle + Math.sin(time * 4 + piece.index * 0.72) * 0.045);
+    const size = r * 2.18;
+    if (key === 'error' && piece.weakOpen) {
+      ctx.shadowColor = '#ff796e'; ctx.shadowBlur = 14;
+    }
+    ctx.drawImage(part, -size / 2, -size / 2, size, size);
+    if (key === 'error' && piece.weakOpen) {
+      ctx.beginPath(); ctx.arc(0, 0, r * 1.3, 0, TAU);
+      ctx.strokeStyle = '#ffe4a1'; ctx.lineWidth = 3; ctx.stroke();
+    }
+  }
+  ctx.restore();
+  return true;
+}
+
+function drawLastShiftCoffin(ctx, { piece, chain, time, pose, head, r }) {
+  const part = head ? COFFIN_ASSETS.head
+    : piece.chest ? COFFIN_ASSETS.chest
+      : COFFIN_ASSETS[lastShiftPartForIndex(piece.index)];
+  if (!part) return false;
+  ctx.save();
+  if (head) {
+    const bob = pose.state === 'telegraph' ? -3 - Math.sin(time * 24) * 2
+      : pose.state === 'strike' ? 4 : Math.sin(time * 5) * 2;
+    if (pose.state === 'hurt') ctx.filter = 'brightness(1.65)';
+    ctx.translate(0, bob + (pose.state === 'hurt' ? -6 : 0));
+    ctx.drawImage(part, -r * 1.55, -r * 1.55, r * 3.1, r * 3.1);
+    if (pose.state === 'telegraph') {
+      ctx.strokeStyle = '#ffe17a'; ctx.lineWidth = 4;
+      ctx.setLineDash([8, 5]); ctx.beginPath();
+      ctx.arc(0, 0, r * 1.72 + Math.sin(time * 18) * 2, 0, TAU);
+      ctx.stroke(); ctx.setLineDash([]);
+    }
+  } else {
+    const ahead = pose.spine[piece.index - 1];
+    const here = pose.spine[piece.index];
+    const angle = ahead && here
+      ? Math.atan2(ahead.y - here.y, ahead.x - here.x) - Math.PI / 2 : 0;
+    ctx.rotate(angle + Math.sin(time * 5 + piece.index * .7) * .07);
+    const size = piece.chest ? r * 2.8 : piece.index === 3 ? r * 2.7 : r * 2.25;
+    ctx.drawImage(part, -size / 2, -size / 2, size, size);
+    if (piece.weakpoint && piece.weakOpen) {
+      ctx.beginPath(); ctx.arc(0, 0, r * 1.34, 0, TAU);
+      ctx.strokeStyle = '#fff2a1'; ctx.lineWidth = 4;
+      ctx.shadowColor = '#ffe17a'; ctx.shadowBlur = 14; ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-r * 1.2, 0); ctx.lineTo(r * 1.2, 0);
+      ctx.moveTo(0, -r * 1.2); ctx.lineTo(0, r * 1.2); ctx.stroke();
+    }
+  }
+  ctx.restore();
+  return true;
+}
+
 export function drawBossSegment(ctx, { piece, chain, time, profile, pose }) {
   if (!piece || piece.hp <= 0 || piece.y < -60 || piece.y > 900
     || piece.x < -60 || piece.x > 450) return;
@@ -266,7 +468,7 @@ export function drawBossSegment(ctx, { piece, chain, time, profile, pose }) {
     * profile.anatomy.bodyScale);
   ctx.save();
   ctx.translate(location.x, location.y);
-  if (head) ctx.rotate(profile.id === 'meme-screech-cat'
+  if (head) ctx.rotate(['meme-screech-cat', 'meme-loading-99'].includes(profile.id)
     ? Math.max(-0.38, Math.min(0.38, pose.angle)) : pose.angle);
   if (head && (pose.state === 'telegraph' || pose.phase === 2)) {
     ctx.shadowColor = colors.glow; ctx.shadowBlur = pose.state === 'telegraph' ? 27 : 13;
@@ -278,6 +480,21 @@ export function drawBossSegment(ctx, { piece, chain, time, profile, pose }) {
   }
   if (profile.id === 'meme-screech-cat'
     && drawScreechCat(ctx, { piece, chain, time, profile, pose, head, r })) {
+    ctx.restore();
+    return;
+  }
+  if (profile.id === 'meme-seen-zone-admin'
+    && drawSeenZoneAdmin(ctx, { piece, chain, time, pose, head, r })) {
+    ctx.restore();
+    return;
+  }
+  if (profile.id === 'meme-last-shift-coffin-leader'
+    && drawLastShiftCoffin(ctx, { piece, chain, time, pose, head, r })) {
+    ctx.restore();
+    return;
+  }
+  if (profile.id === 'meme-loading-99'
+    && drawLoading99(ctx, { piece, chain, time, profile, pose, head, r })) {
     ctx.restore();
     return;
   }

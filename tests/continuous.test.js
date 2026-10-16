@@ -69,13 +69,15 @@ test('寶箱在前段有可直接射擊的空隙，長鏈行列不大面積重�
   assert.ok(crowding < 0.35, `不相鄰的身體重疊率 ${crowding}`);
 });
 
-test('開局即可看到兩列長鏈與可瞄準的寶箱', () => {
+test('開局長鏈已進入可見戰場且寶箱可直接瞄準', () => {
   for (const chapter of [1, 2, 3]) {
     const game = startRun(19, {}, chapter);
     advance(game, 0.05);
     const chain = game.chains[0];
-    assert.ok(chain.segments[0].y >= 350,
-      `第 ${chapter} 關頭部只在 ${chain.segments[0].y}，畫面下半太空`);
+    const anchorDistance = Math.hypot(chain.segments[0].x - game.player.x,
+      chain.segments[0].y - game.player.y);
+    assert.ok(anchorDistance > 120 && anchorDistance < 430,
+      `第 ${chapter} 關頭部與固定角色距離 ${anchorDistance.toFixed(0)} 不合理`);
     const visible = chain.segments.filter(piece => piece.x > 20 && piece.x < 370
       && piece.y > 120 && piece.y < 720);
     assert.ok(visible.length >= 25, `第 ${chapter} 關開局只有 ${visible.length} 節可見`);
@@ -83,16 +85,12 @@ test('開局即可看到兩列長鏈與可瞄準的寶箱', () => {
   }
 });
 
-test('岔路關卡大部分時間繞開中央，玩家必須左右移動', () => {
+test('岔路路線同時覆蓋畫面左右側，玩家可原地轉向迎擊', () => {
   const length = routeLength('fork', false, 0);
   const points = Array.from({ length: 10000 }, (_, index) =>
     routePosition('fork', false, 0, length * index / 10000));
-  const centralRows = points.filter(point => {
-    const row = Math.round((point.y - 128) / 68);
-    return row > 0 && row < 8 && Math.abs(point.y - (128 + row * 68)) < 1
-      && Math.abs(point.x - 195) < 25;
-  });
-  assert.ok(centralRows.length < 80, `岔路橫排仍經過中央 ${centralRows.length} 次`);
+  assert.ok(Math.min(...points.map(point => point.x)) < 80);
+  assert.ok(Math.max(...points.map(point => point.x)) > 310);
 });
 
 test('實際藥丸可以在開局打開身體上的寶箱', () => {
@@ -100,8 +98,14 @@ test('實際藥丸可以在開局打開身體上的寶箱', () => {
     const game = startRun(31, {}, chapter);
     for (let i = 0; i < 120 && game.phase === 'playing'; i++) {
       const chest = game.chains.flatMap(chain => chain.segments)
-        .find(piece => piece.chest && piece.y > 160 && piece.y < 700);
-      advance(game, 0.05, chest?.x ?? 195);
+        .filter(piece => piece.chest && piece.y > 70 && piece.y < 760
+          && piece.x > 0 && piece.x < 390)
+        .sort((a, b) => Math.hypot(a.x - game.player.x, a.y - game.player.y)
+          - Math.hypot(b.x - game.player.x, b.y - game.player.y))[0];
+      const aimAngle = chest
+        ? Math.atan2(chest.y - game.player.y, chest.x - game.player.x)
+        : game.player.aimAngle;
+      advance(game, 0.05, { aimAngle });
     }
     assert.equal(game.phase, 'upgrade', `第 ${chapter} 關的寶箱打不開`);
   }

@@ -9,7 +9,7 @@ const memory = () => {
     setItem: (key, value) => data.set(key, value), removeItem: key => data.delete(key) };
 };
 
-test('戰術研究增加寶箱重抽次數；拾取研究增加接物範圍', () => {
+test('戰術研究增加寶箱重抽次數；弱點解析提升精準傷害', () => {
   const storage = memory();
   storage.setItem('starcore.profile.v2', JSON.stringify({ dna: 1000 }));
   for (let i = 0; i < 2; i++) assert.equal(buyResearch(storage, 'tactics').success, true);

@@ -2,25 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { advance, chooseUpgrade, hitSegment, rerollUpgrades, startRun, UPGRADES, WAVES } from '../dist/src/game.js';
 import { routeLength } from '../dist/src/routes.js';
-
-function avoidKnifeWarning(game, targetX) {
-  const incoming = game.encounter === 'boss' ? game.enemyBullets.filter(shot =>
-    shot.y > 350 && shot.y < 765) : [];
-  if (incoming.length) {
-    const landings = incoming.map(shot => shot.x + shot.vx
-      * ((game.player.y - shot.y) / shot.vy));
-    return [24, 105, 195, 285, 366]
-      .sort((a, b) => Math.min(...landings.map(x => Math.abs(x - b)))
-        - Math.min(...landings.map(x => Math.abs(x - a))))[0];
-  }
-  const boss = game.bosses.find(item => !item.dead
-    && item.rig?.profileId === 'meme-knife-shield' && item.rig.telegraphFor > 0);
-  if (!boss) return targetX;
-  const landingX = boss.rig.targetX + (boss.rig.phase === 2 ? -32 : 32);
-  if (Math.abs(landingX - targetX) >= 48) return targetX;
-  return landingX < 195 ? Math.min(366, landingX + 85)
-    : Math.max(24, landingX - 85);
-}
+import { choosePilotUpgrade, fixedAimAngle } from '../scripts/fixed-aim-pilot.mjs';
 
 test('長鏈頭部不受傷，身體被打爆會使頭部沿路後退', () => {
   const game = startRun(7);
@@ -110,6 +92,26 @@ test('任何頭部碰到底線立刻失敗，不會整條瞬移退回', () => {
   }
 });
 
+test('中央守點與底線迎擊都固定角色座標，只接受瞄準角度', () => {
+  for (const chapter of [1, 3]) {
+    const game = startRun(72, {}, chapter);
+    const origin = { x: game.player.x, y: game.player.y };
+    advance(game, 0.05, { aimAngle: Math.PI / 3 });
+    assert.deepEqual({ x: game.player.x, y: game.player.y }, origin);
+    assert.ok(Math.abs(game.player.aimAngle - Math.PI / 3) < 0.001);
+  }
+});
+
+test('藥丸沿原地瞄準方向發射', () => {
+  const game = startRun(73);
+  game.player.aimAngle = 0;
+  game.fireTimer = 1;
+  advance(game, 0.01, { aimAngle: 0 });
+  assert.ok(game.bullets.length > 0);
+  assert.ok(game.bullets[0].vx > 0);
+  assert.ok(Math.abs(game.bullets[0].vy) < 0.001);
+});
+
 test('技能三選一可免費刷新，實際效果涵蓋不同流派', () => {
   assert.ok(UPGRADES.length >= 24);
   assert.ok(new Set(UPGRADES.map(item => item.category)).size >= 4);
@@ -144,46 +146,20 @@ test('固定站在中央亂射不足以通關', () => {
         const rank = ['power', 'rapid', 'multi', 'arc', 'orbit', 'drone', 'blast', 'pierce'];
         chooseUpgrade(game, rank.find(id => game.choices.includes(id)) || game.choices[0]);
       }
-      advance(game, 0.05, 195);
+      advance(game, 0.05, { aimAngle: -Math.PI / 2 });
     }
     if (game.phase === 'victory') victories++;
   }
   assert.ok(victories <= 2, `固定站樁在 20 次中竟通關 ${victories} 次`);
 });
 
-test('主動追箱並守住迫近敵群，有機會通過完整長局', () => {
+test('固定角色主動轉向打箱並攔截來彈，可通過完整長局', () => {
   const game = startRun(5);
-  let emptyFor = 0;
-  let longestEmpty = 0;
   for (let i = 0; i < 8500 && !['victory', 'defeat'].includes(game.phase); i++) {
-    if (game.phase === 'upgrade') {
-      const rank = ['power', 'rapid', 'multi', 'arc', 'orbit', 'drone', 'blast', 'pierce'];
-      chooseUpgrade(game, rank.find(id => game.choices.includes(id)) || game.choices[0]);
-    }
-    const threat = game.chains.filter(chain => !chain.dead && chain.segments[0].y > 580)
-      .sort((a, b) => b.segments[0].y - a.segments[0].y)[0];
-    const bodies = game.chains.flatMap(chain => chain.segments.slice(1)
-      .filter(segment => segment.y > 220 && segment.y < 710));
-    const chest = bodies.filter(segment => segment.chest).sort((a, b) => b.y - a.y)[0];
-    const near = bodies.sort((a, b) => b.y - a.y)[0];
-    const guard = threat?.segments.slice(1, 8).find(segment => segment.y < 710);
-    let x = guard?.x ?? chest?.x ?? near?.x ?? 195;
-    const incoming = game.enemyBullets.find(shot => {
-      const landingX = shot.x + shot.vx * ((game.player.y - shot.y) / shot.vy);
-      return shot.y > 400 && shot.y < 735 && Math.abs(landingX - x) < 48;
-    });
-    if (incoming) {
-      const landingX = incoming.x + incoming.vx
-        * ((game.player.y - incoming.y) / incoming.vy);
-      x = landingX < 195 ? Math.min(366, landingX + 85)
-        : Math.max(24, landingX - 85);
-    }
-    advance(game, 0.05, avoidKnifeWarning(game, x));
-    emptyFor = game.chains.length ? 0 : emptyFor + 0.05;
-    longestEmpty = Math.max(longestEmpty, emptyFor);
+    if (game.phase === 'upgrade') chooseUpgrade(game, choosePilotUpgrade(game));
+    advance(game, 0.05, { aimAngle: fixedAimAngle(game) });
   }
   assert.equal(game.phase, 'victory', `敗在 ${game.encounter}，${game.runTime.toFixed(1)} 秒，耐久 ${game.core}，清掉 ${game.normalDestroyed} 節`);
-  assert.ok(longestEmpty < 3, `戰場空了 ${longestEmpty.toFixed(1)} 秒`);
 });
 
 test('三個可選關卡具有不同進攻路線與難度', () => {
@@ -199,19 +175,8 @@ test('三個可選關卡具有不同進攻路線與難度', () => {
 test('完成局外研究後，最難關卡仍有可通關路徑', () => {
   const game = startRun(19, { fire: 4, guard: 4, scavenge: 4 }, 3);
   for (let i = 0; i < 8500 && !['victory', 'defeat'].includes(game.phase); i++) {
-    if (game.phase === 'upgrade') {
-      const rank = ['power', 'rapid', 'multi', 'arc', 'orbit', 'drone', 'blast', 'pierce'];
-      chooseUpgrade(game, rank.find(id => game.choices.includes(id)) || game.choices[0]);
-    }
-    const threat = game.chains.filter(chain => !chain.dead && chain.segments[0].y > 580)
-      .sort((a, b) => b.segments[0].y - a.segments[0].y)[0];
-    const bodies = game.chains.flatMap(chain => chain.segments.slice(1)
-      .filter(segment => segment.y > 220 && segment.y < 710));
-    const chest = bodies.filter(segment => segment.chest).sort((a, b) => b.y - a.y)[0];
-    const near = bodies.sort((a, b) => b.y - a.y)[0];
-    const guard = threat?.segments.slice(1, 8).find(segment => segment.y < 710);
-    advance(game, 0.05, avoidKnifeWarning(game,
-      guard?.x ?? chest?.x ?? near?.x ?? 195));
+    if (game.phase === 'upgrade') chooseUpgrade(game, choosePilotUpgrade(game));
+    advance(game, 0.05, { aimAngle: fixedAimAngle(game) });
   }
   assert.equal(game.phase, 'victory');
 });

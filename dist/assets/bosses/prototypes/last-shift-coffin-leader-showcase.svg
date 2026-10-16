@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="340" height="300" viewBox="0 0 340 300" role="img" aria-labelledby="title desc">
+  <title id="title">最後一班・棺材舞領隊</title>
+  <desc id="desc">戴禮帽墨鏡的領隊抬著大梯形棺材，紫黑身節繞成長鏈，右下方有獨立金寶箱。</desc>
+  <defs>
+    <linearGradient id="hat" x2="0" y2="1"><stop stop-color="#fffef8"/><stop offset="1" stop-color="#bcc5d2"/></linearGradient>
+    <linearGradient id="purple" x2="0" y2="1"><stop stop-color="#a780e7"/><stop offset="1" stop-color="#50376f"/></linearGradient>
+    <linearGradient id="gold" x2="0" y2="1"><stop stop-color="#ffe68b"/><stop offset="1" stop-color="#d88b24"/></linearGradient>
+    <linearGradient id="shoe" x2="0" y2="1"><stop stop-color="#444a59"/><stop offset="1" stop-color="#151a25"/></linearGradient>
+    <g id="link-glove" stroke="#171b26" stroke-width="4" stroke-linejoin="round">
+      <path d="M-20 5 L-18 -12 Q-17 -17 -12 -14 L-10 -5 L-9 -20 Q-8 -25 -3 -22 L-2 -6 L1 -22 Q6 -25 8 -20 L8 -5 L13 -17 Q18 -18 19 -12 L17 7 Q14 17 4 20 L-12 17 Z" fill="url(#hat)"/>
+      <path d="M-20 5 L-9 3 L-7 18 L-18 20 Z" fill="#8c60c5"/>
+      <path d="M-15 8 L-9 7" stroke="#fff" stroke-width="2.5"/>
+    </g>
+    <g id="link-coffin" stroke="#171b26" stroke-width="4" stroke-linejoin="round">
+      <path d="M-13 -21 L13 -21 L22 -9 L17 13 L0 22 L-17 13 L-22 -9 Z" fill="#272433"/>
+      <path d="M-10 -16 L10 -16 L16 -7 L12 10 L0 16 L-12 10 L-16 -7 Z" fill="url(#purple)" stroke="#f1eaff" stroke-width="2"/>
+      <path d="M-13 -4 H13 M-10 8 H10 M0 -15 V15" fill="none" stroke="#f5d98e" stroke-width="2.5"/>
+    </g>
+    <g id="link-shoe" stroke="#111621" stroke-width="4" stroke-linejoin="round">
+      <path d="M-17 -13 Q-9 -19 -3 -8 L5 1 Q10 5 21 6 Q27 11 22 19 Q10 24 -17 19 L-22 15 Q-16 8 -18 1 Z" fill="url(#shoe)"/>
+      <path d="M-21 14 Q-3 20 23 12 L22 19 Q6 26 -17 21 L-23 19 Z" fill="#875ac6"/>
+      <path d="M-8 -9 Q-1 1 13 5" fill="none" stroke="#f0eaf8" stroke-width="3"/>
+      <path d="M3 1 L11 3 L8 9 L1 7 Z" fill="url(#gold)" stroke-width="2"/>
+    </g>
+    <g id="treasure" stroke="#382b34" stroke-width="3.5" stroke-linejoin="round">
+      <path d="M-23 -8 Q-21 -20 -11 -20 H11 Q21 -20 23 -8 V20 H-23 Z" fill="url(#gold)"/>
+      <path d="M-23 -4 H23 V20 H-23 Z" fill="#b66d26"/>
+      <path d="M-17 -11 Q-16 -16 -9 -16 H9 Q16 -16 17 -11 V-3 H-17 Z" fill="#ffdf74"/>
+      <path d="M-5 -3 H5 V12 H-5 Z" fill="#fff0ae"/>
+      <path d="M-2 0 H2 V8 H-2 Z" fill="#8052ad" stroke-width="2"/>
+      <path d="M-17 15 H17" stroke="#ffe89a" stroke-width="2.5"/>
+    </g>
+  </defs>
+
+  <!-- 背脊先連成一條，再把各種身節疊在路線上，縮小後仍像一整條長鏈。 -->
+  <path d="M220 72 C282 71 315 101 308 143 C304 178 280 203 241 224 C201 246 154 254 115 239 C76 224 51 198 51 166 C50 137 69 119 100 112" fill="none" stroke="#10141e" stroke-width="29" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M220 72 C282 71 315 101 308 143 C304 178 280 203 241 224 C201 246 154 254 115 239 C76 224 51 198 51 166 C50 137 69 119 100 112" fill="none" stroke="#624578" stroke-width="19" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M220 72 C282 71 315 101 308 143 C304 178 280 203 241 224 C201 246 154 254 115 239 C76 224 51 198 51 166 C50 137 69 119 100 112" fill="none" stroke="#c1a4e0" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="3 8"/>
+
+  <!-- 節點沿長鏈排開：手套、棺材、舞鞋反覆出現。 -->
+  <use href="#link-glove" transform="translate(298 104) rotate(30)"/>
+  <use href="#link-coffin" transform="translate(311 151) rotate(72)"/>
+  <use href="#link-shoe" transform="translate(280 201) rotate(140)"/>
+  <use href="#link-glove" transform="translate(223 234) rotate(178)"/>
+  <use href="#link-coffin" transform="translate(165 247) rotate(192)"/>
+  <use href="#link-shoe" transform="translate(107 224) rotate(225)"/>
+  <use href="#link-glove" transform="translate(57 177) rotate(268)"/>
+  <use href="#link-coffin" transform="translate(70 126) rotate(310)"/>
+
+  <!-- 領隊大頭：禮帽與墨鏡保留粗線，避免小尺寸細節糊成一團。 -->
+  <g stroke="#111621" stroke-linejoin="round">
+    <path d="M126 57 Q129 29 169 27 Q207 30 211 59 L205 91 Q198 111 168 116 Q139 111 132 91 Z" fill="#353b4a" stroke-width="5"/>
+    <path d="M134 40 L145 14 Q168 7 192 14 L203 43 Q170 36 134 45 Z" fill="url(#hat)" stroke-width="4"/>
+    <path d="M139 36 Q170 29 198 37 L199 46 Q170 40 136 47 Z" fill="#8b5bc2" stroke-width="3"/>
+    <path d="M123 46 Q168 34 217 48 L215 57 Q169 47 124 58 Z" fill="#f1f0eb" stroke-width="4"/>
+    <path d="M133 63 Q149 55 164 62 L162 78 Q149 84 136 77 Z M173 62 Q190 55 204 63 L200 78 Q187 84 174 78 Z" fill="#10141d" stroke="#d6d8df" stroke-width="3"/>
+    <path d="M162 68 H174" stroke="#111621" stroke-width="5"/>
+    <path d="M139 68 L154 63 M182 63 L197 68" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M145 91 Q169 84 194 91 L190 101 Q169 106 149 100 Z" fill="#fffdf8" stroke-width="3"/>
+    <path d="M153 91 L153 100 M163 89 L163 102 M174 89 L174 102 M184 90 L184 101" stroke="#737887" stroke-width="2"/>
+  </g>
+
+  <!-- 雙臂抬起大梯形棺材：外形、十字與尺寸都和方形寶箱明確區隔。 -->
+  <g fill="none" stroke="#111621" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M143 113 Q130 126 112 137 L104 126"/>
+    <path d="M194 113 Q211 125 230 137 L238 125"/>
+  </g>
+  <g fill="none" stroke="#8960c2" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M143 113 Q130 126 112 137 L104 126"/>
+    <path d="M194 113 Q211 125 230 137 L238 125"/>
+  </g>
+  <path d="M112 114 L228 114 L246 132 L235 189 L170 207 L105 189 L94 132 Z" fill="#252233" stroke="#111621" stroke-width="6" stroke-linejoin="round"/>
+  <path d="M120 123 L220 123 L234 136 L225 180 L170 195 L115 180 L106 136 Z" fill="url(#purple)" stroke="#eee5fb" stroke-width="3.5" stroke-linejoin="round"/>
+  <path d="M170 126 L192 143 L188 171 L170 185 L152 171 L148 143 Z" fill="#312442" stroke="#f5dda0" stroke-width="3.5" stroke-linejoin="round"/>
+  <path d="M170 130 V181 M132 148 H208" stroke="#f5dda0" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="170" cy="151" r="5" fill="#ffe99b" stroke="#21192a" stroke-width="2"/>
+
+  <!-- 雙手直接托住棺材底部，與身體鏈的手套節分開辨識。 -->
+  <g fill="#f4efe6" stroke="#111621" stroke-width="4" stroke-linejoin="round">
+    <path d="M88 119 L91 104 Q94 100 98 104 L99 115 L102 101 Q106 98 109 103 L108 118 L113 106 Q118 105 120 110 L116 129 Q112 138 102 138 L91 132 Z"/>
+    <path d="M252 119 L249 104 Q246 100 242 104 L241 115 L238 101 Q234 98 231 103 L232 118 L227 106 Q222 105 220 110 L224 129 Q228 138 238 138 L249 132 Z"/>
+  </g>
+  <path d="M90 127 L102 129 L100 138 L91 135 Z M250 127 L238 129 L240 138 L249 135 Z" fill="#8b5dc1" stroke="#111621" stroke-width="3"/>
+
+  <!-- 獨立金寶箱，方形輪廓和棺材尖頂不同；掛在長鏈右下方。 -->
+  <path d="M279 190 Q299 194 307 206" fill="none" stroke="#111621" stroke-width="8" stroke-linecap="round"/>
+  <path d="M279 190 Q299 194 307 206" fill="none" stroke="#76558e" stroke-width="4" stroke-linecap="round"/>
+  <use href="#treasure" transform="translate(308 225) scale(1.12)"/>
+  <path d="M300 192 L306 182 L312 192 M323 193 L329 183 L335 193" fill="none" stroke="#ffe17a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

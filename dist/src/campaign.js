@@ -17,10 +17,10 @@ const MECHANIC_NAMES = {
 const LEVELS = [
   ['孢子初潮', 'tide', [], 'knife-shield'],
   ['窄膜通道', 'narrow', ['narrow'], 'screech-cat'],
-  ['回折潮汐', 'weave', ['switchback'], 'cover'],
+  ['已讀風暴', 'weave', ['switchback', 'weakpoint'], 'group-admin'],
   ['甲殼試煉', 'mirror', ['armor'], 'armor'],
-  ['殼母交鋒', 'spiral', ['armor', 'switchback'], 'armor'],
-  ['左岔菌路', 'fork', ['forkLeft'], 'cover'],
+  ['最後一班', 'spiral', ['switchback', 'weakpoint'], 'coffin-dance'],
+  ['左岔菌路', 'fork', ['forkLeft'], 'loading-99'],
   ['右岔誘餌', 'fork-right', ['forkRight', 'guard'], 'cover'],
   ['交替狹道', 'weave', ['switchback', 'guard'], 'cover'],
   ['護箱菌牆', 'spiral', ['guard', 'armor'], 'guard'],
@@ -44,12 +44,23 @@ const LEVELS = [
 
 // 雙頭集中在每區決戰；其餘關卡由單一頭目帶較長身體與更完整的第二階段。
 const BOSS_COUNTS = [
-  1, 1, 2, 1, 2,
+  1, 1, 1, 1, 1,
   1, 2, 1, 2, 2,
   1, 2, 1, 2, 2,
   1, 2, 1, 2, 2,
   1, 2, 1, 1, 2,
 ];
+
+const POSITION_MODES = [
+  'bottom', 'center', 'center', 'center', 'center',
+  'center', 'bottom', 'center', 'center', 'bottom',
+  'bottom', 'center', 'bottom', 'center', 'center',
+  'center', 'bottom', 'center', 'bottom', 'center',
+  'bottom', 'center', 'bottom', 'center', 'center',
+];
+
+const BOSS_PATHS = ['tide', 'narrow', 'weave', 'mirror', 'spiral',
+  'fork', 'fork-right', 'sine', 'cross'];
 
 export const CHAPTERS = LEVELS.map(([name, path, mechanics, bossMode], index) => {
   const id = index + 1;
@@ -59,22 +70,29 @@ export const CHAPTERS = LEVELS.map(([name, path, mechanics, bossMode], index) =>
   const bossCount = BOSS_COUNTS[index];
   const details = id === 1 ? '舉盾後斜斬 · 換手反擊'
     : id === 2 ? '聲浪安全帶 · 半血變奏'
+      : id === 5 ? '棺材舞長鏈 · 承重手可打斷交替節拍牌'
       : mechanics.length ? mechanics.map(rule => MECHANIC_NAMES[rule]).join(' · ')
         : '連綿長鏈 · 基礎瞄準';
   return {
     id, zone, name, region: zoneInfo.name,
     difficulty: id <= 5 ? '入門' : id <= 10 ? '進階' : id <= 20 ? '挑戰' : '深域',
     mechanics, bossMode, path, bossCount,
+    positionMode: POSITION_MODES[index],
     bossSegments: bossCount === 1 ? 54 : 42,
     bossHpScale: bossCount === 1 ? 1.2 : 1,
-    summary: `${details} · ${bossCount === 1 ? '單頭長戰' : '雙頭交疊'}`,
-    paths: [path, path, path, path, path, 'cross'],
+    summary: `${positionModeName(POSITION_MODES[index])} · ${details} · ${bossCount === 1 ? '單頭長戰' : '雙頭交疊'}`,
+    paths: [path, path, path, path, path,
+      id === 6 ? 'coil' : BOSS_PATHS[index % BOSS_PATHS.length]],
     tints: [tint, tint, tint, tint, tint, zone === 4 ? 'coral' : tint],
     hpScale: 1 + index * 0.055,
     speedScale: (id === 1 ? 0.84 : 1) + index * 0.014,
     gapScale: 1,
   };
 });
+
+function positionModeName(mode) {
+  return mode === 'center' ? '中央守點' : '底線迎擊';
+}
 
 export const ZONE_COUNT = ZONES.length;
 export const FINAL_STAGE = CHAPTERS.length;

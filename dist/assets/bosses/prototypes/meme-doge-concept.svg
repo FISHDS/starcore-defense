@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 820" role="img" aria-labelledby="title desc">
+  <title id="title">再五分鐘柴・低電量長鏈頭目概念</title>
+  <desc id="desc">原創迷因柴犬頭目概念板，展示完整迴圈長鏈、三種身節、藏在鏈內的寶箱，以及可用固定方向射擊反制的蓄電攻擊。</desc>
+  <defs>
+    <linearGradient id="board" x2="0" y2="1"><stop stop-color="#202b3b"/><stop offset="1" stop-color="#111a27"/></linearGradient>
+    <linearGradient id="fur" x2="0.9" y2="1"><stop stop-color="#e9a65f"/><stop offset="1" stop-color="#a85e3e"/></linearGradient>
+    <linearGradient id="cream" x2="0" y2="1"><stop stop-color="#fff0d0"/><stop offset="1" stop-color="#d5ac7b"/></linearGradient>
+    <linearGradient id="battery" x2="0" y2="1"><stop stop-color="#63758a"/><stop offset="1" stop-color="#303c50"/></linearGradient>
+    <linearGradient id="gold" x2="0" y2="1"><stop stop-color="#ffe184"/><stop offset="1" stop-color="#d68b35"/></linearGradient>
+    <filter id="glow" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="9" refY="6" orient="auto"><path d="M1 1 10 6 1 11" fill="none" stroke="#a9c6db" stroke-width="2"/></marker>
+    <g id="cell-battery">
+      <path d="M-32-26 Q-36-26-36-19 V20 Q-36 28-28 28 H25 Q33 28 33 20 V-18 Q33-26 25-26Z" fill="url(#battery)" stroke="#101923" stroke-width="7"/>
+      <path d="M-14-33 H7 V-26 H-14Z" fill="#8195a8" stroke="#101923" stroke-width="5"/>
+      <rect x="-22" y="-15" width="39" height="8" rx="4" fill="#ffd45d"/>
+      <rect x="-22" y="-2" width="29" height="8" rx="4" fill="#f1a947"/>
+      <rect x="-22" y="11" width="18" height="8" rx="4" fill="#ea6f54"/>
+      <path d="M23-8l-8 8 7 3-8 11" fill="none" stroke="#ffbd51" stroke-width="4" stroke-linecap="round"/>
+    </g>
+    <g id="cell-coil">
+      <path d="M-34 0 C-34-26 34-26 34 0 C34 25-34 25-34 0 C-34-15 24-15 24 0 C24 12-23 12-23 0" fill="none" stroke="#111a24" stroke-width="19" stroke-linecap="round"/>
+      <path d="M-34 0 C-34-26 34-26 34 0 C34 25-34 25-34 0 C-34-15 24-15 24 0 C24 12-23 12-23 0" fill="none" stroke="#798b9c" stroke-width="10" stroke-linecap="round"/>
+      <path d="M-26-20 25 20" stroke="#b4c2ce" stroke-width="3" opacity=".8"/>
+    </g>
+    <g id="cell-fuse">
+      <path d="M-36-17 Q-36-26-25-26 H8 Q18-26 18-17 V17 Q18 26 8 26 H-25 Q-36 26-36 17Z" fill="#d8dedb" stroke="#101923" stroke-width="7"/>
+      <path d="M18-13H34V13H18Z" fill="#61d6d2" stroke="#101923" stroke-width="6"/>
+      <path d="M-20-13H5M-20 0H7M-20 13H0" stroke="#576879" stroke-width="5" stroke-linecap="round"/>
+      <path d="M-2-9 7 0-2 9" fill="none" stroke="#f17856" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <g id="chest">
+      <path d="M-33-13 Q-33-24-23-24 H23 Q33-24 33-13 V20 Q33 27 24 27 H-24 Q-33 27-33 20Z" fill="url(#gold)" stroke="#151b23" stroke-width="7"/>
+      <path d="M-34-7H34M-22-18V18M22-18V18" fill="none" stroke="#fff0ad" stroke-width="5"/>
+      <path d="M-6-7H6V8H-6Z" fill="#fff0ad" stroke="#6f4828" stroke-width="3"/>
+    </g>
+    <g id="dog-head">
+      <!-- Oversized sleepy Shiba silhouette; the lower cream jaw and three squared fur tufts survive thumbnail scale. -->
+      <path d="M-57-23 -72-78 Q-74-90-62-84 L-23-55 Q0-62 25-52 L61-82 Q72-89 70-76 L64-22 Q79 0 67 31 Q57 66 22 76 L-31 72 Q-67 60-72 26 Q-78 0-57-23Z" fill="url(#fur)" stroke="#101923" stroke-width="10" stroke-linejoin="round"/>
+      <path d="M-62-71-34-49-52-38Z" fill="#5a3432" stroke="#101923" stroke-width="5" stroke-linejoin="round"/>
+      <path d="M57-70 34-48 52-37Z" fill="#5a3432" stroke="#101923" stroke-width="5" stroke-linejoin="round"/>
+      <path d="M-51 24 Q-37 5-20 17 Q-7 29-18 36 Q-35 41-51 24Z" fill="url(#cream)"/>
+      <path d="M51 24 Q36 5 20 17 Q7 29 18 36 Q35 41 51 24Z" fill="url(#cream)"/>
+      <path d="M-38-10 Q-26-20-14-12" fill="none" stroke="#19202a" stroke-width="8" stroke-linecap="round"/>
+      <path d="M14-12 Q27-20 39-10" fill="none" stroke="#19202a" stroke-width="8" stroke-linecap="round"/>
+      <path d="M-31-5h8M23-5h8" stroke="#f9e8c5" stroke-width="4" stroke-linecap="round"/>
+      <path d="M-13 18 Q0 10 13 18 L8 27H-8Z" fill="#1b2028"/>
+      <path d="M0 27 Q-3 38-16 39M0 27 Q4 38 16 39" fill="none" stroke="#6a3936" stroke-width="4" stroke-linecap="round"/>
+      <!-- A red 5-minute snooze button is the punchline prop, not armor or a weakpoint. -->
+      <path d="M-27-46 Q-25-60-9-59 H11 Q26-58 27-45 L21-32 H-20Z" fill="#bc4e48" stroke="#101923" stroke-width="5"/>
+      <path d="M-11-47H11" stroke="#ffd0a4" stroke-width="5" stroke-linecap="round"/>
+    </g>
+  </defs>
+  <rect width="1200" height="820" rx="28" fill="url(#board)"/>
+  <path d="M26 96H1174" stroke="#526276" stroke-width="2"/>
+  <text x="48" y="55" fill="#f5e5c7" font-family="sans-serif" font-size="30" font-weight="800">再五分鐘柴</text>
+  <text x="49" y="82" fill="#a9bdce" font-family="sans-serif" font-size="15" letter-spacing="2">LOW BATTERY / SNOOZE LOOP · CONCEPT 01</text>
+  <rect x="1002" y="29" width="151" height="36" rx="18" fill="#28394a" stroke="#526276"/>
+  <text x="1078" y="53" text-anchor="middle" fill="#c7d8e4" font-family="sans-serif" font-size="14" font-weight="700">未接入正式關卡</text>
+
+  <!-- Main looping chain. Each head/body mark is separated by visible joints. -->
+  <rect x="38" y="116" width="1124" height="399" rx="20" fill="#172330" stroke="#34485c" stroke-width="2"/>
+  <text x="62" y="148" fill="#90a8bb" font-family="sans-serif" font-size="14" letter-spacing="1.5">完整行軍姿態｜雙層充電線路徑，仍持續向中央核心收圈</text>
+  <path d="M149 354 C146 241 252 187 393 192 C557 198 657 285 628 379 C603 460 452 472 336 429 C267 403 272 327 354 291 C441 254 523 289 526 348 C529 389 480 407 430 389" fill="none" stroke="#52677a" stroke-width="4" stroke-dasharray="7 11" marker-end="url(#arrow)" opacity=".9"/>
+  <circle cx="436" cy="347" r="45" fill="#223448" stroke="#6e8498" stroke-width="3"/>
+  <path d="M421 350h30M436 335v30" stroke="#f0b75a" stroke-width="6" stroke-linecap="round"/>
+  <text x="436" y="411" text-anchor="middle" fill="#93a9bb" font-family="sans-serif" font-size="13">核心底線</text>
+  <!-- Chain links along the route: types repeat, chest is embedded and distinctly framed. -->
+  <g transform="translate(314 201) rotate(8)"><use href="#cell-battery"/></g>
+  <g transform="translate(401 205) rotate(23)"><use href="#cell-coil"/></g>
+  <g transform="translate(486 228) rotate(35)"><use href="#cell-fuse"/></g>
+  <g transform="translate(555 269) rotate(55)"><use href="#cell-battery"/></g>
+  <g transform="translate(595 328) rotate(82)"><use href="#chest"/><use href="#cell-coil" opacity=".55"/></g>
+  <g transform="translate(592 399) rotate(110)"><use href="#cell-coil"/></g>
+  <g transform="translate(533 447) rotate(148)"><use href="#cell-fuse"/></g>
+  <g transform="translate(449 452) rotate(176)"><use href="#cell-battery"/></g>
+  <g transform="translate(361 431) rotate(205)"><use href="#cell-coil"/></g>
+  <g transform="translate(294 386) rotate(235)"><use href="#cell-battery"/></g>
+  <g transform="translate(288 315) rotate(280)"><use href="#cell-fuse"/></g>
+  <g transform="translate(349 258) rotate(320)"><use href="#cell-coil"/></g>
+  <g transform="translate(223 194) rotate(18)"><use href="#cell-battery"/></g>
+  <g transform="translate(160 240) rotate(47)"><use href="#cell-coil"/></g>
+  <g transform="translate(146 306) rotate(85)"><use href="#cell-fuse"/></g>
+  <g transform="translate(145 367) rotate(95)"><use href="#dog-head"/></g>
+  <!-- Chest callout / readability key -->
+  <path d="M631 327 707 282H758" fill="none" stroke="#f4c46b" stroke-width="2"/>
+  <circle cx="631" cy="327" r="5" fill="#ffe08c"/>
+  <rect x="759" y="253" width="347" height="85" rx="12" fill="#29384a" stroke="#bd843f" stroke-width="2"/>
+  <use href="#chest" transform="translate(798 295) scale(.72)"/>
+  <text x="844" y="284" fill="#ffe0a0" font-family="sans-serif" font-size="16" font-weight="800">鏈內技能寶箱</text>
+  <text x="844" y="308" fill="#d2dce2" font-family="sans-serif" font-size="13">亮金外框凸出身節，不會混成攻擊物</text>
+  <text x="844" y="327" fill="#a8bbc9" font-family="sans-serif" font-size="12">直接瞄準射破 → 三選一技能；沒有回血掉落</text>
+  <rect x="775" y="380" width="314" height="81" rx="12" fill="#1b2937" stroke="#3d5368"/>
+  <text x="797" y="406" fill="#e8eff2" font-family="sans-serif" font-size="14" font-weight="700">手機戰鬥實際尺寸</text>
+  <g transform="translate(829 439) scale(.52)"><use href="#dog-head"/></g>
+  <text x="878" y="443" fill="#c6d5df" font-family="sans-serif" font-size="13">頭 86 px｜身節 44 px</text>
+  <g transform="translate(1061 425) scale(.62)"><use href="#cell-fuse"/></g>
+  <text x="1018" y="454" fill="#8fe4dc" font-family="sans-serif" font-size="11" text-anchor="middle">可拆保險節</text>
+  <text x="76" y="493" fill="#a9bdce" font-family="sans-serif" font-size="13">輪廓順序：三角大耳／低垂眼／紅色貪睡鍵。頭永不破壞，身節破壞才會讓頭沿原路平滑回拉。</text>
+
+  <!-- Attack state panel -->
+  <rect x="38" y="536" width="1124" height="246" rx="20" fill="#172330" stroke="#34485c" stroke-width="2"/>
+  <text x="62" y="570" fill="#90a8bb" font-family="sans-serif" font-size="14" letter-spacing="1.5">招牌攻擊｜插頭蓄電後，沿預先點亮的弧線掃向核心</text>
+  <path d="M145 715 C217 620 317 622 391 704" fill="none" stroke="#52677a" stroke-width="4" stroke-dasharray="7 10" marker-end="url(#arrow)"/>
+  <g transform="translate(189 661) rotate(18) scale(.75)"><use href="#dog-head"/></g>
+  <!-- bright warning segment -->
+  <g filter="url(#glow)" transform="translate(292 637) rotate(34)"><use href="#cell-fuse"/></g>
+  <path d="M293 604V590H405" fill="none" stroke="#73e1d6" stroke-width="2"/>
+  <text x="414" y="595" fill="#9df0e8" font-family="sans-serif" font-size="13" font-weight="700">唯一亮起的保險節：普通子彈打爆即可取消</text>
+  <!-- warning and line of attack -->
+  <path d="M213 674 Q351 711 486 732" fill="none" stroke="#ff7d58" stroke-width="5" stroke-dasharray="10 8"/>
+  <path d="M478 722l20 12-22 6" fill="#ff7d58"/>
+  <text x="334" y="755" fill="#ffab88" font-family="sans-serif" font-size="12">紅色只表示攻擊路徑；不會掉落紅色物品</text>
+  <!-- hit response / aimed retort -->
+  <path d="M483 705 Q454 672 420 650" fill="none" stroke="#f9d06b" stroke-width="4" marker-end="url(#arrow)"/>
+  <circle cx="421" cy="649" r="15" fill="none" stroke="#fff0a4" stroke-width="4" filter="url(#glow)"/>
+  <text x="518" y="680" fill="#e6edf1" font-family="sans-serif" font-size="13">原地轉向集火</text>
+  <text x="518" y="701" fill="#e6edf1" font-family="sans-serif" font-size="13">打爆亮節，即取消放電</text>
+  <text x="518" y="722" fill="#a9bdce" font-family="sans-serif" font-size="12">未打斷：固定方向失能，不扣血</text>
+  <path d="M741 597V754" stroke="#405367" stroke-width="2"/>
+  <text x="772" y="610" fill="#e8edf0" font-family="sans-serif" font-size="14" font-weight="800">半血：鬧鐘響了</text>
+  <text x="772" y="638" fill="#c1d0da" font-family="sans-serif" font-size="13">• 路線改成逆時針收圈，先繞再逼近</text>
+  <text x="772" y="662" fill="#c1d0da" font-family="sans-serif" font-size="13">• 兩個保險節依序亮，不同時封死傷害</text>
+  <text x="772" y="686" fill="#c1d0da" font-family="sans-serif" font-size="13">• 每次仍留完整預警，玩家可選打弱點或寶箱</text>
+  <text x="772" y="727" fill="#91e2d8" font-family="sans-serif" font-size="12">小圖檢查：86px頭仍見耳、眼、貪睡鍵；</text>
+  <text x="772" y="747" fill="#91e2d8" font-family="sans-serif" font-size="12">44px身節仍分得出電池／線圈／插頭。</text>
+  <text x="48" y="805" fill="#71879a" font-family="sans-serif" font-size="11">原創剪影概念｜透明主體分件可供後續拆圖｜本稿僅為設計原型，尚未驗收、測試或整合</text>
+</svg>

@@ -1,6 +1,14 @@
 // 三至五區魔王外型：刻意以不同頭型、比例與明暗配色拉開手機上的辨識度。
 export const BOSS_PROFILES_B = [
   {
+    id: 'meme-loading-99', name: '百分之九十九・轉圈載入獸', silhouette: 'core',
+    colors: { shell: '#92a9c0', shadow: '#23374c', glow: '#68e1d7', eye: '#f8fcff' },
+    anatomy: { headScale: 1.02, bodyScale: 1, hornLength: 3, jawWidth: 9, finLength: 5 },
+    motion: { sway: 1.4, pulse: 0.035, attackReach: 13, hurtKick: 8 },
+    parts: { head: 'loading-99-atlas.svg', body: 'loading-99-atlas.svg',
+      glitch: 'loading-99-atlas.svg', chest: 'loading-99-atlas.svg' },
+  },
+  {
     id: 'zone-3-reef-warden', name: '礁脊守衛', silhouette: 'coral',
     colors: { shell: '#e66b58', shadow: '#71384d', glow: '#ffd879', eye: '#fff9df' },
     anatomy: { headScale: 1.08, bodyScale: 1.16, hornLength: 25, jawWidth: 17, finLength: 22 },

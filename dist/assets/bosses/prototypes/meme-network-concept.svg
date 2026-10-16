@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="390" height="844" viewBox="0 0 390 844" role="img" aria-labelledby="title desc">
+  <title id="title">百分之九十九・轉圈載入獸迷因頭目概念</title>
+  <desc id="desc">手機尺寸頭目概念板：轉圈載入獸以長鏈繞中央核心，玩家固定瞄準紅色卡住節打斷攻擊。下方展示三種身節、寶箱與半血反轉動作。</desc>
+  <defs>
+    <linearGradient id="bg" x2="0" y2="1"><stop stop-color="#142439"/><stop offset="1" stop-color="#091522"/></linearGradient>
+    <linearGradient id="head" x2=".8" y2="1"><stop stop-color="#f5fbff"/><stop offset=".55" stop-color="#c9d9e8"/><stop offset="1" stop-color="#72879f"/></linearGradient>
+    <linearGradient id="teal" x2="0" y2="1"><stop stop-color="#74e7de"/><stop offset="1" stop-color="#1e8897"/></linearGradient>
+    <linearGradient id="gold" x2="0" y2="1"><stop stop-color="#ffe783"/><stop offset="1" stop-color="#e89630"/></linearGradient>
+    <filter id="soft"><feGaussianBlur stdDeviation="5"/></filter>
+    <g id="ring-seg">
+      <rect x="-21" y="-21" width="42" height="42" rx="13" fill="#263b52" stroke="#8ca4bd" stroke-width="3"/>
+      <path d="M-10-5A11 11 0 0 1 8-12M11-3A11 11 0 0 1 5 9M-2 12A11 11 0 0 1-12 2" fill="none" stroke="#65d9d5" stroke-width="5" stroke-linecap="round"/>
+      <circle cx="0" cy="0" r="3" fill="#e5fcff"/>
+    </g>
+    <g id="bar-seg">
+      <rect x="-22" y="-19" width="44" height="38" rx="10" fill="#30455a" stroke="#b0bfd0" stroke-width="3"/>
+      <rect x="-14" y="-10" width="28" height="7" rx="3.5" fill="#8194a9"/>
+      <rect x="-14" y="2" width="21" height="7" rx="3.5" fill="#61ded7"/>
+      <circle cx="13" cy="5" r="3" fill="#f4d069"/>
+    </g>
+    <g id="error-seg">
+      <rect x="-22" y="-21" width="44" height="42" rx="11" fill="#622f45" stroke="#ff796e" stroke-width="3"/>
+      <text x="0" y="7" text-anchor="middle" font-family="Arial,sans-serif" font-size="17" font-weight="900" fill="#fff3dc">99%</text>
+      <path d="M-14-15l5 5m-5 0 5-5" stroke="#ffac74" stroke-width="2.5" stroke-linecap="round"/>
+    </g>
+    <g id="chest">
+      <path d="M-22-8h44v25h-44z" fill="url(#gold)" stroke="#fff0aa" stroke-width="3"/>
+      <path d="M-23-8l6-11h34l6 11z" fill="#ffcf58" stroke="#fff0aa" stroke-width="3"/>
+      <path d="M-4-4h8v12h-8z" rx="2" fill="#7a4926"/>
+      <path d="M-18 13h36" stroke="#ac602a" stroke-width="3"/>
+    </g>
+    <g id="head-art">
+      <circle r="45" fill="#07111d" opacity=".35" transform="translate(0 5)"/>
+      <circle r="42" fill="url(#head)" stroke="#f5fbff" stroke-width="4"/>
+      <circle r="30" fill="#23374c" stroke="#455d73" stroke-width="3"/>
+      <path d="M-3-27A27 27 0 0 1 24-2" fill="none" stroke="#68e1d7" stroke-width="8" stroke-linecap="round"/>
+      <path d="M20 8A27 27 0 0 1-4 27" fill="none" stroke="#6fa8d0" stroke-width="8" stroke-linecap="round"/>
+      <path d="M-18 20A27 27 0 0 1-24-5" fill="none" stroke="#ffca62" stroke-width="8" stroke-linecap="round"/>
+      <path d="M-17-19A27 27 0 0 1-4-27" fill="none" stroke="#eaf6ff" stroke-width="8" stroke-linecap="round"/>
+      <!-- 可拆零件：慌張眉眼、手臂與額前百分比牌 -->
+      <path d="M-17-10l9 3M6-7l10-5" stroke="#f5bf78" stroke-width="3.5" stroke-linecap="round"/>
+      <ellipse cx="-8" cy="-1" rx="4.5" ry="5.5" fill="#f8fcff"/><ellipse cx="9" cy="-1" rx="4.5" ry="5.5" fill="#f8fcff"/>
+      <circle cx="-6" cy="1" r="2.4" fill="#172b40"/><circle cx="12" cy="-1" r="2.4" fill="#172b40"/>
+      <path d="M-7 12q7-5 14 2" fill="none" stroke="#ff9278" stroke-width="3.5" stroke-linecap="round"/>
+      <path d="M-38 4q-8 7-2 15l7 3M38 4q8 7 2 15l-7 3" fill="none" stroke="#a9bfd1" stroke-width="5" stroke-linecap="round"/>
+      <circle cx="-31" cy="23" r="5" fill="#f2c47d" stroke="#fff0c2" stroke-width="2"/><circle cx="31" cy="23" r="5" fill="#f2c47d" stroke="#fff0c2" stroke-width="2"/>
+      <path d="M-27-20q-7-11 1-14q7 4 1 12" fill="#76e1db" stroke="#eaffff" stroke-width="2"/>
+      <rect x="-21" y="28" width="42" height="18" rx="8" fill="#fc795f" stroke="#ffc08a" stroke-width="2"/>
+      <text x="0" y="41" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="900" fill="#fff8e7">99%</text>
+    </g>
+  </defs>
+  <rect width="390" height="844" fill="url(#bg)"/>
+  <path d="M0 72H390" stroke="#30465c"/>
+  <text x="18" y="30" fill="#eff7ff" font-family="Arial,sans-serif" font-size="22" font-weight="900">百分之九十九</text>
+  <text x="18" y="53" fill="#79deda" font-family="Arial,sans-serif" font-size="13" font-weight="700">轉圈載入獸｜「快好了」永遠只是快好了</text>
+  <rect x="14" y="83" width="362" height="389" rx="20" fill="#102033" stroke="#344b61" stroke-width="2"/>
+  <text x="28" y="107" fill="#f3ca71" font-family="Arial,sans-serif" font-size="12" font-weight="800" letter-spacing="1">螺旋緩逼｜頭部不受傷，打身節拉回整條長鏈</text>
+  <!-- route shadow and direction -->
+  <path d="M305 174C277 126 220 119 170 132S95 173 91 229s26 107 77 126 105 5 126-34 14-79-15-98-66-15-79 8" fill="none" stroke="#536c82" stroke-width="7" stroke-dasharray="4 8" stroke-linecap="round" opacity=".62"/>
+  <path d="M116 173l-9 4 4-10M290 296l-2 11 10-6M206 346l-10 4 8 7" fill="#9ab1c5"/>
+  <!-- warning is a red directional beam, separate from gold reward -->
+  <path d="M207 254Q199 266 197 276" fill="none" stroke="#ff665f" stroke-width="3" stroke-dasharray="6 5"/>
+  <path d="M193 274l8-8 2 11z" fill="#ff7969"/>
+  <text x="220" y="270" fill="#ff9583" font-family="Arial,sans-serif" font-size="10" font-weight="800" transform="rotate(-70 220 270)">核心掃描</text>
+  <!-- chain, each node roughly 44px -->
+  <g transform="translate(242 135) rotate(-28)"><use href="#ring-seg"/></g>
+  <g transform="translate(180 131) rotate(-8)"><use href="#bar-seg"/></g>
+  <g transform="translate(126 158) rotate(28)"><use href="#error-seg"/></g>
+  <g transform="translate(94 211) rotate(62)"><use href="#ring-seg"/></g>
+  <g transform="translate(98 274) rotate(94)"><use href="#bar-seg"/></g>
+  <g transform="translate(135 326) rotate(130)"><use href="#ring-seg"/></g>
+  <g transform="translate(185 355) rotate(170)"><use href="#chest"/></g>
+  <g transform="translate(250 337) rotate(-145)"><use href="#error-seg"/></g>
+  <g transform="translate(300 280) rotate(-115)"><use href="#ring-seg"/></g>
+  <g transform="translate(286 218) rotate(-70)"><use href="#error-seg"/><circle r="28" fill="none" stroke="#ff806a" stroke-width="3" stroke-dasharray="3 4"/></g>
+  <g transform="translate(222 218) rotate(-40)"><use href="#head-art"/></g>
+  <text x="28" y="391" fill="#ff9c84" font-family="Arial,sans-serif" font-size="11" font-weight="800">鎖定紅色「卡住節」可打斷掃描；寶箱在鏈身，不是攻擊物</text>
+  <!-- fixed player / aim ring -->
+  <circle cx="195" cy="284" r="23" fill="#1c3d52" stroke="#7de4df" stroke-width="2"/>
+  <path d="M195 284L212 268" stroke="#f3fbff" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="195" cy="284" r="7" fill="#f4cf67" stroke="#fff3c2" stroke-width="2"/>
+  <path d="M195 253V244M226 284h9M164 284h-9M195 315v9" stroke="#7192a8" stroke-width="2"/>
+  <text x="195" y="425" text-anchor="middle" fill="#d6e4ed" font-family="Arial,sans-serif" font-size="11" font-weight="700">核心固定不移動｜360°原地轉向，選擇優先目標</text>
+  <!-- silhouettes -->
+  <text x="18" y="500" fill="#f3ca71" font-family="Arial,sans-serif" font-size="14" font-weight="900">身節辨識｜鏈身輪廓混排，金箱一眼分開</text>
+  <g transform="translate(55 545)"><use href="#ring-seg"/><text x="0" y="39" text-anchor="middle" fill="#d6e4ed" font-family="Arial,sans-serif" font-size="10">緩衝環</text></g>
+  <g transform="translate(145 545)"><use href="#bar-seg"/><text x="0" y="39" text-anchor="middle" fill="#d6e4ed" font-family="Arial,sans-serif" font-size="10">進度條節</text></g>
+  <g transform="translate(235 545)"><use href="#error-seg"/><text x="0" y="39" text-anchor="middle" fill="#ff9a87" font-family="Arial,sans-serif" font-size="10">卡住弱點</text></g>
+  <g transform="translate(330 545)"><use href="#chest"/><text x="0" y="39" text-anchor="middle" fill="#ffdf7e" font-family="Arial,sans-serif" font-size="10">技能寶箱</text></g>
+  <path d="M18 592H372" stroke="#30465c"/>
+  <text x="18" y="616" fill="#f3ca71" font-family="Arial,sans-serif" font-size="14" font-weight="900">攻擊節拍｜危險方向清楚，反制靠瞄準不用閃躲</text>
+  <!-- three readable tactical cards -->
+  <g transform="translate(18 630)">
+    <rect width="108" height="150" rx="14" fill="#162b40" stroke="#415a70"/>
+    <circle cx="54" cy="48" r="27" fill="none" stroke="#6edfd9" stroke-width="7" stroke-dasharray="42 14" transform="rotate(-40 54 48)"/>
+    <path d="M67 48l20 10" stroke="#ff7669" stroke-width="3" stroke-dasharray="4 3"/><path d="M85 54l4 7-8-1z" fill="#ff7669"/>
+    <text x="54" y="96" text-anchor="middle" fill="#eff7ff" font-family="Arial,sans-serif" font-size="11" font-weight="900">① 預警掃描</text>
+    <text x="54" y="116" text-anchor="middle" fill="#a9bac8" font-family="Arial,sans-serif" font-size="9">紅線指出出手方向</text>
+    <text x="54" y="132" text-anchor="middle" fill="#a9bac8" font-family="Arial,sans-serif" font-size="9">玩家可先打卡住節</text>
+  </g>
+  <g transform="translate(141 630)">
+    <rect width="108" height="150" rx="14" fill="#162b40" stroke="#415a70"/>
+    <g transform="translate(54 47) scale(.58)"><use href="#head-art"/></g>
+    <path d="M54 77L81 55" stroke="#ff7466" stroke-width="5" stroke-linecap="round"/><path d="M75 54l9-5-3 10z" fill="#ffd07a"/>
+    <text x="54" y="96" text-anchor="middle" fill="#eff7ff" font-family="Arial,sans-serif" font-size="11" font-weight="900">② 卡住打斷</text>
+    <text x="54" y="116" text-anchor="middle" fill="#a9bac8" font-family="Arial,sans-serif" font-size="9">集火紅色故障節</text>
+    <text x="54" y="132" text-anchor="middle" fill="#a9bac8" font-family="Arial,sans-serif" font-size="9">頭沿舊路被拉回</text>
+  </g>
+  <g transform="translate(264 630)">
+    <rect width="108" height="150" rx="14" fill="#162b40" stroke="#415a70"/>
+    <path d="M23 44a31 24 0 1 1 6 22" fill="none" stroke="#77a6c6" stroke-width="6" stroke-linecap="round"/><path d="M25 63l2 11 10-6" fill="#77a6c6"/>
+    <text x="54" y="96" text-anchor="middle" fill="#eff7ff" font-family="Arial,sans-serif" font-size="11" font-weight="900">③ 半血反轉</text>
+    <text x="54" y="116" text-anchor="middle" fill="#a9bac8" font-family="Arial,sans-serif" font-size="9">頭環反向旋轉</text>
+    <text x="54" y="132" text-anchor="middle" fill="#a9bac8" font-family="Arial,sans-serif" font-size="9">延遲追加側掃</text>
+  </g>
+  <text x="195" y="814" text-anchor="middle" fill="#8fa4b6" font-family="Arial,sans-serif" font-size="10">概念原型｜無回血掉落｜攻擊警示紅色，技能寶箱金色</text>
+</svg>

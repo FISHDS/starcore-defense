@@ -1,6 +1,18 @@
 // 第一、二區魔王外型：只提供外觀資料，不改變戰鬥判定。
 export const BOSS_PROFILES_A = [
   {
+    id: 'meme-seen-zone-admin',
+    name: '已讀不回群組長',
+    silhouette: 'ram',
+    colors: { shell: '#f6c279', shadow: '#29334e', glow: '#ff6374', eye: '#fff4dc' },
+    anatomy: { headScale: 1.08, bodyScale: 1, hornLength: 9, jawWidth: 14, finLength: 8 },
+    motion: { sway: 2.3, pulse: 0.06, attackReach: 10, hurtKick: 8 },
+    parts: { head: 'seen-zone-group-admin.svg#boss-head',
+      body: 'seen-zone-group-admin.svg#chain-link',
+      phone: 'seen-zone-group-admin.svg#weakpoint-phone',
+      warning: 'seen-zone-group-admin.svg#attack-warning' },
+  },
+  {
     id: 'meme-screech-cat',
     name: '破音貓',
     silhouette: 'jelly',
@@ -18,6 +30,18 @@ export const BOSS_PROFILES_A = [
     motion: { sway: 1.8, pulse: 0.035, attackReach: 15, hurtKick: 7 },
     parts: { head: 'shiba-head.png', knife: 'shiba-props.png',
       shield: 'shiba-props.png', body: 'shiba-body.png' },
+  },
+  {
+    id: 'meme-last-shift-coffin-leader',
+    name: '棺材舞領隊・最後一班',
+    silhouette: 'ram',
+    colors: { shell: '#7656b7', shadow: '#222737', glow: '#f3d27c', eye: '#f8f1de' },
+    anatomy: { headScale: 1.05, bodyScale: 1.12, hornLength: 7, jawWidth: 18, finLength: 8 },
+    motion: { sway: 2.1, pulse: 0.04, attackReach: 12, hurtKick: 9 },
+    parts: { head: 'last-shift-coffin-leader-atlas.svg#part-head',
+      body: 'last-shift-coffin-leader-atlas.svg#segment-coffin',
+      hand: 'last-shift-coffin-leader-atlas.svg#segment-glove',
+      chest: 'last-shift-coffin-leader-atlas.svg#treasure-chest' },
   },
   {
     id: 'zone-1-dreamweaver',

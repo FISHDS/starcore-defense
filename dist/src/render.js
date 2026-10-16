@@ -1,10 +1,10 @@
-import { WIDTH, HEIGHT } from './game.js?v=20261016-stage-variety-1';
-import { routePosition } from './routes.js?v=20261015-pressure-art-audio';
+import { WIDTH, HEIGHT } from './game.js?v=20261017-starcore-4';
+import { routePosition } from './routes.js?v=20261017-starcore-4';
 import { drawBiome, drawChestFocus, drawConnector, drawGuardian,
-  drawProjectile, drawSegment } from './art.js?v=20261016-stage-variety-1';
-import { BOSS_PROFILES, bossProfileFor } from './boss-profiles.js?v=20261016-stage-variety-1';
+  drawProjectile, drawSegment } from './art.js?v=20261017-starcore-4';
+import { BOSS_PROFILES, bossProfileFor } from './boss-profiles.js?v=20261017-starcore-4';
 import { resolveBossPose } from './boss-rig.js';
-import { drawBossConnector, drawBossSegment } from './boss-art.js?v=20261016-stage-variety-1';
+import { drawBossConnector, drawBossSegment } from './boss-art.js?v=20261017-starcore-4';
 
 const TAU = Math.PI * 2;
 const BACKGROUND_TONES = [
@@ -140,6 +140,18 @@ function rail(ctx, core, time) {
   }
 }
 
+function centerCore(ctx, core, time, x, y) {
+  ctx.save();
+  ctx.strokeStyle = core < 30 ? '#ff7784' : '#6fe7d3';
+  ctx.lineWidth = 3;
+  ctx.shadowColor = ctx.strokeStyle;
+  ctx.shadowBlur = 12 + 3 * Math.sin(time * 4);
+  ctx.beginPath(); ctx.arc(x, y, 49, 0, TAU); ctx.stroke();
+  ctx.globalAlpha = 0.25;
+  ctx.beginPath(); ctx.arc(x, y, 60, 0, TAU); ctx.stroke();
+  ctx.restore();
+}
+
 function guardian(ctx, x, y, time, invulnerable = 0) {
   ctx.save();
   ctx.translate(x, y - 3 + Math.sin(time * 5) * 2);
@@ -250,48 +262,51 @@ function chain(ctx, item, time, zone = 0) {
     const source = item.segments[0];
     ctx.save();
     ctx.setLineDash([9, 8]);
-    ctx.strokeStyle = profile.colors.glow;
+    const groupAdmin = item.rig.profileId === 'meme-seen-zone-admin';
+    const loading99 = item.rig.profileId === 'meme-loading-99';
+    ctx.strokeStyle = groupAdmin || loading99 ? '#ff596b' : profile.colors.glow;
     ctx.lineWidth = 3 + Math.sin(time * 22) * .8;
     const knifeShield = item.rig.profileId === 'meme-knife-shield';
     const screechCat = item.rig.profileId === 'meme-screech-cat';
-    if (screechCat) {
-      for (const x of [48, 117, 195, 273, 342]) {
-        if (Math.abs(x - item.rig.safeX) <= 66) continue;
-        ctx.fillStyle = 'rgba(24, 213, 238, 0.13)';
-        ctx.fillRect(x - 25, source.y + 25, 50, 730 - source.y);
-        ctx.strokeStyle = '#4be8f5';
-        ctx.strokeRect(x - 25, 714, 50, 23);
-      }
-      ctx.fillStyle = '#bafce6';
-      ctx.fillRect((item.rig.safeX ?? 80) - 24, 714, 48, 23);
-      ctx.setLineDash([]);
-      ctx.restore();
-    } else {
-      const mode = item.rig.attackPattern;
-      const spreads = knifeShield ? [item.rig.phase === 2 ? -32 : 32]
-        : mode === 'armor' ? [-72, 0, 72]
+    const coffinLeader = item.rig.profileId === 'meme-last-shift-coffin-leader';
+    const mode = item.rig.attackPattern;
+    const spreads = groupAdmin ? [-0.16, 0, 0.16]
+      : screechCat ? [-0.18, 0, 0.18]
+      : coffinLeader ? [0]
+      : loading99 ? (item.rig.phase === 2 ? [-0.2, 0, 0.2] : [-0.13, 0, 0.13])
+      : knifeShield ? [(item.rig.phase === 2 ? -32 : 32) * Math.PI / 180]
+        : mode === 'armor' ? [-72, 0, 72].map(value => value * Math.PI / 180)
           : mode === 'guard' ? [0]
-            : mode === 'weakpoint' ? [-20, 20]
-              : mode === 'speed' ? [-32, 32] : [-40, 40];
-      for (const spread of spreads) {
-        const landingX = (item.rig.targetX ?? source.x) + spread;
-        if (knifeShield) {
-          ctx.globalAlpha = 0.18;
-          ctx.lineWidth = 42;
-          ctx.beginPath(); ctx.moveTo(source.x, source.y + 22);
-          ctx.lineTo(landingX, 740); ctx.stroke();
-          ctx.globalAlpha = 1;
-          ctx.lineWidth = 4;
-        }
+            : mode === 'weakpoint' ? [-20, 20].map(value => value * Math.PI / 180)
+              : mode === 'speed' ? [-32, 32].map(value => value * Math.PI / 180)
+                : [-40, 40].map(value => value * Math.PI / 180);
+    const angle = item.rig.targetAngle ?? Math.atan2(
+      (item.rig.targetY ?? source.y) - source.y,
+      (item.rig.targetX ?? source.x) - source.x);
+    const reach = Math.hypot((item.rig.targetX ?? source.x) - source.x,
+      (item.rig.targetY ?? 744) - source.y);
+    for (const spread of spreads) {
+      const endX = source.x + Math.cos(angle + spread) * reach;
+      const endY = source.y + Math.sin(angle + spread) * reach;
+      if (knifeShield) {
+        ctx.globalAlpha = 0.2;
+        ctx.lineWidth = 34;
         ctx.beginPath(); ctx.moveTo(source.x, source.y + 22);
-        ctx.lineTo(landingX, 740); ctx.stroke();
-        ctx.fillStyle = `${profile.colors.glow}55`;
-        ctx.fillRect(landingX - (knifeShield ? 24 : 13), 724,
-          knifeShield ? 48 : 26, 20);
+        ctx.lineTo(endX, endY); ctx.stroke();
+        ctx.globalAlpha = 1;
       }
+      ctx.lineWidth = screechCat ? 4 : 3;
+      ctx.beginPath(); ctx.moveTo(source.x, source.y + 22);
+      ctx.lineTo(endX, endY); ctx.stroke();
       ctx.setLineDash([]);
-      ctx.restore();
+      ctx.fillStyle = screechCat ? '#7af4ff' : coffinLeader ? '#ffe17a'
+        : loading99 ? '#ff796e' : '#ff9d8f';
+      if (groupAdmin) ctx.fillStyle = '#ff596b';
+      circle(ctx, endX, endY, screechCat ? 8 : 7, ctx.fillStyle);
+      ctx.setLineDash([9, 8]);
     }
+    ctx.setLineDash([]);
+    ctx.restore();
   }
   for (let i = item.segments.length - 1; i > 0; i--) {
     const a = item.segments[i];
@@ -496,6 +511,27 @@ export function render(ctx, game, time) {
       ctx.lineWidth = 3;
       ctx.beginPath(); ctx.arc(0, 0, 21, -2.4, 0.35); ctx.stroke();
       ctx.restore();
+    } else if (bullet.kind === 'notification') {
+      ctx.save();
+      ctx.translate(bullet.x, bullet.y);
+      ctx.rotate(Math.atan2(bullet.vy, bullet.vx));
+      ctx.fillStyle = '#ff6477'; ctx.strokeStyle = '#fff1dc'; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.roundRect(-11, -8, 22, 16, 5); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-4, 7); ctx.lineTo(-8, 13); ctx.lineTo(1, 8);
+      ctx.fillStyle = '#ff6477'; ctx.fill(); ctx.stroke();
+      for (const x of [-5, 0, 5]) {
+        ctx.beginPath(); ctx.arc(x, 0, 1.35, 0, TAU); ctx.fillStyle = '#fff7e9'; ctx.fill();
+      }
+      ctx.restore();
+    } else if (bullet.kind === 'loadingScan') {
+      ctx.save(); ctx.translate(bullet.x, bullet.y);
+      ctx.rotate(Math.atan2(bullet.vy, bullet.vx));
+      ctx.shadowColor = '#ff796e'; ctx.shadowBlur = 12;
+      ctx.strokeStyle = '#ffe1a1'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(0, 0, 10, -2.25, 1.45); ctx.stroke();
+      ctx.strokeStyle = '#ff796e'; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.arc(0, 0, 15, -1.95, 1.05); ctx.stroke();
+      ctx.restore();
     } else if (bullet.kind === 'sonicWave') {
       ctx.save(); ctx.translate(bullet.x, bullet.y);
       ctx.strokeStyle = '#e5fcff'; ctx.lineWidth = 6;
@@ -537,8 +573,20 @@ export function render(ctx, game, time) {
     ctx.fillText(`${game.comboCount} 連擊`, WIDTH / 2, 157);
     ctx.restore();
   }
-  rail(ctx, game.core / game.maxCore * 100, time);
+  if (game.player.y < 600) centerCore(ctx,
+    game.core / game.maxCore * 100, time, game.player.x, game.player.y);
+  else rail(ctx, game.core / game.maxCore * 100, time);
   chestHighlights(ctx, chests, time);
+  ctx.save();
+  const aimEndX = game.player.x + Math.cos(game.player.aimAngle) * 62;
+  const aimEndY = game.player.y + Math.sin(game.player.aimAngle) * 62;
+  ctx.strokeStyle = 'rgba(191,255,233,.78)';
+  ctx.lineWidth = 3;
+  ctx.shadowColor = '#86ffe4'; ctx.shadowBlur = 9;
+  ctx.beginPath(); ctx.moveTo(game.player.x, game.player.y - 18);
+  ctx.lineTo(aimEndX, aimEndY); ctx.stroke();
+  ctx.beginPath(); ctx.arc(aimEndX, aimEndY, 4, 0, TAU); ctx.fillStyle = '#eaffd5'; ctx.fill();
+  ctx.restore();
   if (game.chargeFor > 0) {
     ctx.save(); ctx.strokeStyle = '#ffde79'; ctx.lineWidth = 3;
     ctx.shadowColor = '#ffcf6e'; ctx.shadowBlur = 10;

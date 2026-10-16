@@ -25,7 +25,42 @@ function rowBounds(path, row, boss, lane) {
   }
 }
 
+function makeCoreRoute(path, boss, lane) {
+  const style = path.slice('center-'.length);
+  const reverse = style === 'mirror' || style === 'cross' && lane % 2 === 1;
+  const start = -Math.PI / 2 + (boss && lane % 2 ? Math.PI : 0);
+  const turns = style === 'tide' ? 1.7 : style === 'fork' ? 2.25
+    : style === 'coil' ? 3.35 : 2.6;
+  const points = [];
+  const steps = 220;
+  for (let index = 0; index <= steps; index++) {
+    const t = index / steps;
+    let radius = 1 - t;
+    const angle = start + (reverse ? -1 : 1) * turns * Math.PI * 2 * t;
+    let xRadius = 185 * radius;
+    let yRadius = 350 * radius;
+    if (style === 'weave') {
+      xRadius += Math.sin(angle * 2.4) * 10 * radius;
+      yRadius += Math.cos(angle * 2.4) * 12 * radius;
+    }
+    if (style === 'fork' && t > 0.42 && t < 0.7) {
+      xRadius += (lane % 2 ? 1 : -1) * 24;
+    }
+    if (style === 'cross') xRadius += Math.sin(angle * 3) * 12 * radius;
+    points.push({ x: 195 + Math.cos(angle) * xRadius,
+      y: 422 + Math.sin(angle) * yRadius });
+  }
+  points.push({ x: 195, y: 422 });
+  const lengths = [0];
+  for (let index = 1; index < points.length; index++) {
+    lengths.push(lengths[index - 1] + Math.hypot(points[index].x - points[index - 1].x,
+      points[index].y - points[index - 1].y));
+  }
+  return { points, lengths, length: lengths.at(-1) };
+}
+
 function makeRoute(path, boss, lane) {
+  if (path.startsWith('center-')) return makeCoreRoute(path, boss, lane);
   const reverse = path === 'mirror' || (path === 'cross' && lane % 2 === 1);
   const yOffset = boss && path === 'cross' && lane % 2 ? 30 : 0;
   const points = [];
@@ -71,8 +106,11 @@ export function routeLength(path, boss = false, lane = 0) {
 export function routePosition(path, boss, lane, distance) {
   const { points, lengths, length } = getRoute(path, boss, lane);
   if (distance < 0) {
-    const direction = points[1].x > points[0].x ? 1 : -1;
-    return { x: points[0].x + direction * distance, y: points[0].y };
+    const dx = points[0].x - points[1].x;
+    const dy = points[0].y - points[1].y;
+    const length = Math.hypot(dx, dy) || 1;
+    return { x: points[0].x + dx / length * -distance,
+      y: points[0].y + dy / length * -distance };
   }
   if (distance >= length) return { x: points.at(-1).x, y: points.at(-1).y + distance - length };
   let low = 1;

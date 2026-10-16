@@ -12,13 +12,16 @@ export function knifeShieldDamageMultiplier(chain, segment) {
   return chain.rig.strikeFor > 0 ? 1.3 : 1;
 }
 
-export function knifeShieldSlash(head, targetX, phase = 1) {
+export function knifeShieldSlash(head, target, phase = 1) {
   const side = phase === 2 ? -1 : 1;
-  const vy = 260;
-  const flight = Math.max(0.65, (744 - head.y - 25) / vy);
+  const targetPoint = typeof target === 'number' ? { x: target, y: 744 } : target;
+  const dx = targetPoint.x - head.x + side * 32;
+  const dy = targetPoint.y - head.y;
+  const length = Math.hypot(dx, dy) || 1;
+  const speed = 300;
   return {
     kind: 'knifeSlash', x: head.x, y: head.y + 25,
-    vx: (targetX - head.x + side * 32) / flight,
-    vy, radius: 17, damage: 12,
+    vx: dx / length * speed, vy: dy / length * speed,
+    radius: 17, damage: 12,
   };
 }

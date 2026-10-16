@@ -1,7 +1,7 @@
-import { startRun, WAVES, UPGRADE_BY_ID } from './game.js?v=20261016-stage-variety-1';
+import { startRun, WAVES, UPGRADE_BY_ID } from './game.js?v=20261017-starcore-4';
 import { META_BY_ID, MILESTONE_REWARDS, ORGANS, WEAPONS } from './meta.js';
 import { createBossRig } from './boss-rig.js';
-import { bossProfileFor } from './boss-profiles.js?v=20261016-stage-variety-1';
+import { bossProfileFor } from './boss-profiles.js?v=20261017-starcore-4';
 
 const CHECKPOINT = 'starcore.checkpoint.v5';
 const BEST = 'starcore.best.v1';
@@ -145,11 +145,10 @@ export function saveCheckpoint(storage, game) {
     chains: game.chains,
     bullets: game.bullets,
     enemyBullets: game.enemyBullets,
-    pickups: game.pickups,
     chargeFor: game.chargeFor,
     comboCount: game.comboCount,
     comboTimer: game.comboTimer,
-    playerX: game.player.x,
+    playerAimAngle: game.player.aimAngle,
     core: game.core,
     score: game.score,
     upgrades: game.upgrades,
@@ -208,20 +207,22 @@ export function loadCheckpoint(storage) {
       chain.originalBodyCount ||= WAVES.at(-1).segments - 1;
       chain.rig ||= createBossRig(bossProfileFor(game.chapter, chain.lane).id);
     }
-    game.bullets = Array.isArray(data.bullets) ? data.bullets.slice(0, 150) : [];
+    game.bullets = Array.isArray(data.bullets) ? data.bullets.slice(0, 150).map(bullet => ({
+      ...bullet,
+      vx: Number.isFinite(bullet.vx) ? bullet.vx : 0,
+      vy: Number.isFinite(bullet.vy) ? bullet.vy : -1250,
+    })) : [];
     game.enemyBullets = Array.isArray(data.enemyBullets)
       ? data.enemyBullets.slice(0, 100) : [];
-    game.pickups = Array.isArray(data.pickups) ? data.pickups.filter(item =>
-      Number.isFinite(item.x) && Number.isFinite(item.y)
-      && ['shield', 'energy'].includes(item.kind)).slice(0, 24) : [];
+    game.pickups = [];
     game.chargeFor = Number.isFinite(data.chargeFor)
       ? Math.max(0, Math.min(5, data.chargeFor)) : 0;
     game.comboCount = Number.isInteger(data.comboCount)
       ? Math.max(0, Math.min(99, data.comboCount)) : 0;
     game.comboTimer = Number.isFinite(data.comboTimer)
       ? Math.max(0, Math.min(2.5, data.comboTimer)) : 0;
-    game.player.x = Number.isFinite(data.playerX)
-      ? Math.max(24, Math.min(366, data.playerX)) : game.player.x;
+    game.player.aimAngle = Number.isFinite(data.playerAimAngle)
+      ? data.playerAimAngle : -Math.PI / 2;
     game.bosses = game.chains.filter(chain => chain.boss);
     game.boss = game.bosses[0] || null;
     game.core = data.core;

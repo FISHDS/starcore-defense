@@ -50,31 +50,32 @@ test('半數身體擊破後進第二階段；預警、攻擊、死亡有獨立�
 });
 
 test('實戰雙頭目各帶共用骨架，發射前會明顯預警', () => {
-  const game = startRun(7, {}, 3);
+  const game = startRun(7, {}, 10);
   game.encounter = 'boss';
   advance(game, 0.1);
   assert.equal(game.bosses.length, 2);
   assert.ok(game.bosses.every(boss => boss.rig && boss.originalBodyCount > 0));
-  for (let step = 0; step < 26; step++) advance(game, 0.1);
+  game.bossShotTimer = 2.2;
+  advance(game, 0.02);
   assert.ok(game.bosses.some(boss => boss.rig.telegraphFor > 0));
 });
 
-test('頭目預警開始即鎖定落點，最後一刻移動也不會被重新追蹤', () => {
-  const game = startRun(29, {}, 3);
+test('頭目預警鎖定固定核心，玩家最後一刻轉向也不會改變彈道', () => {
+  const game = startRun(29, {}, 10);
   game.encounter = 'boss';
-  for (let step = 0; step < 40; step++) advance(game, 0.1, 195);
+  advance(game, 0.1, { aimAngle: Math.PI / 2 });
   const boss = game.bosses[1];
-  // 等待下一次預警；前一次飛彈可能仍在空中。
-  game.enemyBullets = [];
-  while (boss.rig.telegraphFor <= 0) advance(game, 0.1, 195);
-  const lockedX = boss.rig.targetX;
-  while (boss.rig.telegraphFor > 0) advance(game, 0.1, 300);
-  assert.equal(lockedX, 195);
+  game.bossShotTimer = 2.2;
+  advance(game, 0.02, { aimAngle: Math.PI / 2 });
+  const locked = { x: boss.rig.targetX, y: boss.rig.targetY, angle: boss.rig.targetAngle };
+  const fixedPlayer = { x: game.player.x, y: game.player.y };
+  game.bossShotTimer = 2.69;
+  advance(game, 0.02, { aimAngle: 0 });
+  assert.equal(locked.x, fixedPlayer.x);
+  assert.equal(locked.y, fixedPlayer.y);
   const genericShots = game.enemyBullets.filter(shot => shot.kind !== 'knifeSlash');
   assert.ok(genericShots.length >= 2);
-  const landing = genericShots.slice(0, 2)
-    .map(shot => shot.x + shot.vx * ((game.player.y - shot.y) / shot.vy))
-    .sort((a, b) => a - b);
-  assert.ok(Math.abs(landing[0] - 155) < 4, `左彈落點 ${landing[0]}`);
-  assert.ok(Math.abs(landing[1] - 235) < 4, `右彈落點 ${landing[1]}`);
+  assert.ok(genericShots.some(shot => Math.abs(Math.atan2(shot.vy, shot.vx)
+    - locked.angle) < 0.03));
+  assert.deepEqual({ x: game.player.x, y: game.player.y }, fixedPlayer);
 });

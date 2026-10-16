@@ -1,10 +1,10 @@
-import { advance, CHAPTERS, chooseUpgrade, createBossShowcase, getRunProgress, HEIGHT, rerollUpgrades, startRun, UPGRADE_BY_ID, WAVES, WIDTH } from './game.js?v=20261016-stage-variety-1';
-import { pointerToWorldX } from './input.js';
-import { render } from './render.js?v=20261016-stage-variety-1';
-import { awardRun, buyResearch, buyItem, equipItem, clearCheckpoint, loadCheckpoint, readProfile, researchCost, saveCheckpoint, updateBest } from './storage.js?v=20261016-stage-variety-1';
+import { advance, CHAPTERS, chooseUpgrade, createBossShowcase, getRunProgress, HEIGHT, rerollUpgrades, startRun, UPGRADE_BY_ID, WAVES, WIDTH } from './game.js?v=20261017-starcore-4';
+import { pointerToAimAngle } from './input.js';
+import { render } from './render.js?v=20261017-starcore-4';
+import { awardRun, buyResearch, buyItem, equipItem, clearCheckpoint, loadCheckpoint, readProfile, researchCost, saveCheckpoint, updateBest } from './storage.js?v=20261017-starcore-4';
 import { ORGANS, WEAPONS } from './meta.js';
-import { drawSkillIcon } from './art.js?v=20261016-stage-variety-1';
-import { createAudioEngine } from './audio.js?v=20261016-stage-variety-1';
+import { drawSkillIcon } from './art.js?v=20261017-starcore-4';
+import { createAudioEngine } from './audio.js?v=20261017-starcore-4';
 import { getBattleHint } from './tutorial.js';
 
 const $ = id => document.getElementById(id);
@@ -57,15 +57,19 @@ function syncAudioScene() {
 let game = null;
 let paused = false;
 let dragging = false;
-let targetX = WIDTH / 2;
+let targetAimAngle = -Math.PI / 2;
 let lastTime = 0;
 let handledResult = false;
 let showResearch = false;
 let showStages = false;
 let showLoadout = false;
-let selectedShowcase = new URLSearchParams(window.location.search).get('showcase') === 'screech-cat' ? 2 : 1;
-let showShowcase = ['knife-shield', 'screech-cat'].includes(
-  new URLSearchParams(window.location.search).get('showcase'));
+const showcaseQuery = new URLSearchParams(window.location.search).get('showcase');
+let selectedShowcase = showcaseQuery === 'screech-cat' ? 2
+  : showcaseQuery === 'group-admin' ? 3
+    : showcaseQuery === 'coffin-dance' ? 5
+      : showcaseQuery === 'loading-99' ? 6 : 1;
+let showShowcase = ['knife-shield', 'screech-cat', 'group-admin',
+  'coffin-dance', 'loading-99'].includes(showcaseQuery);
 let lastSavedAt = 0;
 let selectedChapter = readProfile(storage).unlockedStage;
 let selectedZone = Math.floor((selectedChapter - 1) / 5);
@@ -88,30 +92,50 @@ function refreshHud() {
   const activeChapter = game.chapter === 26 ? CHAPTERS[20 + (game.endlessTier - 1) % 5]
     : CHAPTERS[game.chapter - 1];
   hint.textContent = game.preview && game.runTime < 10
-    ? game.chapter === 2 ? '瞄準身體與寶箱；吸氣時移到亮起的安全帶'
-      : '左右滑動瞄準身體與寶箱；留意舉盾和斜斬預警'
+    ? game.chapter === 2 ? '原地轉向瞄準身體與寶箱；破壞發聲部位打斷音波'
+      : game.chapter === 3 ? '通知風暴前會亮起手機；轉向打破手機弱點，或逐顆擊落紅泡泡'
+      : '原地旋轉瞄準身體與寶箱；找出頭目預警時的可攻擊部位'
     : getBattleHint(game, activeChapter.summary);
-  hint.hidden = paused || !hint.textContent;
+  hint.hidden = paused || game.preview || !hint.textContent;
   hint.classList.toggle('persistent-tutorial', game.chapter === 1 && game.normalDestroyed === 0);
-  $('wave-number').textContent = game.preview ? '頭目試打' : game.chapter === 26
+  $('wave-number').textContent = game.preview ? '頭目' : game.chapter === 26
     ? `無盡 ${game.endlessTier}` : `第${game.chapter}關`;
   const encounterName = game.encounter === 'boss' && activeChapter.bossMode === 'knife-shield'
     ? '我的刀盾' : game.encounter === 'boss' && activeChapter.bossMode === 'screech-cat'
-      ? '破音貓' : wave.name;
-  $('wave-name').textContent = `${game.chapter === 26 ? '無盡挑戰' : CHAPTERS[game.chapter - 1].name} · ${encounterName}`;
+      ? '破音貓' : game.encounter === 'boss' && activeChapter.bossMode === 'group-admin'
+        ? '已讀不回群組長' : game.encounter === 'boss'
+          && activeChapter.bossMode === 'coffin-dance'
+          ? '棺材舞領隊・最後一班' : game.encounter === 'boss'
+            && activeChapter.bossMode === 'loading-99'
+            ? '百分之九十九・轉圈載入獸' : wave.name;
+  $('wave-name').textContent = game.preview && game.encounter === 'boss'
+    ? encounterName
+    : `${game.chapter === 26 ? '無盡挑戰' : CHAPTERS[game.chapter - 1].name} · ${encounterName}`;
   $('core-value').textContent = String(Math.ceil(game.core));
   $('score-value').textContent = game.score.toLocaleString('zh-TW');
   const progress = getRunProgress(game);
   $('wave-progress').style.width = `${Math.max(0, progress) * 100}%`;
   $('core-progress').style.width = `${game.core / game.maxCore * 100}%`;
-  const nearBoss = game.bosses.some(boss => !boss.dead && boss.segments[0].y > 540);
+  const nearBoss = game.bosses.some(boss => !boss.dead
+    && (game.player.y < 600
+      ? Math.hypot(boss.segments[0].x - game.player.x,
+        boss.segments[0].y - game.player.y) < 280
+      : boss.segments[0].y > 540));
   $('boss-warning').hidden = game.phase !== 'playing' || !nearBoss;
   if (game.phase === 'playing' && nearBoss && !bossWarningActive) audio.playSfx('warning');
   bossWarningActive = game.phase === 'playing' && nearBoss;
   $('boss-warning').textContent = activeChapter.bossMode === 'knife-shield'
-    ? '我的刀盾舉盾時改打亮盾以外的身體；揮刀後是反擊機會'
+    ? '我的刀盾舉刀後會沿斜線揮擊；轉向迎擊彈道可擊落攻擊'
     : activeChapter.bossMode === 'screech-cat'
-    ? '破音貓吸氣後聲浪會落下；移到綠色安全帶'
+    ? '破音貓蓄音後發射扇形聲浪；轉向迎擊可擊落聲波'
+    : activeChapter.bossMode === 'group-admin'
+    ? '通知風暴即將送出 · 趁手機亮起時打破弱點，或轉向擊落紅色訊息'
+    : activeChapter.bossMode === 'armor'
+    ? '護甲縫隙會輪流亮起 · 轉向打中發光節點，傷害才會有效'
+    : activeChapter.bossMode === 'coffin-dance'
+    ? '節拍牌左右交替來襲 · 轉向迎擊，或打破亮起的承重手節中斷一輪'
+    : activeChapter.bossMode === 'loading-99'
+    ? '載入卡在 99% · 轉向打破紅色故障節，中斷狹幅掃描'
     : activeChapter.bossMode === 'final'
     ? '雙母體輪流亮起護盾 · 改打沒發光的長鏈'
     : '雙母體逼近 · 瞄準身體讓頭部後退';
@@ -134,7 +158,7 @@ function refreshStages() {
   const profile = readProfile(storage);
   $('selected-stage').textContent = selectedChapter === 26
     ? `無盡挑戰 · 最佳第 ${profile.bestEndless} 輪`
-    : `第 ${selectedChapter} 關 · ${CHAPTERS[selectedChapter - 1].name}`;
+    : `第 ${selectedChapter} 關 · ${CHAPTERS[selectedChapter - 1].name} · ${CHAPTERS[selectedChapter - 1].positionMode === 'center' ? '中央守點' : '底線迎擊'}`;
   const zones = $('stage-zones');
   zones.replaceChildren();
   for (let zone = 0; zone < 5; zone++) {
@@ -249,7 +273,7 @@ function makeCards() {
     button.addEventListener('click', () => {
       if (!chooseUpgrade(game, id)) return;
       saveCheckpoint(storage, game);
-      targetX = game.player.x;
+      targetAimAngle = game.player.aimAngle;
       syncScreen();
       audio.playSfx('upgrade');
     });
@@ -273,9 +297,12 @@ function setResult() {
     $('result-kicker').textContent = 'BOSS SHOWCASE';
     $('result-emblem').textContent = won ? '✦' : '◇';
     $('result-title').textContent = won ? '試打成功' : '再試一次';
-    $('result-copy').textContent = won
-      ? '你看到了舉盾、斜斬和換手。正式關卡仍等你挑戰。'
-      : '這是練習戰。觀察舉盾空隙與斜斬預警，再試一次。';
+    const previewCopy = game.chapter === 3
+      ? '你看到了手機預警與通知彈。正式關卡仍等你挑戰。'
+      : game.chapter === 2 ? '你看到了吸氣蓄音與聲波反制。正式關卡仍等你挑戰。'
+        : '你看到了舉盾、斜斬和換手。正式關卡仍等你挑戰。';
+    $('result-copy').textContent = won ? previewCopy
+      : '這是練習戰。看清頭目預警，再試一次。';
     $('retry-label').textContent = '再次試打';
     return;
   }
@@ -336,7 +363,7 @@ function beginNew() {
   paused = false;
   handledResult = false;
   resultDelayUntil = 0;
-  targetX = game.player.x;
+  targetAimAngle = game.player.aimAngle;
   lastSavedAt = 0;
   saveCheckpoint(storage, game);
   syncScreen();
@@ -350,7 +377,7 @@ function beginShowcase() {
   paused = false;
   handledResult = false;
   resultDelayUntil = 0;
-  targetX = game.player.x;
+  targetAimAngle = game.player.aimAngle;
   lastSavedAt = 0;
   syncScreen();
   audio.playSfx('boss');
@@ -364,7 +391,7 @@ function continueRun() {
   paused = false;
   handledResult = false;
   resultDelayUntil = 0;
-  targetX = game.player.x;
+  targetAimAngle = game.player.aimAngle;
   lastSavedAt = game.runTime;
   syncScreen();
   audio.playSfx('start');
@@ -380,17 +407,34 @@ function selectShowcase(chapter) {
   selectedShowcase = chapter;
   $('showcase-shiba').classList.toggle('selected', chapter === 1);
   $('showcase-cat').classList.toggle('selected', chapter === 2);
+  $('showcase-admin').classList.toggle('selected', chapter === 3);
+  $('showcase-coffin').classList.toggle('selected', chapter === 5);
+  $('showcase-loading99').classList.toggle('selected', chapter === 6);
   $('showcase-index').textContent = `BOSS SHOWCASE · 0${chapter}`;
-  $('showcase-title').textContent = chapter === 1 ? '我的刀盾' : '破音貓';
+  $('showcase-title').textContent = chapter === 1 ? '我的刀盾'
+    : chapter === 2 ? '破音貓' : chapter === 3 ? '已讀不回群組長'
+      : chapter === 5 ? '棺材舞領隊・最後一班' : '百分之九十九・轉圈載入獸';
   for (const item of showcaseScreen.querySelectorAll('.showcase-shield,.showcase-doge,.showcase-knife'))
     item.hidden = chapter !== 1;
   showcaseScreen.querySelector('.showcase-cat').hidden = chapter !== 2;
+  showcaseScreen.querySelector('.showcase-admin').hidden = chapter !== 3;
+  showcaseScreen.querySelector('.showcase-coffin').hidden = chapter !== 5;
+  showcaseScreen.querySelector('.showcase-loading99').hidden = chapter !== 6;
   $('showcase-moves').innerHTML = chapter === 1
-    ? '<div><strong>01 舉盾</strong><span>交錯保護身體，找空隙或瞄寶箱</span></div><div><strong>02 斜斬</strong><span>看預警換位置；揮完刀就反擊</span></div><div><strong>03 換手</strong><span>身體打掉一半後，防守方向改變</span></div>'
-    : '<div><strong>01 吸氣</strong><span>聲浪來前會標出唯一安全帶</span></div><div><strong>02 聲浪</strong><span>移到安全帶避開整排聲浪</span></div><div><strong>03 變奏</strong><span>身體少一半後，攻擊加快且安全帶會換位置</span></div>';
+    ? '<div><strong>01 舉盾</strong><span>盾牌遮住部分身體，轉向瞄準露出的節點或寶箱</span></div><div><strong>02 斜斬</strong><span>舉刀後會沿預警斜線揮擊；轉向開火可攔截斬線</span></div><div><strong>03 換手</strong><span>身體打掉一半後，刀盾換手並改變護盾側</span></div>'
+    : chapter === 2
+      ? '<div><strong>01 吸氣</strong><span>蓄音時頭部亮起，預告聲波即將發射</span></div><div><strong>02 聲浪</strong><span>扇形聲波朝固定防線逼近；轉向開火可將它擊落</span></div><div><strong>03 變奏</strong><span>半血後蓄音變快，聲波飛得更快且傷害更高</span></div>'
+      : chapter === 3
+        ? '<div><strong>01 手機亮起</strong><span>通知風暴前會打開手機弱點</span></div><div><strong>02 打斷通知</strong><span>轉向集火手機可取消整輪攻擊</span></div><div><strong>03 擊落紅泡泡</strong><span>來不及打手機時，仍可逐顆射掉通知彈</span></div>'
+        : chapter === 5
+          ? '<div><strong>01 抬棺預警</strong><span>領隊舉棺時，承重手節會亮起並預告出牌方向</span></div><div><strong>02 左右交替</strong><span>每輪只飛出一張斜向節拍牌，轉向迎擊可將它擊落</span></div><div><strong>03 失步打斷</strong><span>打破發光手節可中斷本輪；半血後牌速加快</span></div>'
+          : '<div><strong>01 卡在 99%</strong><span>載入長鏈沿核心螺旋逼近，打爆身節會拉回頭部</span></div><div><strong>02 找出錯碼</strong><span>紅色故障節亮起時，轉向集火可中斷載入掃描</span></div><div><strong>03 半血反轉</strong><span>頭環反向旋轉，主掃描後延遲追加側掃</span></div>';
 }
 $('showcase-shiba').addEventListener('click', () => selectShowcase(1));
 $('showcase-cat').addEventListener('click', () => selectShowcase(2));
+$('showcase-admin').addEventListener('click', () => selectShowcase(3));
+$('showcase-coffin').addEventListener('click', () => selectShowcase(5));
+$('showcase-loading99').addEventListener('click', () => selectShowcase(6));
 selectShowcase(selectedShowcase);
 $('showcase-play').addEventListener('click', beginShowcase);
 $('showcase-back').addEventListener('click', () => { showShowcase = false; syncScreen(); });
@@ -451,10 +495,12 @@ canvas.addEventListener('pointerdown', event => {
   if (!game || game.phase !== 'playing' || paused) return;
   dragging = true;
   canvas.setPointerCapture(event.pointerId);
-  targetX = pointerToWorldX(event.clientX, canvas.getBoundingClientRect());
+  targetAimAngle = pointerToAimAngle(event.clientX, event.clientY,
+    canvas.getBoundingClientRect(), game.player);
 });
 canvas.addEventListener('pointermove', event => {
-  if (dragging) targetX = pointerToWorldX(event.clientX, canvas.getBoundingClientRect());
+  if (dragging) targetAimAngle = pointerToAimAngle(event.clientX, event.clientY,
+    canvas.getBoundingClientRect(), game.player);
 });
 canvas.addEventListener('pointerup', () => { dragging = false; });
 canvas.addEventListener('pointercancel', () => { dragging = false; });
@@ -479,16 +525,15 @@ function frame(timestamp) {
   const dt = lastTime ? Math.min((timestamp - lastTime) / 1000, 0.05) : 0;
   lastTime = timestamp;
   if (game?.phase === 'playing' && !paused) {
-    if (keys.left) targetX -= dt * 280;
-    if (keys.right) targetX += dt * 280;
-    targetX = Math.max(26, Math.min(WIDTH - 26, targetX));
+    if (keys.left) targetAimAngle -= dt * 2.5;
+    if (keys.right) targetAimAngle += dt * 2.5;
     const oldPhase = game.phase;
     const oldEncounter = game.encounter;
     const oldCore = game.core;
     const oldShots = game.shotCount;
     const oldDestroyed = game.normalDestroyed + game.bossDestroyed;
     const priorEffects = new Set(game.effects);
-    advance(game, dt, targetX);
+    advance(game, dt, { aimAngle: targetAimAngle });
     for (const cue of game.audioCues || []) audio.playSfx(cue);
     if (game.shotCount > oldShots) audio.playSfx('shot');
     const destroyed = game.normalDestroyed + game.bossDestroyed > oldDestroyed;

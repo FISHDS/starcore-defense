@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { advance, chooseUpgrade, hitSegment, startRun } from '../dist/src/game.js';
+import { advance, chooseUpgrade, getShotDamage, hitSegment, startRun } from '../dist/src/game.js';
 import * as gameplay from '../dist/src/game.js';
 
 test('雙頭關卡進度根據實際清掉的身體而不是經過的時間', () => {
-  const game = startRun(40, {}, 3);
+  const game = startRun(40, {}, 10);
   game.runTime = 200;
   assert.equal(typeof gameplay.getRunProgress, 'function');
   assert.equal(gameplay.getRunProgress(game), 0);
@@ -48,6 +48,15 @@ test('同一條身體由前到後增強，刪除前段後原有強度不變', ()
   }
   assert.equal(middle.maxHp, middleHp);
   assert.ok(middle.index < 100);
+});
+
+test('完整長鏈的自然火力成長不超過前段的二十五倍', () => {
+  const game = startRun(47);
+  const opening = getShotDamage(game);
+  game.normalDestroyed = game.normalTotal;
+  const late = getShotDamage(game);
+  assert.ok(late > opening * 8, `後段火力只成長 ${late / opening} 倍`);
+  assert.ok(late < opening * 25, `後段火力暴增 ${late / opening} 倍`);
 });
 
 test('一節身體被打爆時頭部先明顯沿路後退', () => {

@@ -29,6 +29,8 @@ jobs:
           node-version: '24'
       - name: 執行遊戲測試
         run: npm test
+      - name: 執行全關難度試跑
+        run: npm run balance
       - name: 設定 GitHub Pages
         uses: actions/configure-pages@v5
       - name: 上傳遊戲畫面

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" fill="none">
+ <defs>
+  <linearGradient id="fur" x1="33" y1="20" x2="95" y2="102" gradientUnits="userSpaceOnUse"><stop stop-color="#8B718D"/><stop offset=".58" stop-color="#62556E"/><stop offset="1" stop-color="#3B394F"/></linearGradient>
+  <linearGradient id="muzzle" x1="48" y1="64" x2="77" y2="101" gradientUnits="userSpaceOnUse"><stop stop-color="#F2D8B4"/><stop offset="1" stop-color="#BB9CA0"/></linearGradient>
+ </defs>
+ <path d="m28 49 7-31c1-5 6-6 10-2l19 21 19-21c4-4 9-3 10 2l7 31-30-3H58l-30 3Z" fill="url(#fur)" stroke="#262536" stroke-width="5" stroke-linejoin="round"/>
+ <path d="m39 39 3-13 12 14-15-1Zm48 0L85 26 73 40l14-1Z" fill="#D5937E"/>
+ <path d="M29 49c4-17 17-27 35-27s31 10 35 27l-2 27c-2 17-15 27-33 27S33 93 31 76l-2-27Z" fill="url(#fur)" stroke="#262536" stroke-width="5" stroke-linejoin="round"/>
+ <path d="M39 57c5-4 12-4 17-1-1 6-4 9-9 9s-8-3-8-8Zm33-1c5-3 12-3 17 1 0 5-3 8-8 8s-8-3-9-9Z" fill="#F1E1C8" stroke="#262536" stroke-width="2.5"/>
+ <ellipse cx="48" cy="59" rx="2.4" ry="3" fill="#24232D"/><ellipse cx="80" cy="59" rx="2.4" ry="3" fill="#24232D"/>
+ <!-- Wide open mouth is the signature silhouette; it stays legible when small -->
+ <path d="M43 73c6-7 14-10 21-10s15 3 21 10c-1 18-8 27-21 27S44 91 43 73Z" fill="#321F2B" stroke="#262536" stroke-width="3"/>
+ <path d="M48 74c5-4 10-5 16-5s12 1 16 5l-3 5H51l-3-5Z" fill="#F6E8D2"/>
+ <path d="M53 85c5-3 17-3 22 0v9c-6 5-16 5-22 0v-9Z" fill="#D96E75"/>
+ <path d="M64 87v8" stroke="#F4A0A0" stroke-width="2" stroke-linecap="round"/>
+ <path d="m37 75-14 3m15 4-13 7m66-14 14 3m-15 4 13 7" stroke="#E7D9C4" stroke-width="2.5" stroke-linecap="round"/>
+</svg>

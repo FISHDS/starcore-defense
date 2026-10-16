@@ -29,6 +29,24 @@ test('快速體驗立即看見我的刀盾，保留兩個身體寶箱與換手�
   assert.equal(game.phase, 'upgrade');
 });
 
+test('快速體驗第三關實際生成已讀不回群組長與可打手機', () => {
+  const game = createBossShowcase(93, 3);
+  const boss = game.bosses[0];
+  assert.equal(boss.rig.profileId, 'meme-seen-zone-admin');
+  assert.ok(boss.segments.some(piece => piece.weakpoint
+    && piece.id === boss.rig.weakpointId));
+  assert.equal(game.bosses.length, 1);
+});
+
+test('快速體驗第五關實際生成棺材舞領隊與可打抬棺手節', () => {
+  const game = createBossShowcase(95, 5);
+  const boss = game.bosses[0];
+  assert.equal(boss.rig.profileId, 'meme-last-shift-coffin-leader');
+  assert.ok(boss.segments.some(piece => piece.weakpoint
+    && piece.id === boss.rig.weakpointId));
+  assert.equal(game.bosses.length, 1);
+});
+
 test('快速體驗無法覆蓋續玩、研究點與關卡解鎖', () => {
   const storage = memoryStorage();
   const regular = startRun(91);
@@ -70,5 +88,13 @@ test('首頁及直接連結都能進入快速體驗介紹', () => {
   assert.match(html, /id="showcase-button"/);
   assert.match(html, /id="showcase-screen"/);
   assert.match(html, /id="showcase-play"/);
+  assert.match(main, /\$\('showcase-admin'\)\.addEventListener\('click', \(\) => selectShowcase\(3\)\)/);
+  assert.match(html, /id="showcase-coffin"/);
+  assert.match(html, /last-shift-coffin-leader-showcase\.svg/);
+  assert.match(main, /\$\('showcase-coffin'\)\.addEventListener\('click', \(\) => selectShowcase\(5\)\)/);
+  assert.match(main, /chapter === 3 \? '已讀不回群組長'/);
+  assert.match(main, /showcaseQuery === 'coffin-dance' \? 5/);
+  assert.match(main, /game\.preview\s*&&\s*game\.encounter === 'boss'\s*\?\s*encounterName/);
+  assert.match(main, /game\.preview \? '頭目'/);
   assert.match(main, /URLSearchParams\(window\.location\.search\)/);
 });

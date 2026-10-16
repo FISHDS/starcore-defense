@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96" fill="none">
+ <defs>
+  <linearGradient id="plate" x1="17" y1="13" x2="79" y2="82" gradientUnits="userSpaceOnUse"><stop stop-color="#73909B"/><stop offset="1" stop-color="#344D5B"/></linearGradient>
+  <linearGradient id="paw" x1="57" y1="59" x2="78" y2="91" gradientUnits="userSpaceOnUse"><stop stop-color="#D7964E"/><stop offset="1" stop-color="#85452D"/></linearGradient>
+ </defs>
+ <!-- One readable chain segment: a single shoulder plate and a single paw -->
+ <path d="M12 19c13-8 24-8 36 0s23 8 36 0" stroke="#28353A" stroke-width="10" stroke-linecap="round"/>
+ <path d="M12 19c13-8 24-8 36 0s23 8 36 0" stroke="#9DABA8" stroke-width="3" stroke-linecap="round"/>
+ <path d="M47 13 78 23v23c0 18-11 30-31 40-20-10-31-22-31-40V23l31-10Z" fill="url(#plate)" stroke="#202F38" stroke-width="4" stroke-linejoin="round"/>
+ <path d="M47 20v59M20 44h54" stroke="#A6B6B8" stroke-width="2" opacity=".65"/>
+ <path d="m26 29 13-4m18 6 10 3" stroke="#D4DFD9" stroke-width="2.5" stroke-linecap="round"/>
+ <path d="M51 59c6-4 14-3 19 2l12 13c4 5 2 10-4 12l-13 5c-7 2-11-1-13-7l-5-12c-2-5-1-10 4-13Z" fill="url(#paw)" stroke="#40271F" stroke-width="3.5" stroke-linejoin="round"/>
+ <path d="m59 78 5-2m7 8 5-2" stroke="#F1CE95" stroke-width="2" stroke-linecap="round"/>
+</svg>

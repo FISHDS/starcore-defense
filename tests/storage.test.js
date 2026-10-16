@@ -21,7 +21,7 @@ test('長局戰鬥可從進行中的區域續玩', () => {
   game.core = 63;
   game.score = 140;
   game.upgrades = { rapid: 2, shield: 1 };
-  game.player.x = 35;
+  game.player.aimAngle = 1.1;
   saveCheckpoint(storage, game);
   const restored = loadCheckpoint(storage);
   assert.equal(restored.wave, 3);
@@ -29,7 +29,8 @@ test('長局戰鬥可從進行中的區域續玩', () => {
   assert.equal(restored.core, 63);
   assert.equal(restored.score, 140);
   assert.deepEqual(restored.upgrades, { rapid: 2, shield: 1 });
-  assert.equal(restored.player.x, 35);
+  assert.equal(restored.player.x, 195);
+  assert.equal(restored.player.aimAngle, 1.1);
   assert.equal(restored.chains.length, 0);
 });
 
@@ -94,7 +95,7 @@ test('開箱後未選技能或已刷新時也能原樣續玩', () => {
 
 test('第一隻頭目死後續玩，第二隻死亡仍會判定勝利', () => {
   const storage = memoryStorage();
-  const game = startRun(82, {}, 3);
+  const game = startRun(82, {}, 10);
   game.encounter = 'boss';
   game.wave = 6;
   advance(game, 0.05);

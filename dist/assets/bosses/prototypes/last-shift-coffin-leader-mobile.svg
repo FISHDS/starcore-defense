@@ -1,0 +1,129 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="390" height="844" viewBox="0 0 390 844" role="img" aria-labelledby="title desc">
+  <title id="title">Last Shift coffin dance boss phone-size art board</title>
+  <desc id="desc">A 390 by 844 mobile composition with a stationary central defender, one continuous coffin-dance body chain on a nested four-petal route, connected gloved carriers lifting a tapered coffin, a distinct square gold-clasp chest, lift warning, and stumble pose.</desc>
+  <defs>
+    <linearGradient id="stage" x2="0" y2="1"><stop stop-color="#1b2334"/><stop offset="1" stop-color="#101522"/></linearGradient>
+    <linearGradient id="ivory" x2="0" y2="1"><stop stop-color="#fffef8"/><stop offset="1" stop-color="#c9d0dc"/></linearGradient>
+    <linearGradient id="violet" x2="0" y2="1"><stop stop-color="#a779ff"/><stop offset="1" stop-color="#5b3e9b"/></linearGradient>
+    <linearGradient id="gold" x2="0" y2="1"><stop stop-color="#ffe28b"/><stop offset="1" stop-color="#d89931"/></linearGradient>
+    <linearGradient id="black-polish" x2="0" y2="1"><stop stop-color="#4b5266"/><stop offset=".4" stop-color="#202736"/><stop offset="1" stop-color="#101522"/></linearGradient>
+
+    <!-- 96×96 head. -->
+    <symbol id="part-head" viewBox="0 0 96 96">
+      <path d="M9 48 Q2 42 8 34 Q13 29 20 37 M76 37 Q85 29 90 36 Q95 43 87 49" fill="#353b4c" stroke="#111622" stroke-width="3.5"/>
+      <path d="M18 38 Q18 24 29 18 Q43 10 62 17 Q77 23 79 39 L75 68 Q71 83 49 88 Q27 83 21 68 Z" fill="#343a4a" stroke="#101622" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M19 27 L27 12 Q47 6 66 12 L72 29 Q48 23 19 31 Z" fill="url(#ivory)" stroke="#111622" stroke-width="3.5" stroke-linejoin="round"/>
+      <path d="M24 24 Q46 19 69 25 L69 32 Q47 27 22 33 Z" fill="#7e54ce" stroke="#111622" stroke-width="2.5"/>
+      <path d="M12 32 Q46 24 84 33 L82 39 Q46 32 13 40 Z" fill="#eef0f4" stroke="#111622" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M17 43 Q31 38 45 43 L44 56 Q31 61 20 55 Z M51 43 Q66 38 80 43 L77 55 Q66 61 52 56 Z" fill="#111521" stroke="#c9d0dc" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M43 48 H53" stroke="#111521" stroke-width="4"/>
+      <path d="M24 48 L37 44 M59 44 L73 48" stroke="#ffffff" stroke-width="2" stroke-linecap="round" opacity=".9"/>
+      <path d="M27 66 Q49 60 71 66 L68 75 Q49 80 30 74 Z" fill="#fffdf5" stroke="#111622" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M32 68 L32 74 M40 66 L40 77 M49 66 L49 78 M58 66 L58 77 M66 67 L65 75" stroke="#72798a" stroke-width="1.5"/>
+      <path d="M36 84 L49 77 L62 84 L57 93 H41 Z" fill="url(#violet)" stroke="#111622" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M49 80 V92" stroke="#eee9ff" stroke-width="2"/>
+    </symbol>
+
+    <!-- All chain links use 44×44 boxes; the coffin silhouette is deliberately narrow/tapered. -->
+    <symbol id="segment-glove" viewBox="0 0 44 44">
+      <path d="M8 27 L10 16 Q11 13 14 14 L16 21 L16 10 Q17 7 20 8 L22 20 L23 8 Q25 5 28 8 L29 21 L31 12 Q34 10 36 14 L35 28 Q33 37 25 40 L15 37 Z" fill="url(#ivory)" stroke="#171d29" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M7 27 L16 26 L18 39 L9 41 Z" fill="#7e54ce" stroke="#171d29" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M10 30 L15 29" stroke="#f8eaff" stroke-width="2"/>
+    </symbol>
+    <symbol id="segment-coffin" viewBox="0 0 44 44">
+      <path d="M15 2 H29 L38 11 L35 31 L22 42 L9 31 L6 11 Z" fill="#242838" stroke="#e9e9f2" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M17 6 H27 L33 13 L30 29 L22 36 L14 29 L11 13 Z" fill="url(#violet)" stroke="#171b28" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M12 14 L32 14 M12 28 L32 28" stroke="#dce0e9" stroke-width="2.5"/>
+      <path d="M22 14 V28" stroke="#f5d892" stroke-width="2"/>
+      <circle cx="8" cy="21" r="2" fill="#d8dce5"/><circle cx="36" cy="21" r="2" fill="#d8dce5"/>
+    </symbol>
+    <symbol id="segment-shoe" viewBox="0 0 44 44">
+      <path d="M9 8 Q15 7 18 15 L25 21 Q31 24 37 25 Q41 29 38 35 Q31 40 10 37 L5 34 Q9 29 8 23 Z" fill="url(#black-polish)" stroke="#111622" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M7 34 Q21 38 39 32 L39 37 Q27 43 10 40 L5 38 Z" fill="#8658d2" stroke="#111622" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M16 13 Q21 22 33 25" fill="none" stroke="#e7eaf0" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M22 20 L29 22 L27 27 L20 25 Z" fill="url(#gold)" stroke="#181d29" stroke-width="1.7"/>
+      <path d="M12 31 Q22 33 34 29" fill="none" stroke="#b9c1d0" stroke-width="1.5"/>
+    </symbol>
+    <symbol id="treasure-chest" viewBox="0 0 44 44">
+      <path d="M5 15 Q6 7 13 7 H31 Q38 7 39 15 V37 H5 Z" fill="url(#gold)" stroke="#fff0b4" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M5 17 H39 V37 H5 Z" fill="#bd7729" stroke="#3a2b31" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M8 13 Q9 10 14 10 H30 Q35 10 36 13 V18 H8 Z" fill="#f1c354" stroke="#3a2b31" stroke-width="2"/>
+      <path d="M18 17 H26 V31 H18 Z" fill="#ffe99b" stroke="#493443" stroke-width="2"/>
+      <path d="M20 20 H24 V26 H20 Z" fill="#8c55c4" stroke="#493443" stroke-width="1.5"/>
+      <path d="M9 34 H35" stroke="#f7d977" stroke-width="2"/>
+    </symbol>
+
+    <!-- Two gloved hands, shoulder caps, and visible arms support one 44px coffin link. -->
+    <symbol id="carry-pair" viewBox="0 0 128 84">
+      <path d="M15 66 Q15 51 32 46 L46 48 L39 69 L23 76 Z M113 66 Q113 51 96 46 L82 48 L89 69 L105 76 Z" fill="#453461" stroke="#131827" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M29 58 Q38 42 49 34 M99 58 Q90 42 79 34" fill="none" stroke="#101622" stroke-width="15" stroke-linecap="round"/>
+      <path d="M29 58 Q38 42 49 34 M99 58 Q90 42 79 34" fill="none" stroke="#7456b0" stroke-width="9" stroke-linecap="round"/>
+      <use href="#segment-coffin" x="42" y="0" width="44" height="44"/>
+      <use href="#segment-glove" x="7" y="37" width="44" height="44" transform="rotate(-17 29 59)"/>
+      <use href="#segment-glove" x="77" y="37" width="44" height="44" transform="rotate(17 99 59)"/>
+      <path d="M39 38 L49 34 M89 34 L99 38" stroke="#f8eaff" stroke-width="3" stroke-linecap="round"/>
+    </symbol>
+  </defs>
+
+  <!-- PHONE-SIZE CENTRAL ORBIT COMPOSITION (390×844). -->
+  <rect width="390" height="844" fill="url(#stage)"/>
+  <path d="M0 0 H390 V54 H0 Z" fill="#252d41"/>
+  <path d="M18 27 H76 M314 27 H372" stroke="#7753bf" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="195" cy="27" r="8" fill="#f2c557"/>
+  <rect x="8" y="62" width="374" height="544" rx="26" fill="#151c2a" stroke="#3d475c" stroke-width="3"/>
+
+  <!-- Nested four-petal route lines and inward arrows communicate the later, tighter lap. -->
+  <path id="orbit-route-outer" d="M195 288 C115 288 76 250 87 201 C98 154 151 155 195 288 C239 155 292 154 303 201 C314 250 275 288 195 288 C275 288 314 326 303 375 C292 422 239 421 195 288 C151 421 98 422 87 375 C76 326 115 288 195 288" fill="none" stroke="#7660a8" stroke-width="2.5" stroke-dasharray="6 10" opacity=".30"/>
+  <use href="#orbit-route-outer" transform="translate(195 288) scale(.70) translate(-195 -288)" fill="none" stroke="#aa8de0" stroke-width="2" stroke-dasharray="4 9" opacity=".24"/>
+  <path d="M195 174 L195 197 M288 288 L265 288 M195 402 L195 379 M102 288 L125 288" fill="none" stroke="#d3b4ff" stroke-width="3" stroke-linecap="round" opacity=".42"/>
+  <path d="M190 194 L195 202 L200 194 M267 283 L259 288 L267 293 M190 382 L195 374 L200 382 M123 283 L131 288 L123 293" fill="none" stroke="#d3b4ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".55"/>
+
+  <!-- A real continuous back-bone connects every visible segment into one long chain. -->
+  <path d="M195 178 C224 182 246 191 264 208 C290 232 304 254 300 282 C297 311 293 337 278 361 C261 390 240 410 211 423 C184 434 158 421 139 404 C116 385 102 363 103 335 C102 307 109 281 126 260 C145 237 166 221 186 210" fill="none" stroke="#101622" stroke-width="31" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M195 178 C224 182 246 191 264 208 C290 232 304 254 300 282 C297 311 293 337 278 361 C261 390 240 410 211 423 C184 434 158 421 139 404 C116 385 102 363 103 335 C102 307 109 281 126 260 C145 237 166 221 186 210" fill="none" stroke="#7357a8" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M195 178 C224 182 246 191 264 208 C290 232 304 254 300 282 C297 311 293 337 278 361 C261 390 240 410 211 423 C184 434 158 421 139 404 C116 385 102 363 103 335 C102 307 109 281 126 260 C145 237 166 221 186 210" fill="none" stroke="#c4a6f0" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="3 8" opacity=".75"/>
+
+  <!-- Stationary player at the center; only the aim arrow points toward the moving chain. -->
+  <circle cx="195" cy="288" r="38" fill="none" stroke="#56687c" stroke-width="2" stroke-dasharray="4 8"/>
+  <circle cx="195" cy="288" r="28" fill="#243246" stroke="#7be4df" stroke-width="3"/>
+  <path d="M195 273 C182 259 164 278 195 304 C226 278 208 259 195 273 Z" fill="#ff5b72" stroke="#fff1dd" stroke-width="2.5"/>
+  <path d="M215 270 L264 220" stroke="#65e6e1" stroke-width="4" stroke-linecap="round"/>
+  <path d="M252 221 L267 217 L263 232 Z" fill="#65e6e1"/>
+
+  <!-- One head, a connected carrying pair, then mixed repeating body links. -->
+  <use href="#part-head" x="147" y="89" width="96" height="96"/>
+  <use href="#carry-pair" x="211" y="158" width="128" height="84"/>
+  <use href="#segment-shoe" x="278" y="243" width="44" height="44" transform="rotate(59 300 265)"/>
+  <use href="#segment-glove" x="277" y="296" width="44" height="44" transform="rotate(89 299 318)"/>
+  <use href="#treasure-chest" x="253" y="349" width="44" height="44" transform="rotate(112 275 371)"/>
+  <use href="#segment-coffin" x="217" y="392" width="44" height="44" transform="rotate(143 239 414)"/>
+  <use href="#segment-shoe" x="170" y="412" width="44" height="44" transform="rotate(178 192 434)"/>
+  <use href="#segment-glove" x="120" y="390" width="44" height="44" transform="rotate(215 142 412)"/>
+  <use href="#segment-coffin" x="91" y="344" width="44" height="44" transform="rotate(248 113 366)"/>
+  <use href="#segment-shoe" x="83" y="291" width="44" height="44" transform="rotate(278 105 313)"/>
+  <use href="#segment-glove" x="105" y="236" width="44" height="44" transform="rotate(309 127 258)"/>
+  <circle cx="275" cy="371" r="29" fill="none" stroke="#f2c557" stroke-width="2" opacity=".55"/>
+
+  <!-- Two pose samples; components remain vector and individually reusable. -->
+  <path d="M18 626 H372" stroke="#3b465b" stroke-width="2"/>
+  <rect x="14" y="642" width="174" height="184" rx="18" fill="#20283a" stroke="#7859b8" stroke-width="2"/>
+  <rect x="202" y="642" width="174" height="184" rx="18" fill="#20283a" stroke="#7859b8" stroke-width="2"/>
+  <!-- Lift warning: both hands are visibly connected through sleeves/shoulders to the coffin. -->
+  <g id="telegraph-lift-pose" aria-label="Lift warning pose with two connected carriers">
+    <path d="M47 696 Q102 665 157 696" fill="none" stroke="#ce9eff" stroke-width="4" stroke-dasharray="5 6"/>
+    <path d="M43 682 L48 672 M59 675 L61 662 M144 675 L142 662 M160 682 L155 672" stroke="#ff536f" stroke-width="4" stroke-linecap="round"/>
+    <use href="#carry-pair" x="37" y="708" width="128" height="84"/>
+  </g>
+  <!-- Missed beat: a connected spine compresses while the hat/head, coffin, and shoe tip out of rhythm. -->
+  <g id="stumble-pose" aria-label="Missed beat stumble pose">
+    <path d="M290 741 Q304 755 303 770 L335 784" fill="none" stroke="#101622" stroke-width="17" stroke-linecap="round"/>
+    <path d="M290 741 Q304 755 303 770 L335 784" fill="none" stroke="#7357a8" stroke-width="11" stroke-linecap="round"/>
+    <use href="#part-head" x="236" y="659" width="96" height="96" transform="rotate(13 284 707)"/>
+    <use href="#segment-glove" x="276" y="748" width="44" height="44" transform="rotate(38 298 770)"/>
+    <use href="#segment-coffin" x="287" y="775" width="44" height="44" transform="rotate(67 309 797)"/>
+    <use href="#segment-shoe" x="326" y="773" width="44" height="44" transform="rotate(-17 348 795)"/>
+    <path d="M216 749 Q231 735 246 743 M341 754 L357 746 M344 762 L363 761" fill="none" stroke="#f6c557" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M253 747 L259 740 L265 747 L259 754 Z" fill="#ff536f"/>
+  </g>
+</svg>
+

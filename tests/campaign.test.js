@@ -25,10 +25,10 @@ test('戰役有 25 個正式關卡，分成五區且每關有自己的機制配�
 
 test('守關頭目編制會在單頭與雙頭之間變化，雙頭集中在區域決戰', () => {
   assert.deepEqual(CHAPTERS.map(stage => stage.bossCount), [
-    1, 1, 2, 1, 2, 1, 2, 1, 2, 2, 1, 2, 1,
+    1, 1, 1, 1, 1, 1, 2, 1, 2, 2, 1, 2, 1,
     2, 2, 1, 2, 1, 2, 2, 1, 2, 1, 1, 2,
   ]);
-  for (const id of [5, 10, 15, 20, 25]) assert.equal(CHAPTERS[id - 1].bossCount, 2);
+  for (const id of [10, 15, 20, 25]) assert.equal(CHAPTERS[id - 1].bossCount, 2);
   assert.ok(CHAPTERS.filter(stage => stage.bossCount === 1).length >= 10);
 });
 
@@ -42,6 +42,22 @@ test('相鄰關卡會輪換行進路線，五區都至少出現三種實際路�
   }
 });
 
+test('不同關卡的頭目有自己的行軍路線，不共用同一條交叉路線', () => {
+  const bossPaths = CHAPTERS.map(stage => stage.paths.at(-1));
+  assert.ok(new Set(bossPaths).size >= 8);
+  assert.equal(bossPaths[2], 'weave');
+  assert.equal(bossPaths[3], 'mirror');
+  assert.equal(bossPaths[4], 'spiral');
+});
+
+test('第五關改由棺材舞單頭長鏈守關', () => {
+  assert.equal(CHAPTERS[4].bossCount, 1);
+  assert.equal(CHAPTERS[4].bossSegments, 54);
+  assert.equal(CHAPTERS[4].name, '最後一班');
+  assert.equal(CHAPTERS[4].bossMode, 'coffin-dance');
+  assert.equal(bossProfileFor(5, 0).id, 'meme-last-shift-coffin-leader');
+});
+
 test('單頭決戰有較長身體，進度條會依該關實際頭目長度計算', () => {
   const solo = startRun(31, {}, 4);
   solo.encounter = 'boss';
@@ -52,11 +68,11 @@ test('單頭決戰有較長身體，進度條會依該關實際頭目長度計�
   solo.bossDestroyed = CHAPTERS[3].bossSegments - 1;
   assert.equal(getRunProgress(solo), 1);
 
-  const duo = startRun(32, {}, 5);
+  const duo = startRun(32, {}, 10);
   duo.encounter = 'boss';
   advance(duo, 0.05);
   assert.equal(duo.bosses.length, 2);
-  assert.equal(duo.bosses[0].segments.length - 1, CHAPTERS[4].bossSegments - 1);
+  assert.equal(duo.bosses[0].segments.length - 1, CHAPTERS[9].bossSegments - 1);
 });
 
 test('相鄰關卡的頭目外型不會重複，雙頭關各有不同輪廓', () => {

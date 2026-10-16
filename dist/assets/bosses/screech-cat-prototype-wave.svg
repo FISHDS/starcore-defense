@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="64" viewBox="0 0 128 64" fill="none">
+ <!-- Separate telegraph waves: clean silhouette and generous gaps at phone scale -->
+ <path d="M8 12c18 10 18 30 0 40" stroke="#342B42" stroke-width="12" stroke-linecap="round"/>
+ <path d="M8 12c18 10 18 30 0 40" stroke="#FFCC6D" stroke-width="6" stroke-linecap="round"/>
+ <path d="M34 5c25 15 25 39 0 54M64 3c31 17 31 41 0 58M95 7c25 14 25 36 0 50" stroke="#543A5D" stroke-width="8" stroke-linecap="round"/>
+ <path d="M34 5c25 15 25 39 0 54M64 3c31 17 31 41 0 58M95 7c25 14 25 36 0 50" stroke="#87E6EF" stroke-width="3.5" stroke-linecap="round"/>
+ <path d="m111 18 11 14-11 14" stroke="#F9E7B0" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

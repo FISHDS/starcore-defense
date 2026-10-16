@@ -14,7 +14,8 @@ function enterBoss(chapter = 1) {
 test('第一關只有一隻我的刀盾，擊破後可結算勝利', () => {
   assert.equal(CHAPTERS[0].bossCount, 1);
   assert.equal(CHAPTERS[1].bossCount, 1);
-  assert.equal(CHAPTERS[2].bossCount, 2);
+  assert.equal(CHAPTERS[2].bossCount, 1);
+  assert.equal(CHAPTERS[4].bossCount, 1);
   const game = enterBoss();
   assert.equal(game.bosses.length, 1);
   const boss = game.bosses[0];
@@ -66,7 +67,8 @@ test('斜斬有獨立命中區，半血後換手使斬擊方向反轉', () => {
   assert.equal(first.kind, 'knifeSlash');
   assert.equal(first.radius, 17);
   assert.ok(first.vx > second.vx);
-  assert.equal(first.vy, second.vy);
+  assert.ok(first.vy > 0 && second.vy > 0);
+  assert.notEqual(first.vy, second.vy);
   assert.ok(first.damage >= 10);
 });
 

@@ -9,6 +9,10 @@ export function assignTraits(piece, stage, boss, chestIndices) {
     || (boss && mode === 'final' && piece.depth % 9 === 4)) {
     piece.armorHp = Math.round(piece.maxHp * 0.45);
   }
+  if (boss && mode === 'armor') {
+    piece.weakpoint = true;
+    piece.weakOpen = false;
+  }
   if (has('guard') && chestIndices.some(index => piece.depth === index + 2)) {
     piece.guard = true;
   }
@@ -79,12 +83,12 @@ export function updateHazards(game, dt, enabled) {
     if (hazard.time > 0) continue;
     if (hazard.phase === 'warning') {
       hazard.phase = 'active';
-      hazard.time = 0.32;
-      if (Math.abs(game.player.x - hazard.x) < 38 && game.invulnerable <= 0) {
-        game.core = Math.max(0, game.core - 16);
-        game.invulnerable = 0.7;
-        if (game.core <= 0) game.phase = 'defeat';
-      }
+      hazard.time = 0.2;
+      const y = 95;
+      const flight = Math.max(0.65, (game.player.y - y) / 270);
+      game.enemyBullets.push({ kind: 'hazardPulse', x: hazard.x, y,
+        vx: (game.player.x - hazard.x) / flight, vy: 270,
+        radius: 10, damage: 16 });
     } else game.hazards.splice(index, 1);
   }
 }

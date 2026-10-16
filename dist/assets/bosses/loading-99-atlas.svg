@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="410" height="104" viewBox="0 0 410 104" role="img" aria-label="轉圈載入獸戰鬥素材圖集">
+<defs xmlns="http://www.w3.org/2000/svg">
+    <linearGradient id="bg" x2="0" y2="1"><stop stop-color="#142439" /><stop offset="1" stop-color="#091522" /></linearGradient>
+    <linearGradient id="head" x2=".8" y2="1"><stop stop-color="#f5fbff" /><stop offset=".55" stop-color="#c9d9e8" /><stop offset="1" stop-color="#72879f" /></linearGradient>
+    <linearGradient id="teal" x2="0" y2="1"><stop stop-color="#74e7de" /><stop offset="1" stop-color="#1e8897" /></linearGradient>
+    <linearGradient id="gold" x2="0" y2="1"><stop stop-color="#ffe783" /><stop offset="1" stop-color="#e89630" /></linearGradient>
+    <filter id="soft"><feGaussianBlur stdDeviation="5" /></filter>
+    <g id="ring-seg">
+      <rect x="-21" y="-21" width="42" height="42" rx="13" fill="#263b52" stroke="#8ca4bd" stroke-width="3" />
+      <path d="M-10-5A11 11 0 0 1 8-12M11-3A11 11 0 0 1 5 9M-2 12A11 11 0 0 1-12 2" fill="none" stroke="#65d9d5" stroke-width="5" stroke-linecap="round" />
+      <circle cx="0" cy="0" r="3" fill="#e5fcff" />
+    </g>
+    <g id="bar-seg">
+      <rect x="-22" y="-19" width="44" height="38" rx="10" fill="#30455a" stroke="#b0bfd0" stroke-width="3" />
+      <rect x="-14" y="-10" width="28" height="7" rx="3.5" fill="#8194a9" />
+      <rect x="-14" y="2" width="21" height="7" rx="3.5" fill="#61ded7" />
+      <circle cx="13" cy="5" r="3" fill="#f4d069" />
+    </g>
+    <g id="error-seg">
+      <rect x="-22" y="-21" width="44" height="42" rx="11" fill="#622f45" stroke="#ff796e" stroke-width="3" />
+      <text x="0" y="7" text-anchor="middle" font-family="Arial,sans-serif" font-size="17" font-weight="900" fill="#fff3dc">99%</text>
+      <path d="M-14-15l5 5m-5 0 5-5" stroke="#ffac74" stroke-width="2.5" stroke-linecap="round" />
+    </g>
+    <g id="chest">
+      <path d="M-22-8h44v25h-44z" fill="url(#gold)" stroke="#fff0aa" stroke-width="3" />
+      <path d="M-23-8l6-11h34l6 11z" fill="#ffcf58" stroke="#fff0aa" stroke-width="3" />
+      <path d="M-4-4h8v12h-8z" rx="2" fill="#7a4926" />
+      <path d="M-18 13h36" stroke="#ac602a" stroke-width="3" />
+    </g>
+    <g id="head-art">
+      <circle r="45" fill="#07111d" opacity=".35" transform="translate(0 5)" />
+      <circle r="42" fill="url(#head)" stroke="#f5fbff" stroke-width="4" />
+      <circle r="30" fill="#23374c" stroke="#455d73" stroke-width="3" />
+      <path d="M-3-27A27 27 0 0 1 24-2" fill="none" stroke="#68e1d7" stroke-width="8" stroke-linecap="round" />
+      <path d="M20 8A27 27 0 0 1-4 27" fill="none" stroke="#6fa8d0" stroke-width="8" stroke-linecap="round" />
+      <path d="M-18 20A27 27 0 0 1-24-5" fill="none" stroke="#ffca62" stroke-width="8" stroke-linecap="round" />
+      <path d="M-17-19A27 27 0 0 1-4-27" fill="none" stroke="#eaf6ff" stroke-width="8" stroke-linecap="round" />
+      
+      <path d="M-17-10l9 3M6-7l10-5" stroke="#f5bf78" stroke-width="3.5" stroke-linecap="round" />
+      <ellipse cx="-8" cy="-1" rx="4.5" ry="5.5" fill="#f8fcff" /><ellipse cx="9" cy="-1" rx="4.5" ry="5.5" fill="#f8fcff" />
+      <circle cx="-6" cy="1" r="2.4" fill="#172b40" /><circle cx="12" cy="-1" r="2.4" fill="#172b40" />
+      <path d="M-7 12q7-5 14 2" fill="none" stroke="#ff9278" stroke-width="3.5" stroke-linecap="round" />
+      <path d="M-38 4q-8 7-2 15l7 3M38 4q8 7 2 15l-7 3" fill="none" stroke="#a9bfd1" stroke-width="5" stroke-linecap="round" />
+      <circle cx="-31" cy="23" r="5" fill="#f2c47d" stroke="#fff0c2" stroke-width="2" /><circle cx="31" cy="23" r="5" fill="#f2c47d" stroke="#fff0c2" stroke-width="2" />
+      <path d="M-27-20q-7-11 1-14q7 4 1 12" fill="#76e1db" stroke="#eaffff" stroke-width="2" />
+      <rect x="-21" y="28" width="42" height="18" rx="8" fill="#fc795f" stroke="#ffc08a" stroke-width="2" />
+      <text x="0" y="41" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="900" fill="#fff8e7">99%</text>
+    </g>
+  </defs>
+  
+<use href="#head-art" transform="translate(50 52)"/>
+<use href="#ring-seg" transform="translate(141 52)"/>
+<use href="#bar-seg" transform="translate(218 52)"/>
+<use href="#error-seg" transform="translate(295 52)"/>
+<use href="#chest" transform="translate(372 52)"/>
+</svg>

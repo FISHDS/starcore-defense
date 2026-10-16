@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="336" height="240" viewBox="0 0 336 240" role="img" aria-labelledby="title desc">
+  <title id="title">Last Shift transparent sprite atlas</title>
+  <desc id="desc">Transparent cropped cells for a coffin-dance leader boss: 96-pixel head, 44-pixel body links and chest, lift warning pose, and stumble pose.</desc>
+  <defs>
+    <linearGradient id="ivory" x2="0" y2="1"><stop stop-color="#fffef8"/><stop offset="1" stop-color="#c9d0dc"/></linearGradient>
+    <linearGradient id="violet" x2="0" y2="1"><stop stop-color="#a779ff"/><stop offset="1" stop-color="#5b3e9b"/></linearGradient>
+    <linearGradient id="gold" x2="0" y2="1"><stop stop-color="#ffe28b"/><stop offset="1" stop-color="#d89931"/></linearGradient>
+    <linearGradient id="black-polish" x2="0" y2="1"><stop stop-color="#4b5266"/><stop offset=".4" stop-color="#202736"/><stop offset="1" stop-color="#101522"/></linearGradient>
+
+    <symbol id="part-head" viewBox="0 0 96 96">
+      <path d="M9 48 Q2 42 8 34 Q13 29 20 37 M76 37 Q85 29 90 36 Q95 43 87 49" fill="#353b4c" stroke="#111622" stroke-width="3.5"/>
+      <path d="M18 38 Q18 24 29 18 Q43 10 62 17 Q77 23 79 39 L75 68 Q71 83 49 88 Q27 83 21 68 Z" fill="#343a4a" stroke="#101622" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M19 27 L27 12 Q47 6 66 12 L72 29 Q48 23 19 31 Z" fill="url(#ivory)" stroke="#111622" stroke-width="3.5" stroke-linejoin="round"/>
+      <path d="M24 24 Q46 19 69 25 L69 32 Q47 27 22 33 Z" fill="#7e54ce" stroke="#111622" stroke-width="2.5"/>
+      <path d="M12 32 Q46 24 84 33 L82 39 Q46 32 13 40 Z" fill="#eef0f4" stroke="#111622" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M17 43 Q31 38 45 43 L44 56 Q31 61 20 55 Z M51 43 Q66 38 80 43 L77 55 Q66 61 52 56 Z" fill="#111521" stroke="#c9d0dc" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M43 48 H53" stroke="#111521" stroke-width="4"/>
+      <path d="M24 48 L37 44 M59 44 L73 48" stroke="#ffffff" stroke-width="2" stroke-linecap="round" opacity=".9"/>
+      <path d="M27 66 Q49 60 71 66 L68 75 Q49 80 30 74 Z" fill="#fffdf5" stroke="#111622" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M32 68 L32 74 M40 66 L40 77 M49 66 L49 78 M58 66 L58 77 M66 67 L65 75" stroke="#72798a" stroke-width="1.5"/>
+      <path d="M36 84 L49 77 L62 84 L57 93 H41 Z" fill="url(#violet)" stroke="#111622" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M49 80 V92" stroke="#eee9ff" stroke-width="2"/>
+    </symbol>
+    <symbol id="segment-glove" viewBox="0 0 44 44">
+      <path d="M8 27 L10 16 Q11 13 14 14 L16 21 L16 10 Q17 7 20 8 L22 20 L23 8 Q25 5 28 8 L29 21 L31 12 Q34 10 36 14 L35 28 Q33 37 25 40 L15 37 Z" fill="url(#ivory)" stroke="#171d29" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M7 27 L16 26 L18 39 L9 41 Z" fill="#7e54ce" stroke="#171d29" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M10 30 L15 29" stroke="#f8eaff" stroke-width="2"/>
+    </symbol>
+    <symbol id="segment-coffin" viewBox="0 0 44 44">
+      <path d="M15 2 H29 L38 11 L35 31 L22 42 L9 31 L6 11 Z" fill="#242838" stroke="#e9e9f2" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M17 6 H27 L33 13 L30 29 L22 36 L14 29 L11 13 Z" fill="url(#violet)" stroke="#171b28" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M12 14 L32 14 M12 28 L32 28" stroke="#dce0e9" stroke-width="2.5"/>
+      <path d="M22 14 V28" stroke="#f5d892" stroke-width="2"/>
+      <circle cx="8" cy="21" r="2" fill="#d8dce5"/><circle cx="36" cy="21" r="2" fill="#d8dce5"/>
+    </symbol>
+    <symbol id="segment-shoe" viewBox="0 0 44 44">
+      <path d="M9 8 Q15 7 18 15 L25 21 Q31 24 37 25 Q41 29 38 35 Q31 40 10 37 L5 34 Q9 29 8 23 Z" fill="url(#black-polish)" stroke="#111622" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M7 34 Q21 38 39 32 L39 37 Q27 43 10 40 L5 38 Z" fill="#8658d2" stroke="#111622" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M16 13 Q21 22 33 25" fill="none" stroke="#e7eaf0" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M22 20 L29 22 L27 27 L20 25 Z" fill="url(#gold)" stroke="#181d29" stroke-width="1.7"/>
+      <path d="M12 31 Q22 33 34 29" fill="none" stroke="#b9c1d0" stroke-width="1.5"/>
+    </symbol>
+    <symbol id="treasure-chest" viewBox="0 0 44 44">
+      <path d="M5 15 Q6 7 13 7 H31 Q38 7 39 15 V37 H5 Z" fill="url(#gold)" stroke="#fff0b4" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M5 17 H39 V37 H5 Z" fill="#bd7729" stroke="#3a2b31" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M8 13 Q9 10 14 10 H30 Q35 10 36 13 V18 H8 Z" fill="#f1c354" stroke="#3a2b31" stroke-width="2"/>
+      <path d="M18 17 H26 V31 H18 Z" fill="#ffe99b" stroke="#493443" stroke-width="2"/>
+      <path d="M20 20 H24 V26 H20 Z" fill="#8c55c4" stroke="#493443" stroke-width="1.5"/>
+      <path d="M9 34 H35" stroke="#f7d977" stroke-width="2"/>
+    </symbol>
+    <symbol id="carry-pair" viewBox="0 0 128 84">
+      <path d="M15 66 Q15 51 32 46 L46 48 L39 69 L23 76 Z M113 66 Q113 51 96 46 L82 48 L89 69 L105 76 Z" fill="#453461" stroke="#131827" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M29 58 Q38 42 49 34 M99 58 Q90 42 79 34" fill="none" stroke="#101622" stroke-width="15" stroke-linecap="round"/>
+      <path d="M29 58 Q38 42 49 34 M99 58 Q90 42 79 34" fill="none" stroke="#7456b0" stroke-width="9" stroke-linecap="round"/>
+      <use href="#segment-coffin" x="42" y="0" width="44" height="44"/>
+      <use href="#segment-glove" x="7" y="37" width="44" height="44" transform="rotate(-17 29 59)"/>
+      <use href="#segment-glove" x="77" y="37" width="44" height="44" transform="rotate(17 99 59)"/>
+      <path d="M39 38 L49 34 M89 34 L99 38" stroke="#f8eaff" stroke-width="3" stroke-linecap="round"/>
+    </symbol>
+  </defs>
+
+  <!-- Every atlas cell is transparent outside its drawn vector shapes. -->
+  <g id="cell-head" aria-label="Head 96 by 96"><use href="#part-head" x="0" y="0" width="96" height="96"/></g>
+  <g id="cell-glove" aria-label="Glove body link 44 by 44"><use href="#segment-glove" x="112" y="8" width="44" height="44"/></g>
+  <g id="cell-coffin" aria-label="Coffin body link 44 by 44"><use href="#segment-coffin" x="168" y="8" width="44" height="44"/></g>
+  <g id="cell-shoe" aria-label="Shoe body link 44 by 44"><use href="#segment-shoe" x="224" y="8" width="44" height="44"/></g>
+  <g id="cell-treasure-chest" aria-label="Treasure chest 44 by 44"><use href="#treasure-chest" x="280" y="8" width="44" height="44"/></g>
+
+  <!-- Pose cell: two carrier hands/arms visibly lift the coffin. -->
+  <g id="cell-lift-warning" aria-label="Lift warning pose, 128 by 100">
+    <path d="M18 143 Q64 116 110 143" fill="none" stroke="#ce9eff" stroke-width="4" stroke-dasharray="5 6"/>
+    <path d="M14 128 L19 118 M30 121 L32 108 M98 121 L96 108 M114 128 L109 118" stroke="#ff536f" stroke-width="4" stroke-linecap="round"/>
+    <use href="#carry-pair" x="0" y="128" width="128" height="84"/>
+  </g>
+
+  <!-- Pose cell: the linked body compresses; head, coffin, glove and shoe miss the beat. -->
+  <g id="cell-stumble-pose" aria-label="Stumble pose, 192 by 112">
+    <path d="M218 196 Q240 211 264 211 L290 214" fill="none" stroke="#101622" stroke-width="17" stroke-linecap="round"/>
+    <path d="M218 196 Q240 211 264 211 L290 214" fill="none" stroke="#7357a8" stroke-width="11" stroke-linecap="round"/>
+    <use href="#part-head" x="151" y="112" width="96" height="96" transform="rotate(13 199 160)"/>
+    <use href="#segment-glove" x="212" y="176" width="44" height="44" transform="rotate(38 234 198)"/>
+    <use href="#segment-coffin" x="248" y="188" width="44" height="44" transform="rotate(67 270 210)"/>
+    <use href="#segment-shoe" x="280" y="192" width="44" height="44" transform="rotate(-17 302 214)"/>
+    <path d="M151 184 Q165 173 178 181 M303 177 L318 169 M307 185 L324 185" fill="none" stroke="#f6c557" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M178 181 L184 173 L190 181 L184 189 Z" fill="#ff536f"/>
+  </g>
+</svg>
+

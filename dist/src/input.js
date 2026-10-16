@@ -1,6 +1,10 @@
-import { WIDTH } from './game.js';
+import { HEIGHT, WIDTH } from './game.js';
 
-export function pointerToWorldX(clientX, rect) {
-  const fraction = (clientX - rect.left) / rect.width;
-  return Math.max(26, Math.min(WIDTH - 26, fraction * WIDTH));
+export function pointerToAimAngle(clientX, clientY, rect, origin) {
+  const x = (clientX - rect.left) / rect.width * WIDTH;
+  const y = (clientY - rect.top) / rect.height * HEIGHT;
+  const dx = x - origin.x;
+  const dy = y - origin.y;
+  if (Math.hypot(dx, dy) < 10) return -Math.PI / 2;
+  return Math.atan2(dy, dx);
 }

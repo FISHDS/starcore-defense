@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="320" viewBox="0 0 960 320" role="img" aria-labelledby="title desc">
+  <title id="title">Perfect Jaw Stone Icon boss prototype</title>
+  <desc id="desc">A dryly confident stone-faced meme champion with an absurd square jaw, repeatable carved armor links, a cracked weakpoint, and a red shoulder-slam warning.</desc>
+  <defs>
+    <linearGradient id="stone" x2=".2" y2="1"><stop stop-color="#d8deea"/><stop offset="1" stop-color="#788399"/></linearGradient>
+    <linearGradient id="armor" x2="0" y2="1"><stop stop-color="#8994a8"/><stop offset="1" stop-color="#454e61"/></linearGradient>
+    <linearGradient id="gold" x2="0" y2="1"><stop stop-color="#ffe6a0"/><stop offset="1" stop-color="#dfa938"/></linearGradient>
+  </defs>
+
+  <!-- HEAD CORE: render this group at 96px high; face geometry does not need fine texture. -->
+  <g id="boss-head" aria-label="Perfect Jaw stone-faced champion head">
+    <!-- Broad mantle gives a strong icon outline even in silhouette. -->
+    <path d="M38 271 Q44 232 75 213 L108 201 H205 L243 221 Q267 238 276 279 L263 300 H48 Z" fill="#252c3a" stroke="#111722" stroke-width="11" stroke-linejoin="round"/>
+    <path d="M75 238 L121 221 L151 243 L181 221 L237 241 L250 282 H61 Z" fill="url(#armor)" stroke="#111722" stroke-width="8" stroke-linejoin="round"/>
+    <path d="M130 226 L151 243 L172 226 L165 286 H138 Z" fill="#343b4b" stroke="#111722" stroke-width="6" stroke-linejoin="round"/>
+    <path d="M151 247 L160 258 L151 269 L142 258 Z" fill="url(#gold)" stroke="#272d38" stroke-width="4"/>
+    <!-- Ears and monumental jaw: the meme is in the silhouette, not written text. -->
+    <path d="M76 137 Q55 125 61 151 Q65 171 86 174 M226 137 Q249 124 243 151 Q239 170 218 174" fill="url(#stone)" stroke="#171d28" stroke-width="9" stroke-linejoin="round"/>
+    <path d="M81 130 Q81 92 108 76 Q139 56 180 69 Q217 80 226 118 L222 177 L212 212 Q204 247 179 261 L121 261 Q96 245 89 212 L81 175 Z" fill="url(#stone)" stroke="#171d28" stroke-width="11" stroke-linejoin="round"/>
+    <!-- Side-swept stone crest. -->
+    <path d="M73 132 Q58 110 79 93 Q77 68 105 70 Q120 45 147 63 Q171 43 192 65 Q222 62 230 89 Q251 102 229 133 L208 120 Q194 105 174 105 Q149 120 124 106 Q101 125 84 143 Z" fill="#363e50" stroke="#171d28" stroke-width="10" stroke-linejoin="round"/>
+    <path d="M99 80 Q139 54 188 75 Q166 76 145 91 Q126 97 108 104 Z" fill="#aab4c7"/>
+    <!-- Severe brow and calm, meme-worthy confidence. -->
+    <path d="M96 143 Q116 125 139 137 M168 137 Q190 123 211 141" fill="none" stroke="#242a36" stroke-width="12" stroke-linecap="round"/>
+    <path d="M96 151 Q115 143 136 151 L134 162 Q114 158 97 165 Z M171 151 Q190 143 209 152 L207 164 Q190 158 172 163 Z" fill="#f5f1e9" stroke="#242a36" stroke-width="5" stroke-linejoin="round"/>
+    <ellipse cx="118" cy="154" rx="5" ry="7" fill="#171d28"/><ellipse cx="191" cy="154" rx="5" ry="7" fill="#171d28"/>
+    <path d="M151 159 L141 183 L157 187" fill="none" stroke="#596477" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M125 207 Q151 211 181 201 L188 214 Q164 229 132 221 Z" fill="#373f50" stroke="#171d28" stroke-width="6" stroke-linejoin="round"/>
+    <path d="M151 211 L174 207" stroke="#f6e6c1" stroke-width="5" stroke-linecap="round"/>
+    <!-- The gold diagonal jaw seam echoes weakpoint cracks in the body links. -->
+    <path d="M194 222 L184 235 L192 243 L181 254" fill="none" stroke="#f0bd52" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- REPEATABLE BODY LINK: carved abdominal slab, kept simple for 44px display height. -->
+  <g id="chain-link" aria-label="Repeatable carved armor body segment" transform="translate(344 105)">
+    <path d="M28 10 Q40 1 61 8 L87 20 L113 8 Q136 2 148 15 L137 83 Q128 105 87 117 Q46 106 37 84 Z" fill="#202735" stroke="#101722" stroke-width="9" stroke-linejoin="round"/>
+    <path d="M38 17 Q50 9 66 16 L87 27 L108 16 Q124 10 137 21 L129 76 Q120 94 87 105 Q54 94 46 76 Z" fill="url(#armor)" stroke="#b2bdcf" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M87 29 V91 M54 39 L72 46 M120 39 L102 46" fill="none" stroke="#30394a" stroke-width="8" stroke-linecap="round"/>
+    <path d="M79 66 L87 57 L95 66 L87 76 Z" fill="url(#gold)" stroke="#242b38" stroke-width="4"/>
+    <path d="M54 23 L68 20 M106 20 L120 23" stroke="#e1e6ef" stroke-width="4" stroke-linecap="round" opacity=".85"/>
+  </g>
+
+  <!-- BREAKABLE WEAKPOINT: cracked chest plate, a real body target, never the head. -->
+  <g id="weakpoint-link" aria-label="Cracked gold-seam body weakpoint" transform="translate(566 101)">
+    <path d="M24 12 Q45 1 69 12 L91 25 L113 12 Q137 1 158 15 L144 92 Q134 113 91 126 Q48 113 37 92 Z" fill="#202735" stroke="#101722" stroke-width="10" stroke-linejoin="round"/>
+    <path d="M37 21 Q54 12 72 22 L91 34 L110 22 Q130 13 145 24 L134 85 Q125 102 91 113 Q57 102 48 85 Z" fill="#596477" stroke="#c6cfdb" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M91 34 L80 54 L97 64 L83 82 L100 94 L91 113" fill="none" stroke="url(#gold)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M80 54 L63 48 M97 64 L117 53 M83 82 L65 91 M100 94 L118 101" fill="none" stroke="#f5cc69" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="91" cy="64" r="6" fill="#fff0be"/>
+  </g>
+
+  <!-- ATTACK POSE / TELEGRAPH: shoulder plates rotate up; red wedges mark the danger lane. -->
+  <g id="attack-pose" aria-label="Shoulder-raise slam attack warning" transform="translate(779 81)">
+    <path d="M8 116 Q31 81 71 95 L89 134 Q58 153 19 143 Z" fill="url(#armor)" stroke="#151b26" stroke-width="8" stroke-linejoin="round" transform="rotate(-20 49 118)"/>
+    <path d="M122 95 Q161 81 185 116 L175 143 Q136 153 104 134 Z" fill="url(#armor)" stroke="#151b26" stroke-width="8" stroke-linejoin="round" transform="rotate(20 145 118)"/>
+    <path d="M27 41 L43 21 L53 43 M91 31 V7 M135 42 L151 21 L161 43" fill="none" stroke="#f45563" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M34 183 Q92 215 154 183 M20 207 Q92 246 170 207" fill="none" stroke="#f45563" stroke-width="8" stroke-linecap="round" stroke-dasharray="16 12"/>
+    <path d="M83 120 L100 120 L110 141 L100 160 L83 160 L73 141 Z" fill="#e7edf5" stroke="#252d3b" stroke-width="7" stroke-linejoin="round"/>
+  </g>
+</svg>

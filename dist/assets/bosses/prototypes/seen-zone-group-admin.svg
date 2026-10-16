@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="320" viewBox="0 0 960 320" role="img" aria-labelledby="title desc">
+  <title id="title">Seen-Zone Group Admin boss art prototype</title>
+  <desc id="desc">An exhausted group-chat admin with a giant phone weak point, repeatable ellipsis message-chain links, and a red notification storm warning.</desc>
+  <defs>
+    <linearGradient id="skin" x2="0" y2="1"><stop stop-color="#ffe69b"/><stop offset="1" stop-color="#ef9b64"/></linearGradient>
+    <linearGradient id="phone" x2="0" y2="1"><stop stop-color="#59f1d2"/><stop offset="1" stop-color="#36a6ba"/></linearGradient>
+    <linearGradient id="bubble" x2="0" y2="1"><stop stop-color="#b7f4ea"/><stop offset="1" stop-color="#65cfc9"/></linearGradient>
+  </defs>
+
+  <!-- HEAD / CORE: export or render this group alone at 88-96 px. -->
+  <g id="boss-head" aria-label="Seen-Zone Group Admin head">
+    <!-- Floating notification halo: a readable silhouette cue, not a damage cue. -->
+    <path d="M66 112 Q45 79 73 56 M235 83 Q270 99 257 128" fill="none" stroke="#a78bfa" stroke-width="9" stroke-linecap="round" stroke-dasharray="2 15"/>
+    <!-- Shoulders and aggressively crooked tie make the character feel human, not an object with eyes. -->
+    <path d="M79 238 Q113 210 151 222 Q197 210 237 239 L256 293 Q155 320 57 293 Z" fill="#28334e" stroke="#11182a" stroke-width="9" stroke-linejoin="round"/>
+    <path d="M132 226 L166 230 L178 263 L157 297 L137 261 Z" fill="#ff6c76" stroke="#11182a" stroke-width="7" stroke-linejoin="round"/>
+    <path d="M151 266 L164 274 L157 297 L145 280 Z" fill="#ffd16c"/>
+    <!-- Head silhouette and ear -->
+    <path d="M71 142 Q57 119 76 111 Q76 77 116 68 Q150 52 187 68 Q226 73 236 111 Q253 128 238 151 L229 205 Q214 232 156 235 Q99 230 82 203 Z" fill="url(#skin)" stroke="#11182a" stroke-width="10" stroke-linejoin="round"/>
+    <path d="M77 149 Q61 143 68 128 Q77 118 88 137" fill="#ef9b64" stroke="#11182a" stroke-width="7"/>
+    <!-- Hair: unmistakable burnt-out fringe with one stubborn cowlick. -->
+    <path d="M75 133 Q52 116 70 96 Q58 72 93 69 Q103 43 131 61 Q154 39 172 62 Q205 47 216 76 Q245 72 244 99 Q261 112 240 132 L218 123 Q212 101 195 98 Q172 114 145 99 Q121 119 96 104 Q89 120 75 133 Z" fill="#303b59" stroke="#11182a" stroke-width="9" stroke-linejoin="round"/>
+    <path d="M179 62 Q190 35 207 48 Q203 56 199 65" fill="#303b59" stroke="#11182a" stroke-width="7" stroke-linejoin="round"/>
+    <!-- Uneven brow, heavy sleep-deprived lids, and asymmetrical smirk. -->
+    <path d="M96 143 Q115 128 137 141" fill="none" stroke="#252c43" stroke-width="10" stroke-linecap="round"/>
+    <path d="M171 139 Q192 122 211 137" fill="none" stroke="#252c43" stroke-width="10" stroke-linecap="round"/>
+    <path d="M98 158 Q116 146 135 158 L132 169 Q115 164 100 174 Z" fill="#fff8df" stroke="#252c43" stroke-width="5"/>
+    <ellipse cx="119" cy="161" rx="5" ry="8" fill="#28334e"/>
+    <path d="M173 156 Q191 145 208 156 L205 169 Q190 164 175 173 Z" fill="#fff8df" stroke="#252c43" stroke-width="5"/>
+    <ellipse cx="192" cy="160" rx="5" ry="8" fill="#28334e"/>
+    <path d="M96 182 Q115 191 135 182 M173 182 Q191 190 207 181" fill="none" stroke="#8d5360" stroke-width="5" stroke-linecap="round"/>
+    <path d="M149 167 L143 184 L155 186" fill="none" stroke="#bd755d" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M139 204 Q164 194 190 202 Q177 218 153 216 Q143 214 139 204 Z" fill="#513645" stroke="#252c43" stroke-width="5"/>
+    <path d="M150 205 L180 204" stroke="#fff2ce" stroke-width="5" stroke-linecap="round"/>
+    <!-- One sweat bead: the joke reads as overwhelmed, not cute. -->
+    <path d="M223 155 Q238 174 225 184 Q212 180 223 155 Z" fill="#68d9f3" stroke="#26314d" stroke-width="4"/>
+    <path d="M82 210 Q94 220 104 212 M208 215 Q219 219 226 208" fill="none" stroke="#db7469" stroke-width="5" stroke-linecap="round"/>
+  </g>
+
+  <!-- REPEATABLE CHAIN LINK: 46-54 px tall. Ellipsis/chat-tail is the recurring cue. -->
+  <g id="chain-link" aria-label="Repeatable ellipsis chat-bubble body segment" transform="translate(337 98)">
+    <path d="M22 18 Q22 6 38 6 H130 Q147 6 147 23 V91 Q147 108 130 108 H69 L39 128 L44 108 H38 Q22 108 22 91 Z" fill="#26334d" stroke="#10182b" stroke-width="8" stroke-linejoin="round"/>
+    <path d="M30 20 Q30 14 40 14 H128 Q139 14 139 25 V87 Q139 99 128 99 H67 L49 111 L52 99 H40 Q30 99 30 88 Z" fill="url(#bubble)" stroke="#8ff6e5" stroke-width="3"/>
+    <circle cx="64" cy="57" r="8" fill="#34405d"/>
+    <circle cx="86" cy="57" r="8" fill="#34405d"/>
+    <circle cx="108" cy="57" r="8" fill="#34405d"/>
+    <path d="M45 26 Q85 18 123 25" fill="none" stroke="#eafffa" stroke-width="4" stroke-linecap="round" opacity=".75"/>
+  </g>
+
+  <!-- BREAKABLE WEAK POINT: phone + 99 badge is gameplay-critical and should be shot visibly. -->
+  <g id="weakpoint-phone" aria-label="Breakable phone weak point" transform="translate(558 73) rotate(8 74 110)">
+    <path d="M31 13 Q31 2 44 2 H126 Q139 2 139 15 V202 Q139 215 126 215 H44 Q31 215 31 202 Z" fill="#202b44" stroke="#10172a" stroke-width="10"/>
+    <path d="M42 27 H128 V184 H42 Z" fill="url(#phone)" stroke="#a8fff0" stroke-width="5"/>
+    <path d="M70 13 H100" stroke="#65748f" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="85" cy="199" r="7" fill="#8da0b9"/>
+    <path d="M54 68 Q84 39 115 68 V117 Q115 144 84 159 Q54 144 54 117 Z" fill="#eafaf5" stroke="#273550" stroke-width="6"/>
+    <circle cx="69" cy="96" r="5" fill="#34405d"/><circle cx="84" cy="96" r="5" fill="#34405d"/><circle cx="99" cy="96" r="5" fill="#34405d"/>
+    <circle cx="127" cy="33" r="49" fill="#ff596b" stroke="#fff0d4" stroke-width="7"/>
+    <!-- Self-drawn bold 99+ glyphs stay legible when the whole phone is only 40 px tall. -->
+    <g fill="none" stroke="#fff8e7" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M91 30 C91 20 97 15 104 15 C112 15 117 21 117 30 C117 39 112 44 104 44 C98 44 94 41 92 37 M117 30 L117 61"/>
+      <path d="M111 30 C111 20 117 15 124 15 C132 15 137 21 137 30 C137 39 132 44 124 44 C118 44 114 41 112 37 M137 30 L137 61"/>
+      <path d="M148 31 V55 M138 43 H158"/>
+    </g>
+    <path d="M90 170 l12 13 M102 170 l-12 13" stroke="#ee6470" stroke-width="5" stroke-linecap="round"/>
+  </g>
+
+  <!-- TELEGRAPH: danger-only red notification burst. Do not recolor it like a collectible. -->
+  <g id="attack-warning" aria-label="Danger warning: notification storm" transform="translate(785 102)">
+    <path d="M56 2 L68 32 L99 13 L91 47 L126 43 L103 69 L135 88 L99 96 L116 127 L82 112 L67 146 L51 112 L18 132 L27 96 L-8 87 L22 68 L1 40 L37 46 Z" fill="#ff5368" fill-opacity=".20" stroke="#ff5368" stroke-width="8" stroke-linejoin="round" stroke-dasharray="15 9"/>
+    <path d="M36 43 Q36 35 45 35 H86 Q95 35 95 44 V71 Q95 80 86 80 H64 L51 92 L53 80 H45 Q36 80 36 71 Z" fill="#ff6979" stroke="#fff3df" stroke-width="5"/>
+    <circle cx="52" cy="57" r="4" fill="#fff3df"/><circle cx="65" cy="57" r="4" fill="#fff3df"/><circle cx="78" cy="57" r="4" fill="#fff3df"/>
+    <path d="M63 99 V118 M63 126 V128" stroke="#fff3df" stroke-width="8" stroke-linecap="round"/>
+  </g>
+</svg>
+

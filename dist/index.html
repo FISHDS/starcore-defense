@@ -7,12 +7,12 @@
   <meta name="description" content="星核防線：原創手機直式長鏈防線遊戲。擊破身體讓頭部後退，打開藏在敵群中的寶箱進化武器。">
   <title>星核防線 · Starcore Defense</title>
   <link rel="icon" type="image/svg+xml" href="./assets/icon.svg">
-  <link rel="stylesheet" href="./style.css?v=20261016-stage-variety-1">
-  <script type="module" src="./src/main.js?v=20261016-stage-variety-1"></script>
+  <link rel="stylesheet" href="./style.css?v=20261017-starcore-4">
+  <script type="module" src="./src/main.js?v=20261017-starcore-4"></script>
 </head>
 <body>
   <main class="game-shell" aria-label="星核防線遊戲">
-    <canvas id="arena" class="arena" aria-label="戰鬥畫面；在畫面上左右滑動可移動守衛者"></canvas>
+    <canvas id="arena" class="arena" aria-label="戰鬥畫面；觸控並拖動以原地旋轉瞄準，守衛者不會移動"></canvas>
 
     <div id="hud" class="hud" hidden>
       <div class="hud-top">
@@ -27,7 +27,7 @@
       <div class="core-track"><span id="core-progress"></span></div>
     </div>
 
-    <div id="hint" class="gesture-hint" hidden><span class="gesture-icon">↔</span> 滑動瞄準身體與寶箱節點</div>
+    <div id="hint" class="gesture-hint" hidden><span class="gesture-icon">⟳</span> 按住並拖動，原地轉向瞄準身體與寶箱</div>
     <div id="boss-warning" class="boss-warning" hidden>母體逼近防線 · 集中火力</div>
 
     <section id="menu" class="screen menu-screen" aria-labelledby="game-title">
@@ -37,12 +37,12 @@
         <p class="kicker">守住最後一道光</p>
         <h1 id="game-title">星核<span>防線</span></h1>
         <p class="english-title">STARCORE DEFENSE</p>
-        <p class="menu-copy">一條長鏈從畫面外持續進場，越後段越強。<br>擊破身體讓頭部退後，打開寶箱進化武器。<br>清空長鏈後迎戰關卡頭目；頭部碰底線即敗。</p>
+        <p class="menu-copy">一條長鏈從畫面外持續進場，越後段越強。<br>擊破身體讓頭部退後，打開寶箱進化武器。<br>清空長鏈後迎戰關卡頭目；頭部碰到守點即敗。</p>
       </div>
       <div class="menu-actions">
         <button id="stage-button" class="stage-shortcut" type="button"><span>目前關卡 <strong id="selected-stage">第 1 關 · 孢子初潮</strong></span><span>選擇關卡 ›</span></button>
         <button id="start-button" class="primary-button" type="button"><span>開始作戰</span><span aria-hidden="true">↗</span></button>
-        <button id="showcase-button" class="showcase-shortcut" type="button"><span>✦ 頭目快速體驗 <small>我的刀盾／破音貓，免解鎖直接試打</small></span><span aria-hidden="true">›</span></button>
+        <button id="showcase-button" class="showcase-shortcut" type="button"><span>✦ 頭目快速體驗 <small>五種迷因頭目，免解鎖直接試打</small></span><span aria-hidden="true">›</span></button>
         <div class="menu-secondary-row">
           <button id="continue-button" class="secondary-button" type="button" hidden>繼續進度</button>
           <button id="research-button" class="secondary-button" type="button">細胞研究 <span id="menu-dna">◆ 0</span></button>
@@ -54,9 +54,9 @@
 
     <section id="showcase-screen" class="screen showcase-screen" aria-labelledby="showcase-title" hidden>
       <div class="showcase-heading"><span class="eyebrow" id="showcase-index">BOSS SHOWCASE · 01</span><h2 id="showcase-title">我的刀盾</h2><p>免解鎖 · 直接進頭目戰</p></div>
-      <div class="showcase-selector"><button id="showcase-shiba" type="button" class="selected">我的刀盾</button><button id="showcase-cat" type="button">破音貓</button></div>
-      <div class="showcase-art" aria-hidden="true"><img class="showcase-shield" src="./assets/bosses/shiba-shield.svg" alt=""><img class="showcase-doge" src="./assets/bosses/shiba-head.png" alt=""><img class="showcase-knife" src="./assets/bosses/shiba-knife.svg" alt=""><img class="showcase-cat" src="./assets/bosses/screech-cat-head.png" alt="" hidden></div>
-      <div class="showcase-moves" id="showcase-moves"><div><strong>01 舉盾</strong><span>交錯保護身體，找空隙或瞄寶箱</span></div><div><strong>02 斜斬</strong><span>看預警換位置；揮完刀就反擊</span></div><div><strong>03 換手</strong><span>身體打掉一半後，防守方向改變</span></div></div>
+      <div class="showcase-selector"><button id="showcase-shiba" type="button" class="selected">刀盾</button><button id="showcase-cat" type="button">破音貓</button><button id="showcase-admin" type="button">群組長</button><button id="showcase-coffin" type="button">棺材舞</button><button id="showcase-loading99" type="button">99%載入</button></div>
+      <div class="showcase-art" aria-hidden="true"><img class="showcase-shield" src="./assets/bosses/shiba-shield.svg" alt=""><img class="showcase-doge" src="./assets/bosses/shiba-head.png" alt=""><img class="showcase-knife" src="./assets/bosses/shiba-knife.svg" alt=""><img class="showcase-cat" src="./assets/bosses/screech-cat-head.png" alt="" hidden><img class="showcase-admin" src="./assets/bosses/prototypes/seen-zone-group-admin.svg" alt="" hidden><img class="showcase-coffin" src="./assets/bosses/prototypes/last-shift-coffin-leader-showcase.svg" alt="" hidden><img class="showcase-loading99" src="./assets/bosses/loading-99-showcase.svg" alt="" hidden></div>
+      <div class="showcase-moves" id="showcase-moves"><div><strong>01 舉盾</strong><span>盾牌遮住部分身體，轉向瞄準露出的節點或寶箱</span></div><div><strong>02 斜斬</strong><span>預警亮起時集火刀臂，打斷斬擊；揮刀後可反擊</span></div><div><strong>03 換手</strong><span>身體打掉一半後，刀臂與可攻擊側改變</span></div></div>
       <p class="showcase-note">短篇試打有預設火力與兩個寶箱。練習不消耗進度，也不發放獎勵。</p>
       <div class="showcase-actions"><button id="showcase-play" class="primary-button" type="button"><span>立即試打</span><span aria-hidden="true">↗</span></button><button id="showcase-back" class="text-button" type="button">返回主畫面</button></div>
     </section>
@@ -100,7 +100,7 @@
         <button class="research-item" data-research="guard" type="button"><span class="research-symbol">♥</span><span><strong>韌性組織</strong><small>開局防線耐久增加</small><em id="research-guard-level">等級 0 / 4</em></span><b id="research-guard-cost">◆ 45</b></button>
         <button class="research-item" data-research="scavenge" type="button"><span class="research-symbol">▣</span><span><strong>補給解析</strong><small>寶箱更容易被打開</small><em id="research-scavenge-level">等級 0 / 4</em></span><b id="research-scavenge-cost">◆ 45</b></button>
         <button class="research-item" data-research="tactics" type="button"><span class="research-symbol">↻</span><span><strong>戰術推演</strong><small>每級增加一次寶箱重抽</small><em id="research-tactics-level">等級 0 / 4</em></span><b id="research-tactics-cost">◆ 45</b></button>
-        <button class="research-item" data-research="collector" type="button"><span class="research-symbol">◆</span><span><strong>拾取觸鬚</strong><small>移動拾取能量與護盾的範圍更大</small><em id="research-collector-level">等級 0 / 4</em></span><b id="research-collector-cost">◆ 45</b></button>
+        <button class="research-item" data-research="collector" type="button"><span class="research-symbol">◎</span><span><strong>弱點解析</strong><small>擊中發亮的弱點與蓄力部位時傷害增加</small><em id="research-collector-level">等級 0 / 4</em></span><b id="research-collector-cost">◆ 45</b></button>
       </div>
       <button id="research-back" class="primary-button" type="button">返回主畫面 <span aria-hidden="true">↗</span></button>
     </section>
