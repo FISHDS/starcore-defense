@@ -4,7 +4,7 @@ import { render } from './render.js?v=20261017-starcore-4';
 import { awardRun, buyResearch, buyItem, equipItem, clearCheckpoint, loadCheckpoint, readProfile, researchCost, saveCheckpoint, updateBest } from './storage.js?v=20261017-starcore-4';
 import { ORGANS, WEAPONS } from './meta.js';
 import { drawSkillIcon } from './art.js?v=20261017-starcore-4';
-import { createAudioEngine } from './audio.js?v=20261017-starcore-4';
+import { createAudioEngine, musicThemeForChapter } from './audio.js?v=20261017-starcore-5';
 import { getBattleHint } from './tutorial.js';
 
 const $ = id => document.getElementById(id);
@@ -51,7 +51,7 @@ function syncAudioScene() {
     : game.phase === 'upgrade' ? 'upgrade'
       : game.phase === 'victory' || game.phase === 'defeat' ? 'result'
         : game.encounter === 'boss' ? 'boss' : 'battle';
-  audio.setScene(scene, zone);
+  audio.setScene(scene, zone, musicThemeForChapter(game?.chapter));
 }
 
 let game = null;

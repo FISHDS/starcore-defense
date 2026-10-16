@@ -11,7 +11,11 @@ const ZONE_MOTIFS = [
 
 function hertz(midi) { return 440 * 2 ** ((midi - 69) / 12); }
 
-export function musicEventsForStep(scene, zone, step) {
+export function musicThemeForChapter(chapter) {
+  return Number(chapter) === 5 ? 'coffin-dance' : 'standard';
+}
+
+export function musicEventsForStep(scene, zone, step, theme = 'standard') {
   if (!['menu', 'battle', 'boss', 'upgrade'].includes(scene)) return [];
   const index = Math.max(0, Math.min(4, Math.floor(zone || 1) - 1));
   const phraseStep = ((step % 64) + 64) % 64;
@@ -19,6 +23,37 @@ export function musicEventsForStep(scene, zone, step) {
   const beat = phraseStep % 16;
   const motif = ZONE_MOTIFS[index];
   const events = [];
+  if (theme === 'coffin-dance') {
+    const danceRoot = 45 + [0, -2, 5, 3][Math.floor(phraseStep / 16)];
+    const danceMotif = [7, 10, 14, 12, 7, 10, 15, 14];
+    if (scene === 'upgrade') {
+      if (beat === 0 || beat === 8) events.push({ role: 'pad',
+        frequency: hertz(danceRoot + 12), duration: 0.75,
+        volume: 0.08, type: 'triangle' });
+      if (beat === 4 || beat === 12) events.push({ role: 'spark',
+        frequency: hertz(danceRoot + danceMotif[beat / 2]), duration: 0.2,
+        volume: 0.05, type: 'sine' });
+      return events;
+    }
+    if (beat % 4 === 0) events.push({ role: 'kick',
+      frequency: hertz(danceRoot), duration: 0.14,
+      volume: 0.25, type: 'sine', glide: hertz(danceRoot - 12) });
+    if (beat === 4 || beat === 12) events.push({ role: 'clap',
+      frequency: hertz(danceRoot + 24), duration: 0.07,
+      volume: 0.055, type: 'sawtooth', glide: hertz(danceRoot + 18) });
+    if (beat % 2 === 0) events.push({ role: 'lead',
+      frequency: hertz(danceRoot + 12 + danceMotif[(beat / 2) % 8]),
+      duration: scene === 'boss' ? 0.15 : 0.12,
+      volume: scene === 'boss' ? 0.13 : 0.1,
+      type: 'triangle' });
+    if (scene === 'boss' && beat % 2 === 1) events.push({ role: 'spark',
+      frequency: hertz(danceRoot + 24 + danceMotif[((beat - 1) / 2) % 8]),
+      duration: 0.055, volume: 0.06, type: 'square' });
+    if (beat === 0 || beat === 8) events.push({ role: 'bass',
+      frequency: hertz(danceRoot - 12), duration: 0.28,
+      volume: 0.16, type: 'triangle' });
+    return events;
+  }
   if (scene === 'menu' || scene === 'upgrade') {
     if (beat % 8 === 0) {
       events.push({ role: 'pad', frequency: hertz(root + 12), duration: 1.35,
@@ -85,6 +120,7 @@ export function createAudioEngine({
   let effectsBus = null;
   let scene = 'silent';
   let zone = 1;
+  let theme = 'standard';
   let step = 0;
   let nextStepTime = 0;
   let activeEffects = 0;
@@ -154,13 +190,15 @@ export function createAudioEngine({
         return true;
       } catch { return false; }
     },
-    setScene(nextScene, nextZone = zone) {
+    setScene(nextScene, nextZone = zone, nextTheme = theme) {
       const safeScene = ['menu', 'battle', 'boss', 'upgrade', 'paused', 'result', 'silent']
         .includes(nextScene) ? nextScene : 'silent';
       const safeZone = Math.max(1, Math.min(5, Math.floor(nextZone) || 1));
-      if (scene !== safeScene || zone !== safeZone) {
+      const safeTheme = nextTheme === 'coffin-dance' ? nextTheme : 'standard';
+      if (scene !== safeScene || zone !== safeZone || theme !== safeTheme) {
         scene = safeScene;
         zone = safeZone;
+        theme = safeTheme;
         step = 0;
         if (context) nextStepTime = context.currentTime + .03;
       }
@@ -170,12 +208,14 @@ export function createAudioEngine({
       if (!context || context.state !== 'running' || settings.musicMuted
         || scene === 'paused' || scene === 'result' || scene === 'silent') return;
       if (nextStepTime < context.currentTime - .25) nextStepTime = context.currentTime + .03;
-      const secondsPerStep = 60 / (scene === 'boss' ? 132 : scene === 'battle' ? 108 : 76) / 4;
+      const tempo = theme === 'coffin-dance' ? 126
+        : scene === 'boss' ? 132 : scene === 'battle' ? 108 : 76;
+      const secondsPerStep = 60 / tempo / 4;
       let scheduled = 0;
       while (nextStepTime < context.currentTime + .2 && scheduled < 4) {
-        for (const event of musicEventsForStep(scene, zone, step)) {
+        for (const event of musicEventsForStep(scene, zone, step, theme)) {
           tone(event.frequency, nextStepTime, event.duration, event.volume,
-            event.type, musicBus);
+            event.type, musicBus, event.glide || null);
         }
         step = (step + 1) % 64;
         nextStepTime += secondsPerStep;

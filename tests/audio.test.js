@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createAudioEngine, musicEventsForStep } from '../dist/src/audio.js';
+import { createAudioEngine, musicEventsForStep, musicThemeForChapter } from '../dist/src/audio.js';
 
 function fakeAudio() {
   const instances = [];
@@ -116,6 +116,25 @@ test('連射音效有節流，靜音後不建立新的聲音', () => {
   assert.equal(audio.playSfx('shot'), true);
   audio.setEffectsMuted(true);
   assert.equal(audio.playSfx('chest'), false);
+});
+
+test('第五關最後一班切換原創四拍送葬舞曲，並在頭目戰加強旋律', () => {
+  assert.equal(musicThemeForChapter(5), 'coffin-dance');
+  assert.equal(musicThemeForChapter(4), 'standard');
+  const first = musicEventsForStep('battle', 1, 0, 'coffin-dance');
+  const roles = new Set(Array.from({ length: 16 }, (_, step) =>
+    musicEventsForStep('battle', 1, step, 'coffin-dance')).flat().map(event => event.role));
+  assert.notDeepEqual(first, musicEventsForStep('battle', 1, 0));
+  assert.ok(roles.has('kick'));
+  assert.ok(roles.has('clap'));
+  assert.ok(roles.has('lead'));
+  const clap = musicEventsForStep('battle', 1, 4, 'coffin-dance')
+    .find(event => event.role === 'clap');
+  assert.ok(first.find(event => event.role === 'kick').frequency >= 100);
+  assert.ok(clap.frequency >= 300);
+  assert.ok(musicEventsForStep('boss', 1, 1, 'coffin-dance').length
+    > musicEventsForStep('battle', 1, 1, 'coffin-dance').length);
+  assert.deepEqual(first, musicEventsForStep('battle', 1, 64, 'coffin-dance'));
 });
 
 test('我的刀盾舉盾與斜斬有不同的提示音', () => {
