@@ -105,3 +105,10 @@ test('首頁及直接連結都能進入快速體驗介紹', () => {
   assert.match(main, /game\.preview \? '頭目'/);
   assert.match(main, /URLSearchParams\(window\.location\.search\)/);
 });
+
+test('中央守點頭目的試玩說明強調行軍逼近，不再顯示攻擊招式', () => {
+  const main = readFileSync(new URL('../dist/src/main.js', import.meta.url), 'utf8');
+  assert.match(main, /positionMode === 'center'[\s\S]*?頭目不會發動攻擊/);
+  assert.match(main, /頭目沿行軍路線逼近核心/);
+  assert.match(main, /activeChapter\.positionMode === 'center'/);
+});

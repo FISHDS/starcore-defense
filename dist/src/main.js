@@ -94,7 +94,9 @@ function refreshHud() {
   const activeChapter = game.chapter === 26 ? CHAPTERS[20 + (game.endlessTier - 1) % 5]
     : CHAPTERS[game.chapter - 1];
   hint.textContent = game.preview && game.runTime < 10
-    ? game.chapter === 2 ? '原地轉向瞄準身體與寶箱；破壞發聲部位打斷音波'
+    ? activeChapter.positionMode === 'center'
+      ? '頭目不會發動攻擊；原地轉向瞄準身體、寶箱與弱點，擊破身節拉回頭部'
+      : game.chapter === 2 ? '原地轉向瞄準身體與寶箱；破壞發聲部位打斷音波'
       : game.chapter === 3 ? '通知風暴前會亮起手機；轉向打破手機弱點，或逐顆擊落紅泡泡'
       : '原地旋轉瞄準身體與寶箱；找出頭目預警時的可攻擊部位'
     : getBattleHint(game, activeChapter.summary);
@@ -118,9 +120,12 @@ function refreshHud() {
         boss.segments[0].y - game.player.y) < 280
       : boss.segments[0].y > 540));
   $('boss-warning').hidden = game.phase !== 'playing' || !nearBoss;
-  if (game.phase === 'playing' && nearBoss && !bossWarningActive) audio.playSfx('warning');
+  if (game.phase === 'playing' && nearBoss && !bossWarningActive
+    && activeChapter.positionMode !== 'center') audio.playSfx('warning');
   bossWarningActive = game.phase === 'playing' && nearBoss;
-  $('boss-warning').textContent = activeChapter.bossMode === 'knife-shield'
+  $('boss-warning').textContent = activeChapter.positionMode === 'center'
+    ? '頭目沿行軍路線逼近核心 · 轉向集火弱點、寶箱與身節'
+    : activeChapter.bossMode === 'knife-shield'
     ? '我的刀盾舉刀後會沿斜線揮擊；轉向迎擊彈道可擊落攻擊'
     : activeChapter.bossMode === 'screech-cat'
     ? '破音貓蓄音後發射扇形聲浪；轉向迎擊可擊落聲波'
@@ -416,7 +421,9 @@ function selectShowcase(chapter) {
   if (!customArt.hidden && boss.parts?.head) {
     customArt.src = `./assets/bosses/${boss.parts.head}?v=20261017-boss-roster-2`;
   }
-  $('showcase-moves').innerHTML = chapter === 1
+  $('showcase-moves').innerHTML = CHAPTERS[chapter - 1].positionMode === 'center'
+    ? `<div><strong>01 行軍路線</strong><span>${boss.routeStyle}；長鏈繞行並逐節逼近核心</span></div><div><strong>02 威脅來源</strong><span>頭目不會發動攻擊；挑戰來自行軍路線與逐漸縮短的反應時間</span></div><div><strong>03 應對方式</strong><span>原地轉向，優先擊破身節、寶箱與亮起的弱點，讓長鏈退回</span></div>`
+    : chapter === 1
     ? '<div><strong>01 舉盾</strong><span>盾牌遮住部分身體，轉向瞄準露出的節點或寶箱</span></div><div><strong>02 斜斬</strong><span>舉刀後會沿預警斜線揮擊；轉向開火可攔截斬線</span></div><div><strong>03 換手</strong><span>身體打掉一半後，刀盾換手並改變護盾側</span></div>'
     : chapter === 2
       ? '<div><strong>01 吸氣</strong><span>蓄音時頭部亮起，預告聲波即將發射</span></div><div><strong>02 聲浪</strong><span>扇形聲波朝固定防線逼近；轉向開火可將它擊落</span></div><div><strong>03 變奏</strong><span>半血後蓄音變快，聲波飛得更快且傷害更高</span></div>'
