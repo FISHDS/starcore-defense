@@ -19,15 +19,18 @@ function mobileSprite(image, size = 112) {
 }
 if (typeof Image !== 'undefined') {
   const files = {
-    head: 'shiba-head.png', props: 'shiba-props.png', body: 'shiba-body.png',
+    head: 'shiba-head-battle.png', props: 'shiba-props-battle.png', body: 'shiba-body.png',
     headFallback: 'shiba-head.svg', knifeFallback: 'shiba-knife.svg',
     shieldFallback: 'shiba-shield.svg',
   };
   for (const [part, file] of Object.entries(files)) {
     const image = new Image();
     image.decoding = 'async';
-    image.src = new URL(`../assets/bosses/${file}?v=20261016-shiba-3`, import.meta.url).href;
+    image.src = new URL(`../assets/bosses/${file}?v=20261016-shiba-4`, import.meta.url).href;
     SHIBA_ASSETS[part] = image;
+    image.addEventListener('load', () => {
+      if (part === 'body') mobileSprite(image, 112);
+    }, { once: true });
   }
   for (const part of ['head', 'body']) {
     const image = new Image();

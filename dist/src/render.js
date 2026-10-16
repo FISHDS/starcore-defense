@@ -1,10 +1,10 @@
-import { WIDTH, HEIGHT } from './game.js?v=20261016-cat-1';
+import { WIDTH, HEIGHT } from './game.js?v=20261016-shiba-fix-1';
 import { routePosition } from './routes.js?v=20261015-pressure-art-audio';
 import { drawBiome, drawChestFocus, drawConnector, drawGuardian,
   drawProjectile, drawSegment } from './art.js?v=20261016-boss-evolution';
-import { BOSS_PROFILES, bossProfileFor } from './boss-profiles.js?v=20261016-cat-1';
+import { BOSS_PROFILES, bossProfileFor } from './boss-profiles.js?v=20261016-shiba-fix-1';
 import { resolveBossPose } from './boss-rig.js';
-import { drawBossConnector, drawBossSegment } from './boss-art.js?v=20261016-cat-1';
+import { drawBossConnector, drawBossSegment } from './boss-art.js?v=20261016-shiba-fix-1';
 
 const TAU = Math.PI * 2;
 const BACKGROUND_TONES = [

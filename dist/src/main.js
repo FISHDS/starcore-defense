@@ -1,10 +1,10 @@
-import { advance, CHAPTERS, chooseUpgrade, createBossShowcase, getRunProgress, HEIGHT, rerollUpgrades, startRun, UPGRADE_BY_ID, WAVES, WIDTH } from './game.js?v=20261016-cat-1';
+import { advance, CHAPTERS, chooseUpgrade, createBossShowcase, getRunProgress, HEIGHT, rerollUpgrades, startRun, UPGRADE_BY_ID, WAVES, WIDTH } from './game.js?v=20261016-shiba-fix-1';
 import { pointerToWorldX } from './input.js';
-import { render } from './render.js?v=20261016-cat-1';
+import { render } from './render.js?v=20261016-shiba-fix-1';
 import { awardRun, buyResearch, buyItem, equipItem, clearCheckpoint, loadCheckpoint, readProfile, researchCost, saveCheckpoint, updateBest } from './storage.js?v=20261016-boss-evolution';
 import { ORGANS, WEAPONS } from './meta.js';
 import { drawSkillIcon } from './art.js?v=20261016-boss-evolution';
-import { createAudioEngine } from './audio.js?v=20261016-cat-1';
+import { createAudioEngine } from './audio.js?v=20261016-shiba-fix-1';
 import { getBattleHint } from './tutorial.js';
 
 const $ = id => document.getElementById(id);
@@ -74,7 +74,8 @@ let resultDelayUntil = 0;
 const keys = { left: false, right: false };
 
 function resize() {
-  const ratio = Math.min(window.devicePixelRatio || 1, 2);
+  // 高 DPI 手機每幀重畫長鏈很吃力；1.5 倍仍清楚，同時減少畫布像素量。
+  const ratio = Math.min(window.devicePixelRatio || 1, 1.5);
   canvas.width = Math.round(shell.clientWidth * ratio);
   canvas.height = Math.round(shell.clientHeight * ratio);
 }

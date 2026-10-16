@@ -3,7 +3,7 @@ import { routePosition } from './routes.js?v=20261015-pressure-art-audio';
 import { assignTraits, chainSpeed, chestGuarded, steerBullet,
   updateBossShields, updateHazards, updateWeakpoints } from './mechanics.js';
 import { createBossRig, updateBossRig } from './boss-rig.js';
-import { bossProfileFor } from './boss-profiles.js?v=20261016-cat-1';
+import { bossProfileFor } from './boss-profiles.js?v=20261016-shiba-fix-1';
 import { knifeShieldDamageMultiplier, knifeShieldSlash } from './knife-shield.js';
 
 export { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID };
