@@ -3,7 +3,7 @@ import { routePosition } from './routes.js?v=20261015-pressure-art-audio';
 import { assignTraits, chainSpeed, chestGuarded, steerBullet,
   updateBossShields, updateHazards, updateWeakpoints } from './mechanics.js';
 import { createBossRig, updateBossRig } from './boss-rig.js';
-import { bossProfileFor } from './boss-profiles.js?v=20261016-shiba-boss-1';
+import { bossProfileFor } from './boss-profiles.js?v=20261016-cat-1';
 import { knifeShieldDamageMultiplier, knifeShieldSlash } from './knife-shield.js';
 
 export { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID };
@@ -78,8 +78,8 @@ export function getRunProgress(game) {
   return normal * 0.8 + boss * 0.2;
 }
 
-export function createBossShowcase(seed = Date.now()) {
-  const game = startRun(seed, {}, 1);
+export function createBossShowcase(seed = Date.now(), chapter = 1) {
+  const game = startRun(seed, {}, chapter === 2 ? 2 : 1);
   game.preview = true;
   game.encounter = 'boss';
   game.wave = WAVES.length;
@@ -552,20 +552,28 @@ function updateBossShots(game, dt) {
     * (phaseTwo ? (game.chapter <= 5 ? 0.94 : 0.82) : 1);
   const isKnifeShield = game.bosses.some(boss => !boss.dead
     && boss.rig?.profileId === 'meme-knife-shield');
-  const warningTime = isKnifeShield ? 0.85 : 0.55;
-  if (game.bossShotTimer >= bossInterval - warningTime) {
+  const isScreechCat = game.bosses.some(boss => !boss.dead
+    && boss.rig?.profileId === 'meme-screech-cat');
+  const interval = isScreechCat ? (phaseTwo ? 2.4 : 3.1) : bossInterval;
+  const warningTime = isKnifeShield ? 0.85 : isScreechCat ? 0.9 : 0.55;
+  if (game.bossShotTimer >= interval - warningTime) {
     for (const boss of game.bosses) {
       if (boss.dead || boss.segments[0].y < 120 || !boss.rig) continue;
       if (!boss.rig.telegraphLocked) {
         boss.rig.targetX = game.player.x;
         boss.rig.telegraphLocked = true;
         if (boss.rig.profileId === 'meme-knife-shield') game.audioCues.push('guard');
+        if (boss.rig.profileId === 'meme-screech-cat') {
+          const safePattern = boss.rig.phase === 2 ? [80, 310, 195] : [80, 310];
+          boss.rig.safeX = safePattern[(boss.rig.attackCount || 0) % safePattern.length];
+          game.audioCues.push('inhale');
+        }
       }
-      boss.rig.telegraphFor = Math.max(0, bossInterval - game.bossShotTimer);
+      boss.rig.telegraphFor = Math.max(0, interval - game.bossShotTimer);
     }
   }
-  while (game.bossShotTimer >= bossInterval) {
-    game.bossShotTimer -= bossInterval;
+  while (game.bossShotTimer >= interval) {
+    game.bossShotTimer -= interval;
     for (const boss of game.bosses) {
       if (boss.dead || boss.segments[0].y < 120) continue;
       const head = boss.segments[0];
@@ -578,6 +586,18 @@ function updateBossShots(game, dt) {
         game.enemyBullets.push(knifeShieldSlash(head,
           boss.rig.targetX ?? game.player.x, boss.rig.phase));
         game.audioCues.push('slash');
+        continue;
+      }
+      if (boss.rig?.profileId === 'meme-screech-cat') {
+        const safeX = boss.rig.safeX ?? 80;
+        for (const x of [48, 117, 195, 273, 342]) {
+          if (Math.abs(x - safeX) <= 66) continue;
+          game.enemyBullets.push({ kind: 'sonicWave', x, y: head.y + 22,
+            vx: 0, vy: phaseTwo ? 270 : 225, radius: 24,
+            damage: phaseTwo ? 10 : 7 });
+        }
+        boss.rig.attackCount = (boss.rig.attackCount || 0) + 1;
+        game.audioCues.push('screech');
         continue;
       }
       const vy = phaseTwo ? (game.chapter <= 5 ? 226 : 245) : 220;

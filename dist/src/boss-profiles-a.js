@@ -1,6 +1,15 @@
 // 第一、二區魔王外型：只提供外觀資料，不改變戰鬥判定。
 export const BOSS_PROFILES_A = [
   {
+    id: 'meme-screech-cat',
+    name: '破音貓',
+    silhouette: 'jelly',
+    colors: { shell: '#dc7538', shadow: '#693c45', glow: '#67ebff', eye: '#fff2d1' },
+    anatomy: { headScale: 1.24, bodyScale: 1.07, hornLength: 12, jawWidth: 25, finLength: 9 },
+    motion: { sway: 2.8, pulse: 0.07, attackReach: 12, hurtKick: 10 },
+    parts: { head: 'screech-cat-head.png', body: 'screech-cat-body.png' },
+  },
+  {
     id: 'meme-knife-shield',
     name: '我的刀盾',
     silhouette: 'ram',
@@ -8,7 +17,7 @@ export const BOSS_PROFILES_A = [
     anatomy: { headScale: 1.18, bodyScale: 1.08, hornLength: 21, jawWidth: 20, finLength: 9 },
     motion: { sway: 1.8, pulse: 0.035, attackReach: 15, hurtKick: 7 },
     parts: { head: 'shiba-head.png', knife: 'shiba-props.png',
-      shield: 'shiba-props.png', body: 'shiba-body.svg' },
+      shield: 'shiba-props.png', body: 'shiba-body.png' },
   },
   {
     id: 'zone-1-dreamweaver',

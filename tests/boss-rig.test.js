@@ -50,7 +50,7 @@ test('半數身體擊破後進第二階段；預警、攻擊、死亡有獨立�
 });
 
 test('實戰雙頭目各帶共用骨架，發射前會明顯預警', () => {
-  const game = startRun(7, {}, 2);
+  const game = startRun(7, {}, 3);
   game.encounter = 'boss';
   advance(game, 0.1);
   assert.equal(game.bosses.length, 2);
@@ -60,7 +60,7 @@ test('實戰雙頭目各帶共用骨架，發射前會明顯預警', () => {
 });
 
 test('頭目預警開始即鎖定落點，最後一刻移動也不會被重新追蹤', () => {
-  const game = startRun(29, {}, 2);
+  const game = startRun(29, {}, 3);
   game.encounter = 'boss';
   for (let step = 0; step < 40; step++) advance(game, 0.1, 195);
   const boss = game.bosses[1];

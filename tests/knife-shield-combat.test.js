@@ -13,7 +13,8 @@ function enterBoss(chapter = 1) {
 
 test('第一關只有一隻我的刀盾，擊破後可結算勝利', () => {
   assert.equal(CHAPTERS[0].bossCount, 1);
-  assert.equal(CHAPTERS[1].bossCount, 2);
+  assert.equal(CHAPTERS[1].bossCount, 1);
+  assert.equal(CHAPTERS[2].bossCount, 2);
   const game = enterBoss();
   assert.equal(game.bosses.length, 1);
   const boss = game.bosses[0];

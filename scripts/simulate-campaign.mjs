@@ -24,6 +24,11 @@ function pilot(game) {
     item.phase === 'warning' && item.time < 0.25 && Math.abs(item.x - x) < 60);
   if (hazard) x = hazard.x < 195
     ? Math.min(366, hazard.x + 100) : Math.max(24, hazard.x - 100);
+  const screechCat = game.bosses.find(boss => !boss.dead
+    && boss.rig?.profileId === 'meme-screech-cat');
+  if (screechCat?.rig.safeX != null && (screechCat.rig.telegraphFor > 0
+    || game.enemyBullets.some(shot => shot.kind === 'sonicWave')))
+    x = screechCat.rig.safeX;
   return x;
 }
 

@@ -94,7 +94,7 @@ test('開箱後未選技能或已刷新時也能原樣續玩', () => {
 
 test('第一隻頭目死後續玩，第二隻死亡仍會判定勝利', () => {
   const storage = memoryStorage();
-  const game = startRun(82, {}, 2);
+  const game = startRun(82, {}, 3);
   game.encounter = 'boss';
   game.wave = 6;
   advance(game, 0.05);

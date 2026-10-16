@@ -1,10 +1,10 @@
-import { WIDTH, HEIGHT } from './game.js?v=20261016-shiba-combat-1';
+import { WIDTH, HEIGHT } from './game.js?v=20261016-cat-1';
 import { routePosition } from './routes.js?v=20261015-pressure-art-audio';
 import { drawBiome, drawChestFocus, drawConnector, drawGuardian,
   drawProjectile, drawSegment } from './art.js?v=20261016-boss-evolution';
-import { BOSS_PROFILES, bossProfileFor } from './boss-profiles.js?v=20261016-shiba-boss-1';
+import { BOSS_PROFILES, bossProfileFor } from './boss-profiles.js?v=20261016-cat-1';
 import { resolveBossPose } from './boss-rig.js';
-import { drawBossConnector, drawBossSegment } from './boss-art.js?v=20261016-shiba-combat-1';
+import { drawBossConnector, drawBossSegment } from './boss-art.js?v=20261016-cat-1';
 
 const TAU = Math.PI * 2;
 const BACKGROUND_TONES = [
@@ -243,7 +243,8 @@ function segment(ctx, piece, chain, time) {
 
 function chain(ctx, item, time, zone = 0) {
   if (item.dead) return;
-  const profile = item.boss ? bossProfileFor(zone * 5 + 1, item.lane) : null;
+  const profile = item.boss ? (BOSS_PROFILES.find(candidate => candidate.id === item.rig?.profileId)
+    || bossProfileFor(zone * 5 + 1, item.lane)) : null;
   const pose = profile ? resolveBossPose(item, profile, time) : null;
   if (item.rig?.telegraphFor > 0 && item.segments[0].y > 70) {
     const source = item.segments[0];
@@ -252,25 +253,40 @@ function chain(ctx, item, time, zone = 0) {
     ctx.strokeStyle = profile.colors.glow;
     ctx.lineWidth = 3 + Math.sin(time * 22) * .8;
     const knifeShield = item.rig.profileId === 'meme-knife-shield';
-    const spreads = knifeShield ? [item.rig.phase === 2 ? -32 : 32] : [-40, 40];
-    for (const spread of spreads) {
-      const landingX = (item.rig.targetX ?? source.x) + spread;
-      if (knifeShield) {
-        ctx.globalAlpha = 0.18;
-        ctx.lineWidth = 42;
+    const screechCat = item.rig.profileId === 'meme-screech-cat';
+    if (screechCat) {
+      for (const x of [48, 117, 195, 273, 342]) {
+        if (Math.abs(x - item.rig.safeX) <= 66) continue;
+        ctx.fillStyle = 'rgba(24, 213, 238, 0.13)';
+        ctx.fillRect(x - 25, source.y + 25, 50, 730 - source.y);
+        ctx.strokeStyle = '#4be8f5';
+        ctx.strokeRect(x - 25, 714, 50, 23);
+      }
+      ctx.fillStyle = '#bafce6';
+      ctx.fillRect((item.rig.safeX ?? 80) - 24, 714, 48, 23);
+      ctx.setLineDash([]);
+      ctx.restore();
+    } else {
+      const spreads = knifeShield ? [item.rig.phase === 2 ? -32 : 32] : [-40, 40];
+      for (const spread of spreads) {
+        const landingX = (item.rig.targetX ?? source.x) + spread;
+        if (knifeShield) {
+          ctx.globalAlpha = 0.18;
+          ctx.lineWidth = 42;
+          ctx.beginPath(); ctx.moveTo(source.x, source.y + 22);
+          ctx.lineTo(landingX, 740); ctx.stroke();
+          ctx.globalAlpha = 1;
+          ctx.lineWidth = 4;
+        }
         ctx.beginPath(); ctx.moveTo(source.x, source.y + 22);
         ctx.lineTo(landingX, 740); ctx.stroke();
-        ctx.globalAlpha = 1;
-        ctx.lineWidth = 4;
+        ctx.fillStyle = `${profile.colors.glow}55`;
+        ctx.fillRect(landingX - (knifeShield ? 24 : 13), 724,
+          knifeShield ? 48 : 26, 20);
       }
-      ctx.beginPath(); ctx.moveTo(source.x, source.y + 22);
-      ctx.lineTo(landingX, 740); ctx.stroke();
-      ctx.fillStyle = `${profile.colors.glow}55`;
-      ctx.fillRect(landingX - (knifeShield ? 24 : 13), 724,
-        knifeShield ? 48 : 26, 20);
+      ctx.setLineDash([]);
+      ctx.restore();
     }
-    ctx.setLineDash([]);
-    ctx.restore();
   }
   for (let i = item.segments.length - 1; i > 0; i--) {
     const a = item.segments[i];
@@ -474,6 +490,14 @@ export function render(ctx, game, time) {
       ctx.strokeStyle = '#d66c55';
       ctx.lineWidth = 3;
       ctx.beginPath(); ctx.arc(0, 0, 21, -2.4, 0.35); ctx.stroke();
+      ctx.restore();
+    } else if (bullet.kind === 'sonicWave') {
+      ctx.save(); ctx.translate(bullet.x, bullet.y);
+      ctx.strokeStyle = '#e5fcff'; ctx.lineWidth = 6;
+      ctx.shadowColor = '#51dff4'; ctx.shadowBlur = 10;
+      ctx.beginPath(); ctx.arc(0, 0, 18, .17, Math.PI - .17); ctx.stroke();
+      ctx.strokeStyle = '#36cce4'; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.arc(0, 0, 26, .26, Math.PI - .26); ctx.stroke();
       ctx.restore();
     } else drawProjectile(ctx, { x: bullet.x, y: bullet.y, time, enemy: true });
   }

@@ -7,8 +7,8 @@
   <meta name="description" content="星核防線：原創手機直式長鏈防線遊戲。擊破身體讓頭部後退，打開藏在敵群中的寶箱進化武器。">
   <title>星核防線 · Starcore Defense</title>
   <link rel="icon" type="image/svg+xml" href="./assets/icon.svg">
-  <link rel="stylesheet" href="./style.css?v=20261016-showcase-1">
-  <script type="module" src="./src/main.js?v=20261016-showcase-1"></script>
+  <link rel="stylesheet" href="./style.css?v=20261016-cat-1">
+  <script type="module" src="./src/main.js?v=20261016-cat-1"></script>
 </head>
 <body>
   <main class="game-shell" aria-label="星核防線遊戲">
@@ -42,7 +42,7 @@
       <div class="menu-actions">
         <button id="stage-button" class="stage-shortcut" type="button"><span>目前關卡 <strong id="selected-stage">第 1 關 · 孢子初潮</strong></span><span>選擇關卡 ›</span></button>
         <button id="start-button" class="primary-button" type="button"><span>開始作戰</span><span aria-hidden="true">↗</span></button>
-        <button id="showcase-button" class="showcase-shortcut" type="button"><span>✦ 新內容快速體驗 <small>直接試打「我的刀盾」</small></span><span aria-hidden="true">›</span></button>
+        <button id="showcase-button" class="showcase-shortcut" type="button"><span>✦ 頭目快速體驗 <small>我的刀盾／破音貓，免解鎖直接試打</small></span><span aria-hidden="true">›</span></button>
         <div class="menu-secondary-row">
           <button id="continue-button" class="secondary-button" type="button" hidden>繼續進度</button>
           <button id="research-button" class="secondary-button" type="button">細胞研究 <span id="menu-dna">◆ 0</span></button>
@@ -53,9 +53,10 @@
     </section>
 
     <section id="showcase-screen" class="screen showcase-screen" aria-labelledby="showcase-title" hidden>
-      <div class="showcase-heading"><span class="eyebrow">BOSS SHOWCASE · 01</span><h2 id="showcase-title">我的刀盾</h2><p>免解鎖 · 直接進頭目戰</p></div>
-      <div class="showcase-art" aria-hidden="true"><img class="showcase-shield" src="./assets/bosses/shiba-shield.svg" alt=""><img class="showcase-doge" src="./assets/bosses/shiba-head.png" alt=""><img class="showcase-knife" src="./assets/bosses/shiba-knife.svg" alt=""></div>
-      <div class="showcase-moves"><div><strong>01 舉盾</strong><span>交錯保護身體，找空隙或瞄寶箱</span></div><div><strong>02 斜斬</strong><span>看預警換位置；揮完刀就反擊</span></div><div><strong>03 換手</strong><span>身體打掉一半後，防守方向改變</span></div></div>
+      <div class="showcase-heading"><span class="eyebrow" id="showcase-index">BOSS SHOWCASE · 01</span><h2 id="showcase-title">我的刀盾</h2><p>免解鎖 · 直接進頭目戰</p></div>
+      <div class="showcase-selector"><button id="showcase-shiba" type="button" class="selected">我的刀盾</button><button id="showcase-cat" type="button">破音貓</button></div>
+      <div class="showcase-art" aria-hidden="true"><img class="showcase-shield" src="./assets/bosses/shiba-shield.svg" alt=""><img class="showcase-doge" src="./assets/bosses/shiba-head.png" alt=""><img class="showcase-knife" src="./assets/bosses/shiba-knife.svg" alt=""><img class="showcase-cat" src="./assets/bosses/screech-cat-head.png" alt="" hidden></div>
+      <div class="showcase-moves" id="showcase-moves"><div><strong>01 舉盾</strong><span>交錯保護身體，找空隙或瞄寶箱</span></div><div><strong>02 斜斬</strong><span>看預警換位置；揮完刀就反擊</span></div><div><strong>03 換手</strong><span>身體打掉一半後，防守方向改變</span></div></div>
       <p class="showcase-note">短篇試打有預設火力與兩個寶箱。練習不消耗進度，也不發放獎勵。</p>
       <div class="showcase-actions"><button id="showcase-play" class="primary-button" type="button"><span>立即試打</span><span aria-hidden="true">↗</span></button><button id="showcase-back" class="text-button" type="button">返回主畫面</button></div>
     </section>

@@ -4,7 +4,7 @@ import { advance, chooseUpgrade, hitSegment, startRun } from '../dist/src/game.j
 import * as gameplay from '../dist/src/game.js';
 
 test('雙頭關卡進度根據實際清掉的身體而不是經過的時間', () => {
-  const game = startRun(40, {}, 2);
+  const game = startRun(40, {}, 3);
   game.runTime = 200;
   assert.equal(typeof gameplay.getRunProgress, 'function');
   assert.equal(gameplay.getRunProgress(game), 0);

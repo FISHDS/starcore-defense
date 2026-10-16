@@ -1,10 +1,10 @@
-import { advance, CHAPTERS, chooseUpgrade, createBossShowcase, getRunProgress, HEIGHT, rerollUpgrades, startRun, UPGRADE_BY_ID, WAVES, WIDTH } from './game.js?v=20261016-showcase-1';
+import { advance, CHAPTERS, chooseUpgrade, createBossShowcase, getRunProgress, HEIGHT, rerollUpgrades, startRun, UPGRADE_BY_ID, WAVES, WIDTH } from './game.js?v=20261016-cat-1';
 import { pointerToWorldX } from './input.js';
-import { render } from './render.js?v=20261016-shiba-combat-1';
+import { render } from './render.js?v=20261016-cat-1';
 import { awardRun, buyResearch, buyItem, equipItem, clearCheckpoint, loadCheckpoint, readProfile, researchCost, saveCheckpoint, updateBest } from './storage.js?v=20261016-boss-evolution';
 import { ORGANS, WEAPONS } from './meta.js';
 import { drawSkillIcon } from './art.js?v=20261016-boss-evolution';
-import { createAudioEngine } from './audio.js?v=20261016-shiba-combat-1';
+import { createAudioEngine } from './audio.js?v=20261016-cat-1';
 import { getBattleHint } from './tutorial.js';
 
 const $ = id => document.getElementById(id);
@@ -63,7 +63,9 @@ let handledResult = false;
 let showResearch = false;
 let showStages = false;
 let showLoadout = false;
-let showShowcase = new URLSearchParams(window.location.search).get('showcase') === 'knife-shield';
+let selectedShowcase = new URLSearchParams(window.location.search).get('showcase') === 'screech-cat' ? 2 : 1;
+let showShowcase = ['knife-shield', 'screech-cat'].includes(
+  new URLSearchParams(window.location.search).get('showcase'));
 let lastSavedAt = 0;
 let selectedChapter = readProfile(storage).unlockedStage;
 let selectedZone = Math.floor((selectedChapter - 1) / 5);
@@ -85,14 +87,16 @@ function refreshHud() {
   const activeChapter = game.chapter === 26 ? CHAPTERS[20 + (game.endlessTier - 1) % 5]
     : CHAPTERS[game.chapter - 1];
   hint.textContent = game.preview && game.runTime < 10
-    ? '左右滑動瞄準身體與寶箱；留意舉盾和斜斬預警'
+    ? game.chapter === 2 ? '瞄準身體與寶箱；吸氣時移到亮起的安全帶'
+      : '左右滑動瞄準身體與寶箱；留意舉盾和斜斬預警'
     : getBattleHint(game, activeChapter.summary);
   hint.hidden = paused || !hint.textContent;
   hint.classList.toggle('persistent-tutorial', game.chapter === 1 && game.normalDestroyed === 0);
   $('wave-number').textContent = game.preview ? '頭目試打' : game.chapter === 26
     ? `無盡 ${game.endlessTier}` : `第${game.chapter}關`;
   const encounterName = game.encounter === 'boss' && activeChapter.bossMode === 'knife-shield'
-    ? '我的刀盾' : wave.name;
+    ? '我的刀盾' : game.encounter === 'boss' && activeChapter.bossMode === 'screech-cat'
+      ? '破音貓' : wave.name;
   $('wave-name').textContent = `${game.chapter === 26 ? '無盡挑戰' : CHAPTERS[game.chapter - 1].name} · ${encounterName}`;
   $('core-value').textContent = String(Math.ceil(game.core));
   $('score-value').textContent = game.score.toLocaleString('zh-TW');
@@ -105,6 +109,8 @@ function refreshHud() {
   bossWarningActive = game.phase === 'playing' && nearBoss;
   $('boss-warning').textContent = activeChapter.bossMode === 'knife-shield'
     ? '我的刀盾舉盾時改打亮盾以外的身體；揮刀後是反擊機會'
+    : activeChapter.bossMode === 'screech-cat'
+    ? '破音貓吸氣後聲浪會落下；移到綠色安全帶'
     : activeChapter.bossMode === 'final'
     ? '雙母體輪流亮起護盾 · 改打沒發光的長鏈'
     : '雙母體逼近 · 瞄準身體讓頭部後退';
@@ -338,7 +344,7 @@ function beginNew() {
 
 function beginShowcase() {
   audio.unlockFromGesture();
-  game = createBossShowcase(Math.floor(Math.random() * 0xffffffff));
+  game = createBossShowcase(Math.floor(Math.random() * 0xffffffff), selectedShowcase);
   showShowcase = false;
   paused = false;
   handledResult = false;
@@ -369,6 +375,22 @@ $('showcase-button').addEventListener('click', () => {
   syncScreen();
   audio.playSfx('click');
 });
+function selectShowcase(chapter) {
+  selectedShowcase = chapter;
+  $('showcase-shiba').classList.toggle('selected', chapter === 1);
+  $('showcase-cat').classList.toggle('selected', chapter === 2);
+  $('showcase-index').textContent = `BOSS SHOWCASE · 0${chapter}`;
+  $('showcase-title').textContent = chapter === 1 ? '我的刀盾' : '破音貓';
+  for (const item of showcaseScreen.querySelectorAll('.showcase-shield,.showcase-doge,.showcase-knife'))
+    item.hidden = chapter !== 1;
+  showcaseScreen.querySelector('.showcase-cat').hidden = chapter !== 2;
+  $('showcase-moves').innerHTML = chapter === 1
+    ? '<div><strong>01 舉盾</strong><span>交錯保護身體，找空隙或瞄寶箱</span></div><div><strong>02 斜斬</strong><span>看預警換位置；揮完刀就反擊</span></div><div><strong>03 換手</strong><span>身體打掉一半後，防守方向改變</span></div>'
+    : '<div><strong>01 吸氣</strong><span>聲浪來前會標出唯一安全帶</span></div><div><strong>02 聲浪</strong><span>移到安全帶避開整排聲浪</span></div><div><strong>03 變奏</strong><span>身體少一半後，攻擊加快且安全帶會換位置</span></div>';
+}
+$('showcase-shiba').addEventListener('click', () => selectShowcase(1));
+$('showcase-cat').addEventListener('click', () => selectShowcase(2));
+selectShowcase(selectedShowcase);
 $('showcase-play').addEventListener('click', beginShowcase);
 $('showcase-back').addEventListener('click', () => { showShowcase = false; syncScreen(); });
 $('retry-button').addEventListener('click', () => game?.preview ? beginShowcase() : beginNew());

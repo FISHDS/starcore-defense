@@ -5,17 +5,35 @@ import { knifeShieldGuarded } from './knife-shield.js';
 const TAU = Math.PI * 2;
 const INK = '#172235';
 const SHIBA_ASSETS = {};
+const CAT_ASSETS = {};
+const smallSprites = new WeakMap();
+function mobileSprite(image, size = 112) {
+  if (!image?.complete || !image.naturalWidth) return null;
+  if (smallSprites.has(image)) return smallSprites.get(image);
+  if (typeof document === 'undefined') return image;
+  const canvas = document.createElement('canvas');
+  canvas.width = size; canvas.height = size;
+  canvas.getContext('2d').drawImage(image, 0, 0, size, size);
+  smallSprites.set(image, canvas);
+  return canvas;
+}
 if (typeof Image !== 'undefined') {
   const files = {
-    head: 'shiba-head.png', props: 'shiba-props.png', body: 'shiba-body.svg',
+    head: 'shiba-head.png', props: 'shiba-props.png', body: 'shiba-body.png',
     headFallback: 'shiba-head.svg', knifeFallback: 'shiba-knife.svg',
     shieldFallback: 'shiba-shield.svg',
   };
   for (const [part, file] of Object.entries(files)) {
     const image = new Image();
     image.decoding = 'async';
-    image.src = new URL(`../assets/bosses/${file}?v=20261016-shiba-2`, import.meta.url).href;
+    image.src = new URL(`../assets/bosses/${file}?v=20261016-shiba-3`, import.meta.url).href;
     SHIBA_ASSETS[part] = image;
+  }
+  for (const part of ['head', 'body']) {
+    const image = new Image();
+    image.decoding = 'async';
+    image.src = new URL(`../assets/bosses/screech-cat-${part}.png?v=20261016-cat-1`, import.meta.url).href;
+    CAT_ASSETS[part] = image;
   }
 }
 
@@ -26,7 +44,8 @@ function drawShibaPart(ctx, part, x, y, size, angle = 0) {
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(angle);
-  ctx.drawImage(image, -size / 2, -size / 2, size, size);
+  ctx.drawImage(part === 'body' ? mobileSprite(image) : image,
+    -size / 2, -size / 2, size, size);
   ctx.restore();
   return true;
 }
@@ -202,6 +221,38 @@ function drawKnifeShield(ctx, { piece, chain, time, profile, pose, head, r }) {
   return true;
 }
 
+function drawScreechCat(ctx, { piece, chain, time, profile, pose, head, r }) {
+  const image = CAT_ASSETS[head ? 'head' : 'body'];
+  if (!image?.complete || !image.naturalWidth) return false;
+  ctx.save();
+  if (head) {
+    const open = pose.state === 'telegraph' ? 1.13 : pose.state === 'strike' ? 1.21 : 1;
+    const wobble = pose.state === 'hurt' ? Math.sin(time * 35) * .11 : Math.sin(time * 5) * .025;
+    ctx.rotate(wobble);
+    if (pose.state === 'hurt') ctx.filter = 'brightness(1.6)';
+    ctx.drawImage(mobileSprite(image, 192), -r * 1.6 * open, -r * 1.6 * open,
+      r * 3.2 * open, r * 3.2 * open);
+    if (chain.shielded) {
+      ctx.beginPath(); ctx.arc(0, 0, r + 10, 0, TAU);
+      ctx.strokeStyle = '#8af7ff'; ctx.lineWidth = 4; ctx.stroke();
+    }
+  } else {
+    const ahead = pose.spine[piece.index - 1];
+    const here = pose.spine[piece.index];
+    const pathAngle = ahead && here
+      ? Math.atan2(ahead.y - here.y, ahead.x - here.x) - Math.PI / 2 : 0;
+    ctx.rotate(pathAngle + Math.sin(time * 4 + piece.index * .65) * .06);
+    ctx.drawImage(mobileSprite(image, 80), -r, -r, r * 2, r * 2);
+    if (piece.armorHp > 0 || piece.weakpoint) {
+      ctx.beginPath(); ctx.arc(0, 0, r * .45, 0, TAU);
+      ctx.fillStyle = piece.weakpoint && piece.weakOpen ? '#fff6a8' : '#c5e9f2';
+      ctx.fill();
+    }
+  }
+  ctx.restore();
+  return true;
+}
+
 export function drawBossSegment(ctx, { piece, chain, time, profile, pose }) {
   if (!piece || piece.hp <= 0 || piece.y < -60 || piece.y > 900
     || piece.x < -60 || piece.x > 450) return;
@@ -212,12 +263,18 @@ export function drawBossSegment(ctx, { piece, chain, time, profile, pose }) {
     * profile.anatomy.bodyScale);
   ctx.save();
   ctx.translate(location.x, location.y);
-  if (head) ctx.rotate(pose.angle);
+  if (head) ctx.rotate(profile.id === 'meme-screech-cat'
+    ? Math.max(-0.38, Math.min(0.38, pose.angle)) : pose.angle);
   if (head && (pose.state === 'telegraph' || pose.phase === 2)) {
     ctx.shadowColor = colors.glow; ctx.shadowBlur = pose.state === 'telegraph' ? 27 : 13;
   }
   if (profile.id === 'meme-knife-shield'
     && drawKnifeShield(ctx, { piece, chain, time, profile, pose, head, r })) {
+    ctx.restore();
+    return;
+  }
+  if (profile.id === 'meme-screech-cat'
+    && drawScreechCat(ctx, { piece, chain, time, profile, pose, head, r })) {
     ctx.restore();
     return;
   }

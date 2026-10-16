@@ -16,7 +16,7 @@ const MECHANIC_NAMES = {
 
 const LEVELS = [
   ['孢子初潮', 'tide', [], 'knife-shield'],
-  ['窄膜通道', 'narrow', ['narrow'], 'cover'],
+  ['窄膜通道', 'narrow', ['narrow'], 'screech-cat'],
   ['回折潮汐', 'weave', ['switchback'], 'cover'],
   ['甲殼試煉', 'mirror', ['armor'], 'armor'],
   ['殼母交鋒', 'spiral', ['armor', 'switchback'], 'armor'],
@@ -50,8 +50,9 @@ export const CHAPTERS = LEVELS.map(([name, path, mechanics, bossMode], index) =>
   return {
     id, zone, name, region: zoneInfo.name,
     difficulty: id <= 5 ? '入門' : id <= 10 ? '進階' : id <= 20 ? '挑戰' : '深域',
-    mechanics, bossMode, path, bossCount: id === 1 ? 1 : 2,
+    mechanics, bossMode, path, bossCount: id <= 2 ? 1 : 2,
     summary: id === 1 ? '單頭長鏈 · 舉盾後斜斬 · 換手反擊'
+      : id === 2 ? '破音貓 · 聲浪安全帶 · 半血變奏'
       : mechanics.length ? mechanics.map(rule => MECHANIC_NAMES[rule]).join(' · ')
       : '連綿長鏈 · 基礎瞄準',
     paths: [path, path, path, path, path, 'cross'],
