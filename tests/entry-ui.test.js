@@ -8,6 +8,8 @@ test('第一關提示固定站位並轉向瞄準', () => {
   assert.match(getBattleHint(game), /固定在底線/);
   assert.match(getBattleHint(game), /轉向瞄準/);
   assert.match(getBattleHint(game), /身體/);
+  assert.match(getBattleHint(game), /弱點亮起/);
+  assert.doesNotMatch(getBattleHint(game), /打斷攻擊|敵方攻擊/);
   assert.equal(getBattleHint({ ...game, normalDestroyed: 1 }), '');
 });
 

@@ -42,7 +42,7 @@ test('瞄準選擇比固定方向掛機更能清理長鏈', () => {
     `主動轉向清掉 ${aimedAverage.toFixed(0)} 節，固定方向 ${idleAverage.toFixed(0)} 節`);
 });
 
-test('測試瞄準策略在群組長手機亮起時會優先打斷攻擊', () => {
+test('測試瞄準策略會優先瞄準群組長亮起的手機弱點', () => {
   const game = startRun(17, {}, 3);
   game.encounter = 'boss';
   advance(game, 0.05);

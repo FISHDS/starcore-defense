@@ -1,7 +1,7 @@
 export function getBattleHint(game, summary = '') {
   if (!game || game.phase !== 'playing') return '';
   if (game.chapter === 1 && game.encounter === 'normal' && game.normalDestroyed === 0) {
-    return '主角固定在底線；轉向瞄準身體與寶箱，擊破蓄力部位可打斷攻擊';
+    return '主角固定在底線；轉向瞄準身體與寶箱，弱點亮起時集中攻擊';
   }
   if (game.wave > 1 || game.waveTime > 5) return '';
   return game.chapter === 26

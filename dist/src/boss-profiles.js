@@ -1,4 +1,4 @@
-import { BOSS_PROFILES_A } from './boss-profiles-a.js?v=20261017-starcore-11';
+import { BOSS_PROFILES_A } from './boss-profiles-a.js?v=20261017-starcore-12';
 import { BOSS_PROFILES_B } from './boss-profiles-b.js';
 import { BOSS_PROFILES_C } from './boss-profiles-c.js';
 
