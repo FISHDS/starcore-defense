@@ -57,7 +57,6 @@ body{display:grid;place-items:center;background:radial-gradient(circle at 50% 45
 .result-reward strong{font-size:21px;margin-left:9px}
 @media(max-height:710px){.research-screen{padding-top:calc(env(safe-area-inset-top) + 15px);padding-bottom:calc(env(safe-area-inset-bottom) + 15px)}.research-head h2{font-size:27px}.research-list{margin-top:11px;gap:7px}.research-item{min-height:76px}.research-head p{font-size:11px}.dna-balance{margin-top:12px}.research-screen .primary-button{min-height:48px}}
 .research-item:disabled{opacity:.72}
-.boss-warning{position:absolute;z-index:2;top:calc(env(safe-area-inset-top) + 142px);bottom:auto;left:50%;transform:translateX(-50%);width:min(340px,calc(100% - 44px));padding:8px 12px;border:1px solid #ffb09b;border-radius:10px;background:rgba(87,29,49,.84);color:#ffe0c8;text-align:center;font-size:11px;font-weight:900;line-height:1.35;box-shadow:0 0 20px rgba(255,124,113,.23);pointer-events:none}
 .upgrade-card{position:relative}
 .upgrade-rarity{display:block;align-self:center;padding:3px 9px;border-radius:20px;background:#86ded2;color:#143e50;font-size:10px;font-weight:900;letter-spacing:.12em}
 .upgrade-card.rarity-rare{border-color:#76d2fa;background:linear-gradient(180deg,#174f77,#223d6a)}
@@ -107,8 +106,6 @@ body{display:grid;place-items:center;background:radial-gradient(circle at 50% 45
 .stage-tile small{font-size:10px;color:#b5d6d2}
 .stage-tile.selected{border-color:#ffd175;box-shadow:0 0 19px rgba(255,202,91,.2)}
 .stage-tile:disabled{opacity:.46;background:#263c4b}
-.gesture-hint{top:54%;bottom:auto;max-width:calc(100% - 28px);padding:8px 11px;border:1px solid rgba(157,239,222,.65);border-radius:10px;background:rgba(11,37,51,.86);color:#eafff1;font-size:12px;line-height:1.4;letter-spacing:0;white-space:normal;text-align:center;box-shadow:0 5px 17px rgba(0,0,0,.3)}
-.gesture-hint.persistent-tutorial{top:auto;bottom:calc(env(safe-area-inset-bottom) + 155px);max-width:calc(100% - 56px);font-size:11px;opacity:.93}
 .upgrade-card.rarity-evolution{border-color:#fff0a4;background:linear-gradient(180deg,#9a572b,#704169 55%,#4d346d);box-shadow:0 0 0 3px #583454,0 0 27px #ffd377aa;animation:evolution-glow 1.3s ease-in-out infinite alternate}
 .rarity-evolution .upgrade-rarity{background:#fff0a4;color:#593322}
 @keyframes evolution-glow{from{box-shadow:0 0 0 3px #583454,0 0 14px #ffca67aa}to{box-shadow:0 0 0 3px #865c54,0 0 33px #ffe49dcc}}

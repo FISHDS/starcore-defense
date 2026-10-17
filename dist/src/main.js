@@ -75,7 +75,6 @@ let showShowcase = validShowcaseQuery;
 let lastSavedAt = 0;
 let selectedChapter = readProfile(storage).unlockedStage;
 let selectedZone = Math.floor((selectedChapter - 1) / 5);
-let bossWarningActive = false;
 let resultDelayUntil = 0;
 const keys = { left: false, right: false };
 
@@ -97,7 +96,6 @@ function refreshHud() {
     ? '頭目只會繞場行軍，不發動攻擊或護罩；原地轉向瞄準弱點、寶箱與身節'
     : getBattleHint(game, activeChapter.summary);
   hint.hidden = paused || game.preview || !hint.textContent;
-  hint.classList.toggle('persistent-tutorial', game.chapter === 1 && game.normalDestroyed === 0);
   $('wave-number').textContent = game.preview ? '頭目' : game.chapter === 26
     ? `無盡 ${game.endlessTier}` : `第${game.chapter}關`;
   const currentBossProfile = bossProfileFor(game.chapter, 0);
@@ -110,14 +108,6 @@ function refreshHud() {
   const progress = getRunProgress(game);
   $('wave-progress').style.width = `${Math.max(0, progress) * 100}%`;
   $('core-progress').style.width = `${game.core / game.maxCore * 100}%`;
-  const nearBoss = game.bosses.some(boss => !boss.dead
-    && (game.player.y < 600
-      ? Math.hypot(boss.segments[0].x - game.player.x,
-        boss.segments[0].y - game.player.y) < 280
-      : boss.segments[0].y > 540));
-  $('boss-warning').hidden = game.phase !== 'playing' || !nearBoss;
-  bossWarningActive = game.phase === 'playing' && nearBoss;
-  $('boss-warning').textContent = '頭目正在繞場行軍 · 追蹤弱點、寶箱與身節；沒有彈幕或護罩';
 }
 
 function refreshResearch() {
@@ -310,7 +300,6 @@ function setResult() {
 function syncScreen() {
   menu.hidden = !!game || showResearch || showStages || showLoadout || showShowcase;
   showcaseScreen.hidden = !!game || !showShowcase;
-  $('boss-warning').hidden = !game || game.phase !== 'playing';
   researchScreen.hidden = !showResearch;
   stageScreen.hidden = !showStages;
   loadoutScreen.hidden = !showLoadout;

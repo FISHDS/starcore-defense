@@ -22,3 +22,15 @@ test('首頁失敗提示適用中央守點與底線迎擊', () => {
   assert.match(html, /頭部碰到守點即敗/);
   assert.doesNotMatch(html, /頭部碰底線即敗/);
 });
+
+test('戰鬥畫面不顯示遮住戰場的常駐頭目提示', () => {
+  const html = readFileSync(new URL('../dist/index.html', import.meta.url), 'utf8');
+  const main = readFileSync(new URL('../dist/src/main.js', import.meta.url), 'utf8');
+  const css = readFileSync(new URL('../dist/style.css', import.meta.url), 'utf8');
+  assert.doesNotMatch(html, /id="boss-warning"/);
+  assert.doesNotMatch(main, /boss-warning|頭目正在繞場行軍/);
+  assert.doesNotMatch(css, /\.boss-warning\{/);
+  assert.match(html, /id="hint"/);
+  assert.doesNotMatch(css, /\.gesture-hint\{top:54%;bottom:auto/);
+  assert.doesNotMatch(css, /\.gesture-hint\.persistent-tutorial\{/);
+});
