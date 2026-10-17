@@ -109,7 +109,7 @@ test('頭目身上的寶箱不會被護箱節減傷', () => {
   game.encounter = 'boss';
   advance(game, 0.05);
   const boss = game.bosses[0];
-  const chest = boss.segments.find(segment => segment.chest && segment.depth === 5);
+  const chest = boss.segments.find(segment => segment.chest && segment.depth === 4);
   assert.ok(chest);
   const before = chest.hp;
   hitSegment(game, boss, chest, 100);

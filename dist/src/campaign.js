@@ -62,15 +62,10 @@ const POSITION_MODES = [
 const BOSS_PATHS = ['tide', 'narrow', 'weave', 'mirror', 'spiral',
   'fork', 'fork-right', 'sine', 'cross'];
 
-// 依每發命中頭目、一般長鏈清除後火力、代表性局外研究與常見技能配法校準。
-// 目標頭目時間由第 1 關約 45 秒，逐關增加到第 25 關約 74 秒。
-const BOSS_HP_SCALES = [
-  1.352, 1.394, 1.475, 1.255, 1.338,
-  2.292, 1.560, 2.724, 1.826, 1.986,
-  3.444, 2.366, 3.988, 2.645, 2.842,
-  4.882, 3.242, 5.548, 3.672, 4.319,
-  7.361, 4.850, 8.247, 8.736, 5.701,
-];
+// 純頭目開場後重新校準，避免把已移除的普通長鏈火力成長算進平衡。
+// 每關身節耐久遞增，通關時間再以不同路線、寶箱與技能選擇的全關模擬驗證。
+const BOSS_HP_SCALES = Array.from({ length: LEVELS.length }, (_, index) =>
+  Math.round((1 + index * 0.06) * 1000) / 1000);
 
 export const CHAPTERS = LEVELS.map(([name, path, mechanics, bossMode], index) => {
   const id = index + 1;

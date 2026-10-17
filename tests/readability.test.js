@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { advance, chooseUpgrade, createBossShowcase, startRun } from '../dist/src/game.js';
 import { selectDamagePopups, selectHealthLabels, visibleChests } from '../dist/src/render.js';
 
-test('長鏈密集時只顯示少量彼此分開的血量，寶箱周圍保持淨空', () => {
+test('頭目身體較密時只顯示少量分開的血量，寶箱周圍保持淨空', () => {
   const game = startRun(1);
   for (let frame = 0; frame < 260 && game.phase === 'playing'; frame++) {
     if (game.phase === 'upgrade') chooseUpgrade(game, game.choices[0]);
@@ -17,8 +17,8 @@ test('長鏈密集時只顯示少量彼此分開的血量，寶箱周圍保持�
   assert.ok(labels.every(piece => piece.x >= 20 && piece.x <= 370),
     '畫面外的身體佔用了血量標示名額');
   assert.ok(visibleChests(game.chains).every(piece => piece.x >= 20 && piece.x <= 370));
-  assert.ok(game.chains[0].segments.at(-1).maxHp > game.chains[0].segments[1].maxHp * 30,
-    '越後面的身體數值應明顯成長');
+  assert.ok(game.chains[0].segments.at(-1).maxHp > game.chains[0].segments[1].maxHp,
+    '頭目尾段耐久應高於前段');
   assert.ok(labels.every(piece => !piece.chest && piece.index > 0));
   assert.ok(labels.every(piece => Math.hypot(piece.x - chest.x, piece.y - chest.y) >= 48));
   for (let i = 0; i < labels.length; i++) {

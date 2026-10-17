@@ -18,7 +18,7 @@ function simulate(chapter, seed, idle = false, build = 'base') {
     advance(game, 0.05, { aimAngle: idle ? -Math.PI / 2 : fixedAimAngle(game) });
   }
   return { phase: game.phase, sec: Math.round(game.runTime),
-    killed: game.normalDestroyed,
+    killed: game.bossDestroyed,
     boss: game.bossDestroyed };
 }
 
@@ -31,6 +31,7 @@ for (let chapter = 1; chapter <= 25; chapter++) {
     baseWins: active.filter(result => result.phase === 'victory').length,
     newWins: newBuild.filter(result => result.phase === 'victory').length,
     baseBest: Math.max(...active.map(result => result.killed)),
+    baseSec: Math.round(active.reduce((sum, result) => sum + result.sec, 0) / active.length),
     idle: idle?.phase || '-', idleKilled: idle?.killed ?? '-' });
 }
 console.table(rows);

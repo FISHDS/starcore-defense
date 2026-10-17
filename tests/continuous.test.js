@@ -5,11 +5,11 @@ import { routeLength, routePosition } from '../dist/src/routes.js';
 
 test('同一條長鏈後段達數萬血，玩家火力隨進度成長', () => {
   const game = startRun(12, {}, 25);
-  game.normalDestroyed = 150;
+  game.bossDestroyed = 30;
   advance(game, 0.05);
   const chain = game.chains[0];
-  assert.ok(chain.segments.at(-1).maxHp > 20000);
-  assert.ok(getShotDamage(game) > 500);
+  assert.ok(chain.segments.at(-1).maxHp > chain.segments[1].maxHp);
+  assert.ok(getShotDamage(game) > 100);
 });
 
 test('被擊破的身體會補齊間距，尾巴仍連成一條', () => {

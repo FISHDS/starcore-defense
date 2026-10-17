@@ -10,21 +10,18 @@ function launched(stage) {
   return game;
 }
 
-test('甲殼節必須先破殼，寶箱本身仍可直接命中', () => {
+test('頭目身節不靠額外護甲吸收傷害', () => {
   const game = launched(4);
   const chain = game.chains[0];
-  const armored = chain.segments.find(piece => piece.armorHp > 0);
-  assert.ok(armored);
-  const hp = armored.hp;
-  hitSegment(game, chain, armored, armored.armorHp);
-  assert.equal(armored.armorHp, 0);
-  assert.equal(armored.hp, hp);
-  hitSegment(game, chain, armored, 20);
-  assert.ok(armored.hp < hp);
-  assert.ok(chain.segments.filter(piece => piece.chest).every(piece => !piece.armorHp));
+  const body = chain.segments.find(piece => piece.index > 0 && !piece.chest);
+  assert.ok(body);
+  assert.equal(body.armorHp, 0);
+  const hp = body.hp;
+  hitSegment(game, chain, body, 20);
+  assert.ok(body.hp < hp);
 });
 
-test('護箱節還在時寶箱較耐打，先清護衛能解除保護', () => {
+test('頭目寶箱不會被附近身節護衛減傷', () => {
   const game = launched(9);
   const chain = game.chains[0];
   const chest = chain.segments.find(piece => piece.chest);
@@ -33,10 +30,7 @@ test('護箱節還在時寶箱較耐打，先清護衛能解除保護', () => {
   assert.ok(guard);
   const hp = chest.hp;
   hitSegment(game, chain, chest, 20);
-  const blocked = hp - chest.hp;
-  hitSegment(game, chain, guard, guard.hp + guard.armorHp + 1);
-  hitSegment(game, chain, chest, 20);
-  assert.ok(hp - blocked - chest.hp > blocked);
+  assert.equal(hp - chest.hp, 20);
 });
 
 test('磁節會偏折鄰近藥丸，破壞後停止作用', () => {
@@ -105,7 +99,8 @@ test('輪轉頭目兩條長鏈的弱點窗口錯開', () => {
   const a = left.segments.find(piece => piece.weakpoint);
   const b = right.segments.find(piece => piece.depth === a.depth);
   assert.ok(a && b);
-  assert.notEqual(a.weakOpen, b.weakOpen);
+  assert.equal(a.weakOpen && b.weakOpen, false,
+    '兩條頭目長鏈不應同時打開弱點窗口');
 });
 
 test('終局雙頭目不再輪流套護罩，兩條長鏈都能直接受傷', () => {

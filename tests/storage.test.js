@@ -91,6 +91,26 @@ test('續玩保留選擇的關卡與當時長鏈的剩餘身體', () => {
   assert.equal(restored.normalDestroyed, game.normalDestroyed);
 });
 
+test('舊版普通長鏈存檔續玩時會轉成頭目開場，不再帶入小怪', () => {
+  const storage = memoryStorage();
+  const game = startRun(57, {}, 2);
+  advance(game, 0.05);
+  game.encounter = 'normal';
+  game.normalTotal = 89;
+  game.chains = game.chains.map(chain => ({ ...chain, boss: false,
+    rig: null, healthGroups: [] }));
+  game.bosses = [];
+  game.boss = null;
+  saveCheckpoint(storage, game);
+  const restored = loadCheckpoint(storage);
+  assert.equal(restored.encounter, 'boss');
+  assert.equal(restored.normalTotal, 0);
+  assert.ok(restored.chains.every(chain => chain.boss),
+    '舊普通長鏈不應被帶回新規則的關卡');
+  advance(restored, 0.05);
+  assert.equal(restored.bosses.length, 1);
+});
+
 test('續玩頭目戰會重建共享血量與身體節點的連結', () => {
   const storage = memoryStorage();
   const game = startRun(49, {}, 5);

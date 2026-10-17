@@ -16,19 +16,19 @@ function playOpening(seed, profile, aim, seconds = 45) {
     advance(game, 0.05, { aimAngle: angle });
   }
   return {
-    destroyed: game.normalDestroyed,
-    headY: game.chains.find(chain => !chain.boss && !chain.dead)?.segments[0].y ?? 744,
+    destroyed: game.bossDestroyed,
+    headY: game.bosses[0]?.segments[0].y ?? 744,
   };
 }
 
-test('第一關敵群不會在開場持續被壓在畫面最上方', () => {
+test('第一關頭目會從入口持續往場內行軍，不會被擊破永久壓回入口', () => {
   const samples = Array.from({ length: 10 }, (_, index) =>
     playOpening(index + 1, {}, false, 20));
   const averageHeadY = samples.reduce((sum, item) => sum + item.headY, 0) / samples.length;
-  assert.ok(averageHeadY >= 360, `20 秒時鏈頭平均只到 y=${averageHeadY.toFixed(0)}`);
+  assert.ok(averageHeadY < 744, `20 秒時頭目已過底線 y=${averageHeadY.toFixed(0)}`);
 });
 
-test('瞄準選擇比固定方向掛機更能清理長鏈', () => {
+test('主動追蹤比固定方向連射更能擊破頭目身體', () => {
   const profile = { fire: 2, precision: 2, scavenge: 2,
     equippedWeapon: 'scatter', equippedOrgans: ['focus-lens'] };
   const idle = Array.from({ length: 10 }, (_, index) =>
@@ -58,15 +58,16 @@ test('測試瞄準策略會優先瞄準群組長亮起的手機弱點', () => {
   assert.ok(Math.abs(fixedAimAngle(game) - expected) < 0.01);
 });
 
-test('普通長鏈身體被擊破會讓頭部按一節距離回彈', () => {
+test('擊破頭目身節時只短暫回彈，不永久倒退行軍距離', () => {
   const game = startRun(12);
   advance(game, 0.05);
   const chain = game.chains[0];
-  const flank = chain.segments.find(piece => piece.index === 1);
+  const group = chain.healthGroups.find(item => item.members.some(piece => piece.index > 0));
+  const flank = group.members[0];
   const before = chain.travel;
   const headBefore = chain.segments[0].routeDistance;
-  assert.equal(hitSegment(game, chain, flank, flank.hp + 1), true);
-  assert.equal(chain.travel, before - chain.spacing, '頭部要按減少的一節回拉');
+  assert.equal(hitSegment(game, chain, flank, group.hp + 1), true);
+  assert.equal(chain.travel, before, '永久行軍距離不會被擊破倒扣');
   advance(game, 0.05);
   assert.ok(chain.segments[0].routeDistance < headBefore - 8,
     '頭部要有清楚可見的回彈');

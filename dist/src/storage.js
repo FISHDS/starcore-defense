@@ -1,7 +1,7 @@
-import { startRun, WAVES, UPGRADE_BY_ID } from './game.js?v=20261018-starcore-17';
-import { META_BY_ID, MILESTONE_REWARDS, ORGANS, WEAPONS } from './meta.js?v=20261018-starcore-17';
-import { createBossRig } from './boss-rig.js?v=20261018-starcore-17';
-import { bossProfileFor } from './boss-profiles.js?v=20261018-starcore-17';
+import { startRun, WAVES, UPGRADE_BY_ID } from './game.js?v=20261018-starcore-18';
+import { META_BY_ID, MILESTONE_REWARDS, ORGANS, WEAPONS } from './meta.js?v=20261018-starcore-18';
+import { createBossRig } from './boss-rig.js?v=20261018-starcore-18';
+import { bossProfileFor } from './boss-profiles.js?v=20261018-starcore-18';
 
 const CHECKPOINT = 'starcore.checkpoint.v5';
 const BEST = 'starcore.best.v1';
@@ -178,25 +178,27 @@ export function loadCheckpoint(storage) {
       equippedWeapon: data.equippedWeapon,
       equippedOrgans: data.equippedOrgans,
     }, data.chapter);
-    game.wave = data.wave;
+    const migrateNormalRun = data.encounter !== 'boss';
+    game.wave = migrateNormalRun ? WAVES.length : data.wave;
     game.endlessTier = Number.isInteger(data.endlessTier)
       ? Math.max(1, Math.min(999, data.endlessTier)) : 1;
     game.shotCount = Number.isInteger(data.shotCount) ? Math.max(0, data.shotCount) : 0;
     game.phase = data.phase;
     game.runTime = data.runTime;
     game.waveTime = Number.isFinite(data.waveTime) ? data.waveTime : 0;
-    game.encounter = data.encounter;
-    game.normalDestroyed = data.normalDestroyed;
-    game.bossDestroyed = Number.isInteger(data.bossDestroyed)
+    game.encounter = 'boss';
+    game.normalDestroyed = 0;
+    game.bossDestroyed = !migrateNormalRun && Number.isInteger(data.bossDestroyed)
       ? Math.max(0, Math.min(2 * (WAVES.at(-1).segments - 1), data.bossDestroyed)) : 0;
-    game.spawnCount = Number.isInteger(data.spawnCount) ? data.spawnCount : 0;
+    game.spawnCount = migrateNormalRun ? 0
+      : Number.isInteger(data.spawnCount) ? data.spawnCount : 0;
     game.nextId = Number.isInteger(data.nextId) ? data.nextId : 1;
     game.fireTimer = Number.isFinite(data.fireTimer) ? data.fireTimer : 0;
     game.specialTimers = data.specialTimers && typeof data.specialTimers === 'object'
       ? data.specialTimers : {};
     game.normalShotTimer = Number.isFinite(data.normalShotTimer)
       ? data.normalShotTimer : 0;
-    game.chains = data.chains;
+    game.chains = migrateNormalRun ? [] : data.chains.filter(chain => chain.boss);
     for (const chain of game.chains.filter(item => item.boss)) {
       chain.originalBodyCount ||= WAVES.at(-1).segments - 1;
       chain.rig ||= createBossRig(bossProfileFor(game.chapter, chain.lane).id);

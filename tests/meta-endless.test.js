@@ -55,7 +55,7 @@ test('第25關通關解鎖無盡模式，雙頭目倒下會接續下一輪', () 
   advance(game, 0.05);
   assert.equal(game.phase, 'playing');
   assert.equal(game.endlessTier, 2);
-  assert.equal(game.encounter, 'normal');
+  assert.equal(game.encounter, 'boss');
 });
 
 test('續玩保留無盡輪次與裝備，並丟棄舊版攻擊預警', () => {

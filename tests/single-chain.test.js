@@ -1,136 +1,82 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { advance, chooseUpgrade, getShotDamage, hitSegment, startRun } from '../dist/src/game.js';
-import * as gameplay from '../dist/src/game.js';
+import { advance, getRunProgress, getShotDamage, hitSegment, startRun } from '../dist/src/game.js';
 
-test('雙頭關卡進度根據實際清掉的身體而不是經過的時間', () => {
+test('雙頭關卡進度只依實際擊破的頭目身體計算', () => {
   const game = startRun(40, {}, 10);
   game.runTime = 200;
-  assert.equal(typeof gameplay.getRunProgress, 'function');
-  assert.equal(gameplay.getRunProgress(game), 0);
-  game.normalDestroyed = Math.floor(game.normalTotal / 2);
-  assert.ok(gameplay.getRunProgress(game) > 0.35 && gameplay.getRunProgress(game) < 0.45);
-  game.encounter = 'boss';
-  game.normalDestroyed = game.normalTotal;
+  assert.equal(getRunProgress(game), 0);
+  game.normalDestroyed = 10000;
+  assert.equal(getRunProgress(game), 0);
   game.bossDestroyed = 41;
-  assert.ok(gameplay.getRunProgress(game) > 0.85 && gameplay.getRunProgress(game) < 0.95);
+  assert.ok(getRunProgress(game) > 0.45 && getRunProgress(game) < 0.55);
 });
 
-test('普通戰鬥只有一顆頭，時間跨區域也不產生新頭', () => {
-  const game = startRun(41);
-  advance(game, 0.05);
-  const first = game.chains[0];
-  assert.ok(first.segments.length >= 90);
-  assert.ok(first.segments.at(-1).x < 0);
-  for (const time of [49, 98, 150, 205, 260]) {
-    game.runTime = time;
+test('普通長鏈移除後，一關只帶指定頭目數與同場身體', () => {
+  for (const chapter of [1, 7, 10, 25]) {
+    const game = startRun(41, {}, chapter);
     advance(game, 0.05);
-    assert.equal(game.chains.filter(chain => !chain.dead && !chain.boss).length, 1);
-    assert.equal(game.chains[0].id, first.id);
-    assert.equal(game.bosses.length, 0);
+    assert.equal(game.bosses.length, game.chapter === 1 ? 1
+      : game.chapter === 7 ? 2 : game.chapter === 10 ? 2 : 2);
+    assert.ok(game.chains.every(chain => chain.boss));
+    assert.ok(game.chains.every(chain => chain.segments.length > 30));
+    assert.equal(game.encounter, 'boss');
   }
 });
 
-test('同一條身體由前到後增強，刪除前段後原有強度不變', () => {
-  const game = startRun(42);
-  advance(game, 0.05);
-  const chain = game.chains[0];
-  const front = chain.segments[1];
-  const middle = chain.segments[Math.floor(chain.segments.length * 0.8)];
-  const rear = chain.segments.at(-1);
-  assert.ok(front.maxHp >= 45 && front.maxHp <= 65, `前段血量 ${front.maxHp}`);
-  assert.ok(middle.maxHp > 1000, `中段血量 ${middle.maxHp}`);
-  assert.ok(rear.maxHp > 2000, `後段血量 ${rear.maxHp}`);
-  const middleHp = middle.maxHp;
-  for (const piece of chain.segments.slice(1, 16)) {
-    hitSegment(game, chain, piece, piece.hp + 1);
-    if (game.phase === 'upgrade') chooseUpgrade(game, game.choices[0]);
-  }
-  assert.equal(middle.maxHp, middleHp);
-  assert.ok(middle.index < Math.floor(chain.segments.length * 0.8));
+test('後段頭目的身節耐久成長，擊破頭目身節也提高玩家火力', () => {
+  const first = startRun(42, {}, 1);
+  const late = startRun(42, {}, 25);
+  advance(first, 0.05);
+  advance(late, 0.05);
+  const firstBoss = first.bosses[0];
+  const lateBoss = late.bosses[0];
+  assert.ok(lateBoss.segments.at(-1).maxHp > firstBoss.segments.at(-1).maxHp * 2);
+  const before = getShotDamage(late);
+  const group = lateBoss.healthGroups[0];
+  hitSegment(late, lateBoss, group.members[0], group.hp + 1);
+  assert.ok(getShotDamage(late) > before);
 });
 
-test('完整長鏈的自然火力成長不超過前段的二十五倍', () => {
-  const game = startRun(47, {}, 25);
-  const opening = getShotDamage(game);
-  game.normalDestroyed = game.normalTotal;
-  const late = getShotDamage(game);
-  assert.ok(late > opening * 8, `後段火力只成長 ${late / opening} 倍`);
-  assert.ok(late < opening * 25, `後段火力暴增 ${late / opening} 倍`);
+test('身體被擊破後骨架補齊間距，頭部沿行軍路線平順移動', () => {
+  const game = startRun(13);
+  advance(game, 0.05);
+  const boss = game.bosses[0];
+  const id = boss.segments[20].id;
+  const head = boss.segments[0];
+  const beforeTravel = boss.travel;
+  const before = { x: head.x, y: head.y };
+  const group = boss.healthGroups.find(item => item.members.includes(boss.segments[20]));
+  hitSegment(game, boss, boss.segments[20], group.hp + 1);
+  assert.ok(!boss.segments.some(segment => segment.id === id));
+  assert.ok(boss.segments.every((segment, index) => segment.index === index));
+  assert.deepEqual({ x: head.x, y: head.y }, before);
+  advance(game, 0.05);
+  assert.ok(Math.hypot(head.x - before.x, head.y - before.y) < 20);
+  assert.ok(boss.travel > beforeTravel);
 });
 
-test('一節身體被打爆時頭部先明顯沿路後退', () => {
-  const game = startRun(43);
-  advance(game, 0.05);
-  const chain = game.chains[0];
-  const head = chain.segments[0];
-  const before = head.routeDistance;
-  const piece = chain.segments[12];
-  hitSegment(game, chain, piece, piece.hp + 1);
-  advance(game, 0.05);
-  assert.ok(head.routeDistance < before - 8,
-    `頭部只退了 ${(before - head.routeDistance).toFixed(1)} 像素`);
-});
-
-test('擊破身體後頭部回拉一節，尾段留在原位', () => {
-  const game = startRun(46);
-  advance(game, 0.05);
-  const chain = game.chains[0];
-  game.fireTimer = -100;
-  const head = chain.segments[0];
-  const rear = chain.segments[3];
-  const beforeHead = head.routeDistance;
-  const beforeRear = rear.routeDistance;
-  const beforeTravel = chain.travel;
-  const piece = chain.segments[2];
-  hitSegment(game, chain, piece, piece.hp + 1);
-  advance(game, 0.05);
-  assert.ok(Math.abs(chain.travel - (beforeTravel - chain.spacing + chain.speed * 0.05)) < 0.01);
-  assert.ok(head.routeDistance < beforeHead - 15);
-  for (let i = 0; i < 11; i++) advance(game, 0.05);
-  assert.ok(rear.routeDistance >= beforeRear - 3,
-    `後段位移 ${Math.round(rear.routeDistance - beforeRear)} 像素`);
-});
-
-test('畫面外等待進場的尾部不會被自動武器提前打掉', () => {
-  const game = startRun(45);
-  advance(game, 0.05);
-  const chain = game.chains[0];
-  const hidden = chain.segments.slice(1).filter(piece => piece.x < -35);
-  assert.ok(hidden.length > 50);
-  for (const piece of chain.segments.slice(1)) {
-    if (piece.x >= -35 && piece.x <= 425) piece.hp = 0;
-  }
-  game.upgrades.drone = 1;
-  game.specialTimers.drone = 1.2;
-  game.fireTimer = -100;
-  const before = new Map(hidden.map(piece => [piece.id, piece.hp]));
-  advance(game, 0.05);
-  assert.ok(hidden.filter(piece => piece.x < -35)
-    .every(piece => piece.hp === before.get(piece.id)));
-});
-
-test('補給箱沿整條身體分布，打光後立即進入該關頭目', () => {
+test('每條頭目長鏈沿身體安排補給寶箱，擊破後仍在同一場戰鬥', () => {
   const game = startRun(44, {}, 25);
   advance(game, 0.05);
-  const chain = game.chains[0];
-  const chests = chain.segments.filter(piece => piece.chest);
+  const boss = game.bosses[0];
+  const chests = boss.segments.filter(piece => piece.chest);
   assert.ok(chests.length >= 5);
   assert.ok(chests.some(piece => piece.gold));
-  assert.ok(chests.some(piece => piece.index > 120));
-  while (chain.segments.length > 1) {
-    const piece = chain.segments[1];
-    const group = chain.healthGroups?.find(item => item.members.includes(piece));
-    hitSegment(game, chain, piece, (group?.hp ?? piece.hp) + piece.armorHp + 1);
-    if (game.phase === 'upgrade') chooseUpgrade(game, game.choices[0]);
-  }
-  assert.equal(chain.dead, true);
+  const chest = chests[0];
+  hitSegment(game, boss, chest, chest.hp + 1);
+  assert.equal(game.phase, 'upgrade');
+  assert.ok(game.bosses.includes(boss));
+});
+
+test('雙頭目在同場並行，擊破一隻不會等候後續分批登場', () => {
+  const game = startRun(54, {}, 10);
   advance(game, 0.05);
-  assert.equal(game.chains.filter(item => !item.dead && item.boss).length, 2);
-  const boss = game.bosses[0];
-  const segment = boss.segments[1];
-  const group = boss.healthGroups.find(item => item.members.includes(segment));
-  hitSegment(game, boss, segment, segment.hp + 1);
-  assert.equal(game.bossDestroyed, group.members.length);
-  assert.equal(game.normalDestroyed, game.normalTotal);
+  const [first, second] = game.bosses;
+  assert.ok(first && second);
+  const firstBody = first.healthGroups[0];
+  hitSegment(game, first, firstBody.members[0], 1000000);
+  assert.equal(game.bosses.length, 2);
+  assert.ok(!second.dead);
+  assert.ok(second.segments.length > 1);
 });

@@ -1,11 +1,11 @@
-import { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID } from './content.js?v=20261018-starcore-17';
-import { routeLength, routePosition } from './routes.js?v=20261018-starcore-17';
+import { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID } from './content.js?v=20261018-starcore-18';
+import { routeLength, routePosition } from './routes.js?v=20261018-starcore-18';
 import { assignTraits, chainSpeed, chestGuarded, healthPoolKey,
   poisonDamageRatio, pulseDamageRatio, selectNextHealthPoolTarget,
   steerBullet, uniqueHealthTargets, updateWeakpoints }
-  from './mechanics.js?v=20261018-starcore-17';
-import { createBossRig, updateBossRig } from './boss-rig.js?v=20261018-starcore-17';
-import { bossProfileFor, bossRosterIndexFor } from './boss-profiles.js?v=20261018-starcore-17';
+  from './mechanics.js?v=20261018-starcore-18';
+import { createBossRig, updateBossRig } from './boss-rig.js?v=20261018-starcore-18';
+import { bossProfileFor, bossRosterIndexFor } from './boss-profiles.js?v=20261018-starcore-18';
 
 export { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID };
 export const WIDTH = 390;
@@ -42,8 +42,8 @@ export function startRun(seed = Date.now(), profile = {}, chapter = 1) {
     phase: 'playing', seed: seed >>> 0,
     chapter: chapter === 26 || CHAPTERS.some(item => item.id === chapter) ? chapter : 1,
     endlessTier: 1, equippedWeapon: weapon, equippedOrgans: organs.slice(0, 2), shotCount: 0,
-    wave: 1, waveTime: 0, runTime: 0,
-    encounter: 'normal', normalTotal: normalSegmentsForChapter(chapter) - 1,
+    wave: WAVES.length, waveTime: 0, runTime: 0,
+    encounter: 'boss', normalTotal: 0,
     normalDestroyed: 0, bossDestroyed: 0,
     spawnCount: 0, nextId: 1,
     fireTimer: 0, specialTimers: {}, normalShotTimer: 0,
@@ -64,7 +64,7 @@ function random(game) {
 }
 
 export function getShotDamage(game) {
-  const depth = Math.max(0, game.normalDestroyed);
+  const depth = Math.max(0, game.previewDamageDepth || game.bossDestroyed || 0);
   const chapterScale = 1 + Math.max(0, game.chapter - 5) * 0.035;
   const natural = game.baseDamage * (1 + depth / 30) ** 1.45 * chapterScale;
   const upgrades = 1 + (game.upgrades.power || 0) * 0.35
@@ -95,13 +95,10 @@ export function addBlastEffect(game, x, y, rank = 1) {
 export function getRunProgress(game) {
   if (game.phase === 'victory') return 1;
   if (game.preview) return Math.min(1, game.bossDestroyed / game.previewBodyTotal);
-  const normal = Math.min(1, game.normalDestroyed / game.normalTotal);
   const stage = activeStage(game);
   const bossBodyLength = stage.bossSegments - 1;
-  const bossTotal = Math.max(stage.bossCount,
-    game.encounter === 'boss' ? game.spawnCount : 0) * bossBodyLength;
-  const boss = Math.min(1, game.bossDestroyed / bossTotal);
-  return normal * 0.8 + boss * 0.2;
+  const bossTotal = stage.bossCount * bossBodyLength;
+  return Math.min(1, game.bossDestroyed / bossTotal);
 }
 
 export function createBossShowcase(seed = Date.now(), chapter = 1) {
@@ -110,8 +107,8 @@ export function createBossShowcase(seed = Date.now(), chapter = 1) {
   game.preview = true;
   game.encounter = 'boss';
   game.wave = WAVES.length;
-  // 體驗局保留長鏈，但提高耐久，讓玩家必須持續轉向追擊才趕得上守點。
-  game.normalDestroyed = 105;
+  // 體驗局以頭目擊破進度校準傷害，讓快速試玩能在守點期限前結束。
+  game.previewDamageDepth = 105;
   game.upgrades = { power: 1, rapid: 1 };
   advance(game, 0.01);
   const boss = game.bosses[0];
@@ -160,7 +157,15 @@ function configuredWave(game, index) {
 }
 
 function initialTravel(path, boss, preview = false, lane = 0) {
-  if (boss) return preview ? 500 : -500;
+  if (boss) {
+    if (preview) return 500;
+    for (let distance = -500; distance <= 0; distance += 5) {
+      const point = routePosition(path, true, lane, distance);
+      if (point.x >= -20 && point.x <= WIDTH + 20
+        && point.y >= 70 && point.y <= HEIGHT - 70) return distance;
+    }
+    return -30;
+  }
   // 每條路線由入口外開始，避免開始作戰時頭目或長鏈已經在戰場內。
   for (let distance = -60; distance >= -800; distance -= 10) {
     const point = routePosition(path, false, lane, distance);
@@ -174,7 +179,11 @@ function reposition(chain, dt = 0) {
   for (let index = 0; index < chain.segments.length; index++) {
     const segment = chain.segments[index];
     segment.index = index;
-    const target = chain.travel - index * chain.spacing;
+    const recoilRatio = chain.recoilDuration > 0
+      ? Math.max(0, chain.recoil / chain.recoilDuration) : 0;
+    const recoilOffset = (chain.recoilDistance || 0) * recoilRatio ** 2
+      * Math.exp(-index / 2.2);
+    const target = chain.travel - index * chain.spacing - recoilOffset;
     if (!Number.isFinite(segment.routeDistance)) segment.routeDistance = target;
     if (dt > 0) {
       const desiredStep = (target - segment.routeDistance)
@@ -204,7 +213,8 @@ function spawnChain(game, wave, lane = game.spawnCount) {
     originalBodyCount: boss ? count - 1 : 0,
     rig: boss ? createBossRig(bossProfileFor(game.chapter, lane).id) : null,
   };
-  const chestIndices = boss ? [5, 15, 26, 38]
+  const chestIndices = boss
+    ? count >= 50 ? [4, 11, 18, 25, 32, 39, 46] : [4, 10, 16, 22, 28, 34, 39]
     : [5, 18, 36, 60, 84, 110, 138, 168, 198];
   for (let index = 0; index < count; index++) {
     const head = index === 0;
@@ -218,8 +228,11 @@ function spawnChain(game, wave, lane = game.spawnCount) {
       id: game.nextId++, index, depth: index, x: 0, y: 0, hp, maxHp: hp,
       armorHp: 0,
       radius: head ? (boss ? 27 : 23) : chest ? 23 : boss ? 20 : 18,
-      chest, gold: chest && (boss || index === 60 || index === 138 || index === 198
-        || (stage.mechanics.includes('goldRush') && [18, 84, 168].includes(index))),
+      chest, gold: chest && (boss ? stage.mechanics.includes('goldRush')
+        ? chestIndices.includes(index)
+        : [11, 25, 39].includes(index)
+        : index === 60 || index === 138 || index === 198
+          || (stage.mechanics.includes('goldRush') && [18, 84, 168].includes(index))),
       poisonFor: 0, burnFor: 0, mark: 0,
     };
     assignTraits(piece, stage, boss, chestIndices);
@@ -360,9 +373,11 @@ export function hitSegment(game, chain, segment, amount, options = {}) {
   if (healthGroup) chain.healthGroups = chain.healthGroups.filter(group => group !== healthGroup);
   chain.actualSpeed = chainSpeed(chain);
   chain.segments.forEach((piece, index) => { piece.index = index; });
-  // 身體變短的距離由頭部沿路收回，尾段因索引前移而留在原位。
-  chain.travel -= chain.spacing * defeatedSegments.length;
-  chain.recoil = Math.max(chain.recoil || 0, 0.18);
+  // 擊破會讓前段頭身短暫回彈；回彈只影響姿勢，不倒扣已取得的行軍距離。
+  chain.recoilDuration = 0.38;
+  chain.recoil = chain.recoilDuration;
+  chain.recoilDistance = Math.min(chain.spacing * 1.15,
+    chain.spacing * defeatedSegments.length);
   const anchorDuration = (game.upgrades.anchor || 0) * 0.12
     + (game.equippedOrgans.includes('anchor-organ') ? 0.08 : 0);
   if (anchorDuration > 0) {
@@ -835,7 +850,7 @@ export function advance(game, dt, control = { aimAngle: game.player.aimAngle }) 
     && game.bosses.every(boss => boss.dead)) {
     if (game.chapter === 26) {
       game.endlessTier++;
-      game.encounter = 'normal';
+      game.encounter = 'boss';
       game.normalDestroyed = 0;
       game.bossDestroyed = 0;
       game.spawnCount = 0;

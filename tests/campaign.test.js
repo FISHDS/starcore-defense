@@ -87,11 +87,11 @@ test('相鄰關卡的頭目外型不會重複，雙頭關各有不同輪廓', ()
 
 test('同一擊破進度下，空等不會增加武器傷害', () => {
   const game = startRun(100);
-  game.normalDestroyed = 35;
+  game.bossDestroyed = 35;
   const damage = getShotDamage(game);
   game.runTime = 400;
   assert.equal(getShotDamage(game), damage);
-  game.normalDestroyed = 100;
+  game.bossDestroyed = 100;
   assert.ok(getShotDamage(game) > damage);
 });
 

@@ -1,10 +1,10 @@
-import { WIDTH, HEIGHT } from './game.js?v=20261018-starcore-17';
-import { routePosition } from './routes.js?v=20261018-starcore-17';
+import { WIDTH, HEIGHT } from './game.js?v=20261018-starcore-18';
+import { routePosition } from './routes.js?v=20261018-starcore-18';
 import { drawBiome, drawChestFocus, drawConnector, drawGuardian,
-  drawProjectile, drawSegment } from './art.js?v=20261018-starcore-17';
-import { BOSS_PROFILES, bossProfileFor } from './boss-profiles.js?v=20261018-starcore-17';
-import { resolveBossPose } from './boss-rig.js?v=20261018-starcore-17';
-import { drawBossConnector, drawBossSegment } from './boss-art.js?v=20261018-starcore-17';
+  drawProjectile, drawSegment } from './art.js?v=20261018-starcore-18';
+import { BOSS_PROFILES, bossProfileFor } from './boss-profiles.js?v=20261018-starcore-18';
+import { resolveBossPose } from './boss-rig.js?v=20261018-starcore-18';
+import { drawBossConnector, drawBossSegment } from './boss-art.js?v=20261018-starcore-18';
 
 const TAU = Math.PI * 2;
 const BACKGROUND_TONES = [

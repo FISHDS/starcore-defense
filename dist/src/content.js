@@ -5,10 +5,10 @@ export const WAVES = [
   { name: '硬殼岔路', startsAt: 96, duration: 48, spawnGap: 1.5, segments: 70, hp: 3300, speed: 36, tint: 'amber', path: 'fork' },
   { name: '雙螺旋', startsAt: 144, duration: 52, spawnGap: 1.5, segments: 74, hp: 9240, speed: 44, tint: 'coral', path: 'weave' },
   { name: '終端渦流', startsAt: 196, duration: 54, spawnGap: 1.5, segments: 78, hp: 26400, speed: 68, tint: 'violet', path: 'spiral' },
-  { name: '交錯雙母體', startsAt: 250, duration: 50, spawnGap: 0, segments: 42, hp: 14000, speed: 27, tint: 'coral', path: 'cross', boss: true },
+  { name: '交錯雙母體', startsAt: 250, duration: 50, spawnGap: 0, segments: 42, hp: 850, speed: 27, tint: 'coral', path: 'cross', boss: true },
 ];
 
-export { CHAPTERS } from './campaign.js?v=20261018-starcore-17';
+export { CHAPTERS } from './campaign.js?v=20261018-starcore-18';
 
 export const UPGRADES = [
   { id: 'power', name: '高能藥丸', description: '藥丸傷害 +35%', icon: '✦', tone: 'coral', rarity: 'common', category: 'bullet', max: 5 },
