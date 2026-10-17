@@ -1,4 +1,4 @@
-import { HEIGHT, WIDTH } from './game.js';
+import { HEIGHT, WIDTH } from './game.js?v=20261017-starcore-13';
 
 export function pointerToAimAngle(clientX, clientY, rect, origin) {
   const x = (clientX - rect.left) / rect.width * WIDTH;
