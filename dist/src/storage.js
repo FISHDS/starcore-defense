@@ -1,7 +1,7 @@
-import { startRun, WAVES, UPGRADE_BY_ID } from './game.js?v=20261017-starcore-16';
-import { META_BY_ID, MILESTONE_REWARDS, ORGANS, WEAPONS } from './meta.js?v=20261017-starcore-16';
-import { createBossRig } from './boss-rig.js?v=20261017-starcore-16';
-import { bossProfileFor } from './boss-profiles.js?v=20261017-starcore-16';
+import { startRun, WAVES, UPGRADE_BY_ID } from './game.js?v=20261018-starcore-17';
+import { META_BY_ID, MILESTONE_REWARDS, ORGANS, WEAPONS } from './meta.js?v=20261018-starcore-17';
+import { createBossRig } from './boss-rig.js?v=20261018-starcore-17';
+import { bossProfileFor } from './boss-profiles.js?v=20261018-starcore-17';
 
 const CHECKPOINT = 'starcore.checkpoint.v5';
 const BEST = 'starcore.best.v1';

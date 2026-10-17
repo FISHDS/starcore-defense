@@ -1,9 +1,11 @@
-import { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID } from './content.js?v=20261017-starcore-16';
-import { routeLength, routePosition } from './routes.js?v=20261017-starcore-16';
-import { assignTraits, chainSpeed, chestGuarded, steerBullet,
-  updateWeakpoints } from './mechanics.js?v=20261017-starcore-16';
-import { createBossRig, updateBossRig } from './boss-rig.js?v=20261017-starcore-16';
-import { bossProfileFor, bossRosterIndexFor } from './boss-profiles.js?v=20261017-starcore-16';
+import { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID } from './content.js?v=20261018-starcore-17';
+import { routeLength, routePosition } from './routes.js?v=20261018-starcore-17';
+import { assignTraits, chainSpeed, chestGuarded, healthPoolKey,
+  poisonDamageRatio, pulseDamageRatio, selectNextHealthPoolTarget,
+  steerBullet, uniqueHealthTargets, updateWeakpoints }
+  from './mechanics.js?v=20261018-starcore-17';
+import { createBossRig, updateBossRig } from './boss-rig.js?v=20261018-starcore-17';
+import { bossProfileFor, bossRosterIndexFor } from './boss-profiles.js?v=20261018-starcore-17';
 
 export { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID };
 export const WIDTH = 390;
@@ -321,19 +323,30 @@ export function hitSegment(game, chain, segment, amount, options = {}) {
   game.effects.push({ kind: 'hit', x: segment.x, y: segment.y, life: 0.2, maxLife: 0.2 });
   if (chain.boss && chain.rig && !options.dot) chain.rig.hurtFor = 0.14;
   if (!options.dot) {
-    if (game.upgrades.frost) chain.slowFor = Math.max(chain.slowFor, 0.8 + game.upgrades.frost * 0.5);
-    if (game.upgrades.poison) segment.poisonFor = 4 + game.upgrades.poison * 1.5;
-    if (game.upgrades.burn) segment.burnFor = 2 + game.upgrades.burn;
-    if (game.upgrades.mark) segment.mark = Math.max(segment.mark, game.upgrades.mark * 0.11);
+    const affected = healthGroup?.members || [segment];
+    if (game.upgrades.frost) chain.slowFor = Math.max(chain.slowFor,
+      0.45 + game.upgrades.frost * 0.25);
+    if (game.upgrades.poison) for (const member of affected) {
+      member.poisonFor = Math.max(member.poisonFor, 4 + game.upgrades.poison * 1.5);
+    }
+    if (game.upgrades.burn) for (const member of affected) {
+      member.burnFor = Math.max(member.burnFor, 2 + game.upgrades.burn);
+    }
+    if (game.upgrades.mark) for (const member of affected) {
+      member.mark = Math.max(member.mark, game.upgrades.mark * 0.11);
+    }
   }
   if (game.upgrades.detonation && !options.dot && segment.poisonFor > 0
     && segment.burnFor > 0 && (segment.detonationCooldown || 0) <= 0) {
-    segment.detonationCooldown = 1.2;
+    const affected = healthGroup?.members || [segment];
+    for (const member of affected) member.detonationCooldown = 1.2;
     addBlastEffect(game, segment.x, segment.y, 1);
     const blastIndex = chain.segments.indexOf(segment);
-    for (const near of [chain.segments[blastIndex - 1], chain.segments[blastIndex + 1]]) {
-      if (near?.index > 0 && !near.chest) hitSegment(game, chain, near,
-        getShotDamage(game) * 0.28, { dot: true });
+    const neighbors = uniqueHealthTargets([chain.segments[blastIndex - 1],
+      chain.segments[blastIndex + 1]].filter(near => near?.index > 0 && !near.chest)
+      .map(near => ({ chain, segment: near })));
+    for (const { segment: near } of neighbors) {
+      hitSegment(game, chain, near, getShotDamage(game) * 0.28, { dot: true });
     }
   }
   if ((healthGroup?.hp ?? segment.hp) > 0) return true;
@@ -349,9 +362,12 @@ export function hitSegment(game, chain, segment, amount, options = {}) {
   chain.segments.forEach((piece, index) => { piece.index = index; });
   // 身體變短的距離由頭部沿路收回，尾段因索引前移而留在原位。
   chain.travel -= chain.spacing * defeatedSegments.length;
-  chain.recoil = Math.max(chain.recoil || 0,
-    0.18 + (game.upgrades.anchor || 0) * 0.04
-      + (game.equippedOrgans.includes('anchor-organ') ? 0.05 : 0));
+  chain.recoil = Math.max(chain.recoil || 0, 0.18);
+  const anchorDuration = (game.upgrades.anchor || 0) * 0.12
+    + (game.equippedOrgans.includes('anchor-organ') ? 0.08 : 0);
+  if (anchorDuration > 0) {
+    chain.anchorFor = Math.max(chain.anchorFor || 0, anchorDuration);
+  }
   if (!chain.boss) {
     game.normalDestroyed += defeatedSegments.length;
     const nextWave = Math.min(5, 1 + Math.floor(game.normalDestroyed
@@ -362,11 +378,11 @@ export function hitSegment(game, chain, segment, amount, options = {}) {
   game.comboCount = game.comboTimer > 0 ? Math.min(99, game.comboCount + 1) : 1;
   game.comboTimer = 2.5;
   if (!segment.chest && !options.dot && (game.upgrades.shatter || 0) > 0) {
-    for (const neighbor of neighbors) {
-      if (neighbor?.index > 0 && chain.segments.includes(neighbor)) {
-        hitSegment(game, chain, neighbor, getShotDamage(game)
-          * (0.12 + game.upgrades.shatter * 0.12), { dot: true });
-      }
+    const targets = uniqueHealthTargets(neighbors.filter(neighbor => neighbor?.index > 0
+      && chain.segments.includes(neighbor)).map(segment => ({ chain, segment })));
+    for (const { segment: neighbor } of targets) {
+      hitSegment(game, chain, neighbor, getShotDamage(game)
+        * (0.12 + game.upgrades.shatter * 0.12), { dot: true });
     }
   }
   for (const position of positions) game.effects.push({ kind: 'burst',
@@ -389,11 +405,14 @@ export function hitSegment(game, chain, segment, amount, options = {}) {
   }
   if (segment.chest) presentUpgrades(game, segment.gold ? 'gold' : 'chest');
   if (game.upgrades.rebound && !options.dot && !chain.dead && game.phase === 'playing') {
-    for (const neighbor of neighbors) {
-      if (neighbor && neighbor.index > 0 && chain.segments.includes(neighbor)) {
-        hitSegment(game, chain, neighbor, getShotDamage(game) * game.upgrades.rebound * 0.18,
-          { dot: true });
-      }
+    const origin = positions.reduce((sum, point) => ({
+      x: sum.x + point.x / positions.length,
+      y: sum.y + point.y / positions.length,
+    }), { x: 0, y: 0 });
+    const target = selectNextHealthPoolTarget(activeBodies(game), origin, new Set(), 210);
+    if (target) {
+      hitSegment(game, target.chain, target.segment, getShotDamage(game)
+        * (0.35 + (game.upgrades.rebound - 1) * 0.12), { dot: true });
     }
   }
   return true;
@@ -405,6 +424,7 @@ function updateChains(game, dt) {
     if (chain.dead) { game.chains.splice(index, 1); continue; }
     updateBossRig(chain, dt);
     chain.recoil = Math.max(0, chain.recoil - dt);
+    chain.anchorFor = Math.max(0, (chain.anchorFor || 0) - dt);
     const visible = chain.segments.filter(piece => piece.index > 0
       && piece.y > 40 && piece.y < 730 && piece.x > -20 && piece.x < 410).length;
     if (visible >= 8) chain.entryComplete = true;
@@ -417,8 +437,9 @@ function updateChains(game, dt) {
     chain.feedSpeed = (chain.feedSpeed || 0)
       + (feedTarget - (chain.feedSpeed || 0)) * Math.min(1, dt * 2);
     chain.actualSpeed = chainSpeed(chain) + chain.feedSpeed;
-    const nextTravel = chain.travel
-      + chain.actualSpeed * (chain.slowFor > 0 ? 0.58 : 1) * dt;
+    const movementScale = chain.anchorFor > 0 ? 0
+      : chain.slowFor > 0 ? 0.72 : 1;
+    const nextTravel = chain.travel + chain.actualSpeed * movementScale * dt;
     chain.travel = Math.min(routeLength(chain.path, chain.boss, chain.lane), nextTravel);
     chain.slowFor = Math.max(0, chain.slowFor - dt);
     reposition(chain, dt);
@@ -440,7 +461,8 @@ function fireCapsules(game, dt) {
   while (game.fireTimer >= interval) {
     game.fireTimer -= interval;
     game.shotCount++;
-    const count = 1 + (game.upgrades.multi || 0)
+    const multi = game.upgrades.multi || 0;
+    const count = 1 + multi
       + (game.equippedWeapon === 'scatter' ? 1 : 0);
     const extra = random(game) < (game.upgrades.echo || 0) * 0.22 ? 1 : 0;
     for (let shot = 0; shot < count + extra; shot++) {
@@ -452,9 +474,12 @@ function fireCapsules(game, dt) {
       game.bullets.push({
         x: game.player.x + Math.cos(angle) * 24,
         y: game.player.y + Math.sin(angle) * 24,
-        vx, vy, damage: getShotDamage(game),
+        vx, vy, damage: getShotDamage(game) * (1 + multi * 0.45) / (1 + multi),
         speed: velocity,
         bounces: game.upgrades.bounce || 0,
+        bounceLevel: game.upgrades.bounce || 0,
+        pierceLevel: game.upgrades.pierce || 0,
+        extraHit: false,
         volley: !!game.upgrades.volley && game.shotCount % 4 === 0,
         pierce: (game.upgrades.pierce || 0)
           + (game.equippedWeapon === 'prism' && game.shotCount % 3 === 0 ? 1 : 0), hit: [],
@@ -501,15 +526,16 @@ function fireSpecials(game, dt) {
       kind: 'orbit', x: game.player.x, y: game.player.y,
       radius: 210 + game.upgrades.orbit * 18, damage: power * 0.48,
       angle: game.player.aimAngle, halfAngle: 0.72,
-      hit: [], life: 2.1, maxLife: 2.1,
+      hitPools: [], life: 2.1, maxLife: 2.1,
     });
   }
   if (game.upgrades.arc && specialTimer(game, 'arc', dt,
     Math.max(0.55, 1.7 - game.upgrades.arc * 0.2))) {
-    const targets = activeBodies(game).filter(({ segment }) =>
+    const targets = uniqueHealthTargets(activeBodies(game).filter(({ segment }) =>
       inAimSector(game, segment, 560, 0.62)).sort((a, b) =>
       Math.hypot(a.segment.x - game.player.x, a.segment.y - game.player.y)
       - Math.hypot(b.segment.x - game.player.x, b.segment.y - game.player.y))
+    )
       .slice(0, 2 + game.upgrades.arc + (game.upgrades.superconductor ? 2 : 0));
     let from = { x: game.player.x + Math.cos(game.player.aimAngle) * 22,
       y: game.player.y + Math.sin(game.player.aimAngle) * 22 };
@@ -517,8 +543,8 @@ function fireSpecials(game, dt) {
       game.effects.push({ kind: 'arc', x: from.x, y: from.y,
         x2: target.segment.x, y2: target.segment.y, life: 0.24, maxLife: 0.24 });
       hitSegment(game, target.chain, target.segment,
-        power * (game.upgrades.superconductor ? 0.8 : 0.58), { special: true });
-      if (game.upgrades.superconductor) target.chain.slowFor = Math.max(target.chain.slowFor, 1.6);
+        power * (game.upgrades.superconductor ? 0.72 : 0.5), { special: true });
+      if (game.upgrades.superconductor) target.chain.slowFor = Math.max(target.chain.slowFor, 1.1);
       from = target.segment;
       if (game.phase !== 'playing') return;
     }
@@ -539,24 +565,25 @@ function fireSpecials(game, dt) {
     }
   }
   if (game.upgrades.saw && specialTimer(game, 'saw', dt, 2.3)) {
-    const targets = activeBodies(game).filter(({ segment }) =>
+    const targets = uniqueHealthTargets(activeBodies(game).filter(({ segment }) =>
       inAimSector(game, segment, 520, 0.78)).sort((a, b) =>
       Math.hypot(a.segment.x - game.player.x, a.segment.y - game.player.y)
       - Math.hypot(b.segment.x - game.player.x, b.segment.y - game.player.y))
+    )
       .slice(0, 4 + game.upgrades.saw * 2);
     for (const target of targets) {
       hitSegment(game, target.chain, target.segment,
-        power * 0.34 * game.upgrades.saw, { special: true });
+        power * (0.22 + (game.upgrades.saw - 1) * 0.08), { special: true });
       if (game.phase !== 'playing') return;
     }
     game.effects.push({ kind: 'blast', x: game.player.x, y: game.player.y,
       life: 0.45, maxLife: 0.45 });
   }
   if (game.upgrades.pulse && specialTimer(game, 'pulse', dt, 4.5)) {
-    for (const target of activeBodies(game).filter(item =>
-      inAimSector(game, item.segment, 360, 0.82))) {
+    for (const target of uniqueHealthTargets(activeBodies(game).filter(item =>
+      inAimSector(game, item.segment, 360, 0.82)))) {
       hitSegment(game, target.chain, target.segment,
-        power * 0.13 * game.upgrades.pulse, { special: true });
+        power * pulseDamageRatio(game.upgrades.pulse), { special: true });
       if (game.phase !== 'playing') return;
     }
     game.effects.push({ kind: 'orbit', x: game.player.x, y: game.player.y,
@@ -579,6 +606,8 @@ function pointSegmentDistance(px, py, x1, y1, x2, y2) {
 function updateBullets(game, dt) {
   for (let i = game.bullets.length - 1; i >= 0; i--) {
     const bullet = game.bullets[i];
+    bullet.hit ||= [];
+    bullet.hitPools ||= [];
     steerBullet(game, bullet, dt);
     if (bullet.seeking) {
       const chest = activeBodies(game).filter(item => item.segment.chest)
@@ -591,7 +620,8 @@ function updateBullets(game, dt) {
     bullet.x += bullet.vx * dt;
     bullet.y += bullet.vy * dt;
     const crossed = activeBodies(game)
-      .filter(({ segment }) => !bullet.hit.includes(segment.id)
+      .filter(({ chain, segment }) => !bullet.hit.includes(segment.id)
+        && !bullet.hitPools.includes(healthPoolKey(chain, segment))
         && pointSegmentDistance(segment.x, segment.y, previousX, previousY,
           bullet.x, bullet.y) <= segment.radius + bullet.width)
       .sort((a, b) => pointSegmentProgress(b.segment.x, b.segment.y,
@@ -600,16 +630,21 @@ function updateBullets(game, dt) {
           previousX, previousY, bullet.x, bullet.y));
     let consumed = false;
     for (const { chain, segment } of crossed) {
+      const pool = healthPoolKey(chain, segment);
+      if (bullet.hitPools.includes(pool)) continue;
       const oldX = segment.x;
       const oldY = segment.y;
-      if (!hitSegment(game, chain, segment, bullet.damage, { projectile: true })) continue;
+      const extraHitLevel = Math.max(bullet.bounceLevel || bullet.bounces || 0,
+        bullet.pierceLevel || bullet.pierce || 0);
+      const damage = bullet.extraHit
+        ? bullet.damage * (0.42 + 0.05 * Math.max(1, extraHitLevel)) : bullet.damage;
+      if (!hitSegment(game, chain, segment, damage, { projectile: true })) continue;
       bullet.hit.push(segment.id);
+      bullet.hitPools.push(pool);
       if (game.phase !== 'playing') { consumed = true; break; }
       if (bullet.bounces > 0) {
-        const next = activeBodies(game).filter(item => !bullet.hit.includes(item.segment.id)
-          && Math.hypot(item.segment.x - oldX, item.segment.y - oldY) < 180)
-          .sort((a, b) => Math.hypot(a.segment.x - oldX, a.segment.y - oldY)
-            - Math.hypot(b.segment.x - oldX, b.segment.y - oldY))[0];
+        const next = selectNextHealthPoolTarget(activeBodies(game),
+          { x: oldX, y: oldY }, new Set(bullet.hitPools), 180);
         if (next) {
           const dx = next.segment.x - oldX;
           const dy = next.segment.y - oldY;
@@ -618,6 +653,7 @@ function updateBullets(game, dt) {
           bullet.vx = dx / length * bullet.speed;
           bullet.vy = dy / length * bullet.speed;
           bullet.bounces--;
+          bullet.extraHit = true;
           game.effects.push({ kind: 'arc', x: oldX, y: oldY,
             x2: next.segment.x, y2: next.segment.y, life: 0.2, maxLife: 0.2 });
           consumed = false;
@@ -625,10 +661,14 @@ function updateBullets(game, dt) {
         }
       }
       if (game.upgrades.blast) {
+        const splashPools = new Set([pool]);
         for (const nearby of chain.segments.slice(1)) {
           if (nearby === segment || nearby.hp <= 0) continue;
           if (Math.hypot(nearby.x - oldX, nearby.y - oldY)
             < 40 + game.upgrades.blast * 11) {
+            const nearbyPool = healthPoolKey(chain, nearby);
+            if (splashPools.has(nearbyPool)) continue;
+            splashPools.add(nearbyPool);
             hitSegment(game, chain, nearby, bullet.damage * 0.24 * game.upgrades.blast,
               { dot: true });
             if (game.phase !== 'playing') break;
@@ -637,11 +677,8 @@ function updateBullets(game, dt) {
         addBlastEffect(game, oldX, oldY, game.upgrades.blast);
       }
       if (game.upgrades.bankshot && game.phase === 'playing') {
-        const next = activeBodies(game).filter(item => !item.segment.chest
-          && item.segment.id !== segment.id
-          && Math.hypot(item.segment.x - oldX, item.segment.y - oldY) < 115)
-          .sort((a, b) => Math.hypot(a.segment.x - oldX, a.segment.y - oldY)
-            - Math.hypot(b.segment.x - oldX, b.segment.y - oldY))[0];
+        const next = selectNextHealthPoolTarget(activeBodies(game),
+          { x: oldX, y: oldY }, new Set(bullet.hitPools), 115);
         if (next) {
           game.effects.push({ kind: 'arc', x: oldX, y: oldY,
             x2: next.segment.x, y2: next.segment.y, life: 0.17, maxLife: 0.17 });
@@ -649,7 +686,10 @@ function updateBullets(game, dt) {
             bullet.damage * (0.2 + game.upgrades.bankshot * 0.1), { special: true });
         }
       }
-      if (bullet.pierce > 0) bullet.pierce--;
+      if (bullet.pierce > 0) {
+        bullet.extraHit = true;
+        bullet.pierce--;
+      }
       else { consumed = true; break; }
     }
     if (consumed || bullet.x < -30 || bullet.x > WIDTH + 30
@@ -661,14 +701,16 @@ function updateEffects(game, dt) {
   for (let i = game.effects.length - 1; i >= 0; i--) {
     const effect = game.effects[i];
     if (effect.kind === 'orbit' && effect.damage > 0) {
-      for (const { chain, segment } of activeBodies(game)) {
-        if (effect.hit.includes(segment.id)) continue;
+      for (const { chain, segment } of uniqueHealthTargets(activeBodies(game))) {
+        const pool = healthPoolKey(chain, segment);
+        effect.hitPools ||= [];
+        if (effect.hitPools.includes(pool)) continue;
         const angle = Math.atan2(segment.y - effect.y, segment.x - effect.x);
         const difference = Math.atan2(Math.sin(angle - effect.angle),
           Math.cos(angle - effect.angle));
         if (Math.hypot(segment.x - effect.x, segment.y - effect.y) < effect.radius
           && Math.abs(difference) <= effect.halfAngle) {
-          effect.hit.push(segment.id);
+          effect.hitPools.push(pool);
           hitSegment(game, chain, segment, effect.damage, { special: true });
           if (game.phase !== 'playing') break;
         }
@@ -685,15 +727,24 @@ function updateEffects(game, dt) {
 }
 
 function updateStatuses(game, dt) {
-  for (const { chain, segment } of activeBodies(game)) {
-    segment.detonationCooldown = Math.max(0, (segment.detonationCooldown || 0) - dt);
-    if (segment.poisonFor > 0) {
-      segment.poisonFor -= dt;
+  for (const { chain, segment } of uniqueHealthTargets(activeBodies(game))) {
+    const group = chain.boss && segment.healthGroupId
+      ? chain.healthGroups.find(item => item.id === segment.healthGroupId) : null;
+    const members = group?.members || [segment];
+    const cooldown = Math.max(0, Math.max(...members.map(member =>
+      member.detonationCooldown || 0)) - dt);
+    for (const member of members) member.detonationCooldown = cooldown;
+    const poisonFor = Math.max(...members.map(member => member.poisonFor || 0));
+    if (poisonFor > 0) {
+      const remaining = Math.max(0, poisonFor - dt);
+      for (const member of members) member.poisonFor = remaining;
       hitSegment(game, chain, segment, getShotDamage(game)
-        * (0.16 + 0.07 * ((game.upgrades.poison || 1) - 1)) * dt, { dot: true });
+        * poisonDamageRatio(game.upgrades.poison || 1) * dt, { dot: true });
     }
-    if (segment.burnFor > 0 && game.phase === 'playing') {
-      segment.burnFor -= dt;
+    const burnFor = Math.max(...members.map(member => member.burnFor || 0));
+    if (burnFor > 0 && game.phase === 'playing') {
+      const remaining = Math.max(0, burnFor - dt);
+      for (const member of members) member.burnFor = remaining;
       hitSegment(game, chain, segment, getShotDamage(game)
         * 0.18 * (game.upgrades.burn || 0) * dt, { dot: true });
     }

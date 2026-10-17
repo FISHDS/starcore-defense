@@ -26,9 +26,12 @@ export function fixedAimAngle(game) {
 
 export function choosePilotUpgrade(game, build = 'base') {
   const ranks = build === 'new'
-    ? ['detonation', 'superconductor', 'bounce', 'shatter', 'volley', 'power',
-      'rapid', 'pierce', 'poison', 'burn', 'arc', 'multi', 'bankshot', 'combo']
-    : ['power', 'rapid', 'multi', 'arc', 'orbit', 'drone', 'blast', 'pierce',
-      'bounce', 'volley', 'bankshot', 'poison', 'burn', 'combo'];
+    ? ['power', 'multi', 'rapid', 'volley', 'pierce', 'bounce', 'crit', 'echo',
+      'arc', 'drone', 'blast', 'bankshot', 'needle', 'rail', 'combo', 'burn',
+      'poison', 'detonation', 'superconductor', 'shatter']
+    : ['power', 'multi', 'rapid', 'volley', 'pierce', 'bounce', 'crit', 'echo',
+      'arc', 'drone', 'blast', 'bankshot', 'needle', 'rail', 'combo', 'burn',
+      'poison', 'orbit', 'frost', 'mark', 'rebound', 'shatter', 'saw', 'pulse',
+      'anchor'];
   return ranks.find(id => game.choices.includes(id)) || game.choices[0];
 }

@@ -9,7 +9,7 @@ export const ORGANS = [
   { id: 'focus-lens', name: '弱點透鏡', description: '擊中頭目弱點時傷害提高 20%', cost: 140 },
   { id: 'salvage', name: '拾荒囊', description: '寶箱更容易打開，研究點收入提升', cost: 200 },
   { id: 'tempo', name: '速搏心', description: '開局射擊間隔縮短', cost: 260 },
-  { id: 'anchor-organ', name: '定錨腺', description: '每擊破一節，敵群後退更明顯', cost: 300 },
+  { id: 'anchor-organ', name: '定錨腺', description: '重力錨額外拖住敵群一小段時間', cost: 300 },
 ];
 
 export const META_ITEMS = [...WEAPONS, ...ORGANS];

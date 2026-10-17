@@ -1,4 +1,37 @@
 // 關卡特殊節點都沿原有長鏈行進；破壞後不會額外生出頭部。
+export function healthPoolKey(chain, segment) {
+  return `${chain.id}:${segment.healthGroupId || segment.id}`;
+}
+
+export function uniqueHealthTargets(items) {
+  const seen = new Set();
+  return items.filter(({ chain, segment }) => {
+    if (!segment || segment.hp <= 0) return false;
+    const key = healthPoolKey(chain, segment);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+export function selectNextHealthPoolTarget(items, origin, excludedPools, range) {
+  const excluded = excludedPools instanceof Set ? excludedPools : new Set(excludedPools);
+  return items.filter(({ chain, segment }) => !segment.chest && segment.hp > 0
+    && !excluded.has(healthPoolKey(chain, segment))
+    && Math.hypot(segment.x - origin.x, segment.y - origin.y) < range)
+    .sort((a, b) => Math.hypot(a.segment.x - origin.x, a.segment.y - origin.y)
+      - Math.hypot(b.segment.x - origin.x, b.segment.y - origin.y))
+    .find(item => !excluded.has(healthPoolKey(item.chain, item.segment))) || null;
+}
+
+export function poisonDamageRatio(rank) {
+  return 0.22 + (Math.max(1, Math.min(3, rank)) - 1) * 0.1;
+}
+
+export function pulseDamageRatio(rank) {
+  return 0.4 + (Math.max(1, Math.min(3, rank)) - 1) * 0.15;
+}
+
 export function assignTraits(piece, stage, boss, chestIndices) {
   if (piece.index === 0 || piece.chest) return;
   const rules = stage.mechanics || [];

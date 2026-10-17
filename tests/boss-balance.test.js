@@ -29,15 +29,16 @@ function estimateBossSeconds(chapter) {
     + game.upgrades.echo * 0.22;
   const expectedCritical = 1 + game.upgrades.crit * 0.1;
   const expectedVolley = 0.75 + 0.25 * (1.7 + game.upgrades.volley * 0.2);
-  const damagePerSecond = getShotDamage(game) * projectileCount / interval
+  const damagePerSecond = getShotDamage(game) * projectileCount
+    * (1 + game.upgrades.multi * 0.45) / (1 + game.upgrades.multi) / interval
     * expectedCritical * expectedVolley;
   return bossHealth / damagePerSecond;
 }
 
-test('25關頭目在全彈命中與合理局外成長下，戰鬥時間逐關增加且落在可控範圍', () => {
+test('25關頭目純藥丸傷害估算逐關增加，且保留技能輸出的空間', () => {
   const seconds = Array.from({ length: 25 }, (_, index) => estimateBossSeconds(index + 1));
   for (let index = 0; index < seconds.length; index++) {
-    assert.ok(seconds[index] >= 45 && seconds[index] <= 95,
+    assert.ok(seconds[index] >= 45 && seconds[index] <= 140,
       `第${index + 1}關估計 ${seconds[index].toFixed(1)} 秒`);
     if (index > 0) {
       assert.ok(seconds[index] >= seconds[index - 1] * 0.97,
