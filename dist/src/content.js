@@ -8,7 +8,7 @@ export const WAVES = [
   { name: '交錯雙母體', startsAt: 250, duration: 50, spawnGap: 0, segments: 42, hp: 14000, speed: 27, tint: 'coral', path: 'cross', boss: true },
 ];
 
-export { CHAPTERS } from './campaign.js?v=20261017-starcore-9';
+export { CHAPTERS } from './campaign.js?v=20261017-starcore-11';
 
 export const UPGRADES = [
   { id: 'power', name: '高能藥丸', description: '藥丸傷害 +35%', icon: '✦', tone: 'coral', rarity: 'common', category: 'bullet', max: 5 },
@@ -19,9 +19,7 @@ export const UPGRADES = [
   { id: 'orbit', name: '蓄能環', description: '定期在準星方向展開脈衝扇區', icon: '◉', tone: 'gold', rarity: 'epic', category: 'area', max: 3 },
   { id: 'arc', name: '連鎖電弧', description: '沿準星方向連鎖攻擊附近節點', icon: 'ϟ', tone: 'cyan', rarity: 'epic', category: 'area', max: 3 },
   { id: 'frost', name: '冰凍脈衝', description: '命中後讓整條敵群減速', icon: '❄', tone: 'cyan', rarity: 'rare', category: 'control', max: 3 },
-  { id: 'shield', name: '防護膜', description: '頭目飛彈造成的傷害減少', icon: '⬡', tone: 'mint', rarity: 'common', category: 'survival', max: 4 },
   { id: 'crit', name: '精準藥劑', description: '提高暴擊機率', icon: '✧', tone: 'gold', rarity: 'common', category: 'bullet', max: 4 },
-  { id: 'fury', name: '背水一戰', description: '護盾越低，傷害越高', icon: '♨', tone: 'coral', rarity: 'rare', category: 'survival', max: 3 },
   { id: 'needle', name: '超音速針', description: '藥丸飛行更快且傷害增加', icon: '↑', tone: 'violet', rarity: 'common', category: 'bullet', max: 3 },
   { id: 'poison', name: '滲透毒素', description: '命中後持續侵蝕該節身體', icon: '☣', tone: 'mint', rarity: 'rare', category: 'control', max: 3 },
   { id: 'burn', name: '灼熱藥劑', description: '命中後持續灼燒該節身體', icon: '♨', tone: 'coral', rarity: 'rare', category: 'control', max: 3 },

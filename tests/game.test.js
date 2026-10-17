@@ -153,13 +153,13 @@ test('固定站在中央亂射不足以通關', () => {
   assert.ok(victories <= 2, `固定站樁在 20 次中竟通關 ${victories} 次`);
 });
 
-test('固定角色主動轉向打箱並攔截來彈，可通過完整長局', () => {
+test('固定角色主動轉向打箱與身節，可通過完整長局', () => {
   const game = startRun(5);
   for (let i = 0; i < 8500 && !['victory', 'defeat'].includes(game.phase); i++) {
     if (game.phase === 'upgrade') chooseUpgrade(game, choosePilotUpgrade(game));
     advance(game, 0.05, { aimAngle: fixedAimAngle(game) });
   }
-  assert.equal(game.phase, 'victory', `敗在 ${game.encounter}，${game.runTime.toFixed(1)} 秒，耐久 ${game.core}，清掉 ${game.normalDestroyed} 節`);
+  assert.equal(game.phase, 'victory', `敗在 ${game.encounter}，${game.runTime.toFixed(1)} 秒，清掉 ${game.normalDestroyed} 節`);
 });
 
 test('三個可選關卡具有不同進攻路線與難度', () => {

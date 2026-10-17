@@ -23,7 +23,7 @@ test('頭目會直接受傷，沒有掃描彈或護罩', () => {
   const game = startRun(997, {}, 6);
   game.encounter = 'boss';
   for (let step = 0; step < 160; step++) advance(game, 0.05);
-  assert.equal(game.enemyBullets.length, 0);
+  assert.equal('enemyBullets' in game, false);
   assert.ok(game.bosses.every(boss => !('shielded' in boss)
     && !('telegraphFor' in boss.rig)));
 });

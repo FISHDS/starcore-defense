@@ -10,7 +10,7 @@ const ZONES = [
 const MECHANIC_NAMES = {
   narrow: '窄道', switchback: '折返', armor: '甲殼', forkLeft: '左岔',
   forkRight: '右岔', guard: '護箱', magnet: '磁力', focus: '補給窗口',
-  weakpoint: '開合弱點', haste: '加速節', hazard: '預警射線',
+  weakpoint: '開合弱點', haste: '加速節',
   goldRush: '黃金補給',
 };
 
@@ -31,15 +31,15 @@ const LEVELS = [
   ['磁晶交錯', 'weave', ['magnet', 'weakpoint'], 'weakpoint'],
   ['輪轉晶后', 'cross', ['magnet', 'weakpoint', 'guard'], 'alternating'],
   ['熱脈加速', 'sine', ['haste'], 'speed'],
-  ['導管警報', 'mirror', ['hazard'], 'hazard'],
+  ['導管折返', 'mirror', ['switchback', 'weakpoint'], 'weakpoint'],
   ['補給或追擊', 'fork', ['haste', 'guard'], 'speed'],
   ['甲殼暴走', 'weave', ['armor', 'haste'], 'speed'],
-  ['雙脈破陣', 'spiral', ['hazard', 'haste'], 'hazard'],
+  ['雙脈破陣', 'spiral', ['magnet', 'haste'], 'speed'],
   ['深域大迴路', 'cross', ['switchback', 'weakpoint'], 'alternating'],
   ['磁速同調', 'spiral', ['magnet', 'haste'], 'speed'],
-  ['誘餌與射線', 'fork', ['guard', 'hazard'], 'hazard'],
-  ['高階金箱', 'weave', ['armor', 'magnet', 'hazard', 'goldRush'], 'alternating'],
-  ['母巢終局', 'cross', ['armor', 'haste', 'weakpoint', 'guard', 'hazard'], 'final'],
+  ['誘餌與折返', 'fork', ['guard', 'forkRight', 'weakpoint'], 'alternating'],
+  ['高階金箱', 'weave', ['armor', 'magnet', 'goldRush'], 'alternating'],
+  ['母巢終局', 'cross', ['armor', 'haste', 'weakpoint', 'guard'], 'final'],
 ];
 
 // 雙頭集中在每區決戰；其餘關卡由單一頭目帶較長身體與更完整的第二階段。

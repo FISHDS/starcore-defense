@@ -1,9 +1,9 @@
-import { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID } from './content.js?v=20261017-starcore-9';
-import { routePosition } from './routes.js?v=20261017-starcore-9';
+import { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID } from './content.js?v=20261017-starcore-11';
+import { routePosition } from './routes.js?v=20261017-starcore-11';
 import { assignTraits, chainSpeed, chestGuarded, steerBullet,
-  updateHazards, updateWeakpoints } from './mechanics.js';
+  updateWeakpoints } from './mechanics.js';
 import { createBossRig, updateBossRig } from './boss-rig.js';
-import { bossProfileFor, bossRosterIndexFor } from './boss-profiles.js?v=20261017-starcore-9';
+import { bossProfileFor, bossRosterIndexFor } from './boss-profiles.js?v=20261017-starcore-11';
 
 export { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID };
 export const WIDTH = 390;
@@ -23,7 +23,7 @@ function activeStage(game) {
 export function startRun(seed = Date.now(), profile = {}, chapter = 1) {
   const profileLevels = {
     fire: Math.max(0, Math.min(4, profile.fire || 0)),
-    guard: Math.max(0, Math.min(4, profile.guard || 0)),
+    precision: Math.max(0, Math.min(4, profile.precision ?? profile.guard ?? 0)),
     scavenge: Math.max(0, Math.min(4, profile.scavenge || 0)),
     tactics: Math.max(0, Math.min(4, profile.tactics || 0)),
     collector: Math.max(0, Math.min(4, profile.collector || 0)),
@@ -31,7 +31,6 @@ export function startRun(seed = Date.now(), profile = {}, chapter = 1) {
   const organs = Array.isArray(profile.equippedOrgans) ? profile.equippedOrgans : [];
   const weapon = ['capsule', 'scatter', 'rail', 'prism'].includes(profile.equippedWeapon)
     ? profile.equippedWeapon : 'capsule';
-  const maxCore = 120 + profileLevels.guard * 15 + (organs.includes('guard-membrane') ? 20 : 0);
   return {
     phase: 'playing', seed: seed >>> 0,
     chapter: chapter === 26 || CHAPTERS.some(item => item.id === chapter) ? chapter : 1,
@@ -41,15 +40,13 @@ export function startRun(seed = Date.now(), profile = {}, chapter = 1) {
     normalDestroyed: 0, bossDestroyed: 0,
     spawnCount: 0, nextId: 1,
     fireTimer: 0, specialTimers: {}, normalShotTimer: 0,
-    regenTimer: 0,
-    hazardTimer: 0, hazards: [],
-    maxCore, core: maxCore, baseDamage: 40 + profileLevels.fire * 5,
+    baseDamage: 40 + profileLevels.fire * 5,
     chestMaxHp: 100 - profileLevels.scavenge * 8 - (organs.includes('salvage') ? 15 : 0),
     profileLevels, score: 0, player: { ...playerPosition(chapter), aimAngle: -Math.PI / 2 },
-    chains: [], chest: null, bullets: [], enemyBullets: [], effects: [], popups: [],
+    chains: [], chest: null, bullets: [], effects: [], popups: [],
     pickups: [], chargeFor: 0, comboCount: 0, comboTimer: 0,
     audioCues: [],
-    boss: null, bosses: [], invulnerable: 0, upgrades: {}, choices: [],
+    boss: null, bosses: [], upgrades: {}, choices: [],
     rerollsLeft: 0, upgradeSource: null,
   };
 }
@@ -65,10 +62,10 @@ export function getShotDamage(game) {
   const natural = game.baseDamage * (1 + depth / 30) ** 1.45 * chapterScale;
   const upgrades = 1 + (game.upgrades.power || 0) * 0.35
     + (game.upgrades.needle || 0) * 0.14 + (game.upgrades.rail || 0) * 0.13;
-  const danger = 1 + (game.upgrades.fury || 0) * 0.5 * (1 - game.core / game.maxCore);
   const chain = 1 + Math.min(10, game.comboCount || 0) * (game.upgrades.combo || 0) * 0.015;
   const charge = game.chargeFor > 0 ? 1.25 : 1;
-  return Math.round(natural * upgrades * danger * chain * charge
+  return Math.round(natural * upgrades * (1 + game.profileLevels.precision * 0.06)
+    * chain * charge
     * (game.equippedWeapon === 'rail' ? 1.2 : 1));
 }
 
@@ -145,9 +142,9 @@ function configuredWave(game, index) {
   };
 }
 
-function initialTravel(path, boss) {
-  if (path.startsWith('center-')) return boss ? 1020 : 1020;
-  if (boss) return 500;
+function initialTravel(path, boss, preview = false) {
+  if (boss) return preview ? 500 : -500;
+  if (path.startsWith('center-')) return 1020;
   if (path === 'tide') return 760;
   if (path === 'fork' || path === 'fork-right' || path === 'narrow') return 950;
   if (path === 'weave') return 1200;
@@ -181,7 +178,7 @@ function spawnChain(game, wave, lane = game.spawnCount) {
   const count = wave.segments;
   const chain = {
     id: game.nextId++, boss, dead: false, path: wave.path, lane, stage: game.wave,
-    tint: wave.tint, travel: initialTravel(wave.path, boss),
+    tint: wave.tint, travel: initialTravel(wave.path, boss, game.preview),
     spacing: boss ? 31 : 29, speed: wave.speed, actualSpeed: wave.speed,
     feedSpeed: 0,
     slowFor: 0, recoil: 0, segments: [],
@@ -259,7 +256,8 @@ export function hitSegment(game, chain, segment, amount, options = {}) {
   const critical = !options.dot && random(game) < (game.upgrades.crit || 0) * 0.1;
   const weakpoint = segment.weakpoint && segment.weakOpen;
   const damage = Math.max(1, Math.round(amount * (critical ? 2 : 1)
-    * (weakpoint ? 1 + game.profileLevels.collector * 0.12 : 1)
+    * (weakpoint ? 1 + game.profileLevels.collector * 0.12
+      + (game.equippedOrgans.includes('focus-lens') ? 0.2 : 0) : 1)
     * (1 + segment.mark)
     * (supplyGuarded ? 0.35 : 1)
     * (segment.weakpoint ? (segment.weakOpen ? 1.6 : chain.boss ? 1 : 0.28) : 1)));
@@ -518,15 +516,6 @@ function pointSegmentDistance(px, py, x1, y1, x2, y2) {
   return Math.hypot(px - (x1 + (x2 - x1) * t), py - (y1 + (y2 - y1) * t));
 }
 
-export function canInterceptProjectile(player, projectile, aimAngle,
-  tolerance = 0.3) {
-  const incomingAngle = Math.atan2(projectile.y - player.y,
-    projectile.x - player.x);
-  const difference = Math.atan2(Math.sin(incomingAngle - aimAngle),
-    Math.cos(incomingAngle - aimAngle));
-  return Math.abs(difference) <= tolerance;
-}
-
 function updateBullets(game, dt) {
   for (let i = game.bullets.length - 1; i >= 0; i--) {
     const bullet = game.bullets[i];
@@ -550,20 +539,6 @@ function updateBullets(game, dt) {
         - pointSegmentProgress(a.segment.x, a.segment.y,
           previousX, previousY, bullet.x, bullet.y));
     let consumed = false;
-    for (let shotIndex = game.enemyBullets.length - 1; shotIndex >= 0; shotIndex--) {
-      const hostile = game.enemyBullets[shotIndex];
-      if (!canInterceptProjectile(game.player, hostile, game.player.aimAngle)) continue;
-      if (pointSegmentDistance(hostile.x, hostile.y, previousX, previousY,
-        bullet.x, bullet.y) > bullet.width + hostile.radius) continue;
-      game.enemyBullets.splice(shotIndex, 1);
-      game.score += 4;
-      game.effects.push({ kind: 'arc', x: hostile.x, y: hostile.y,
-        x2: hostile.x + hostile.vx * 0.06,
-        y2: hostile.y + hostile.vy * 0.06, life: 0.2, maxLife: 0.2 });
-      if (bullet.pierce > 0) bullet.pierce--;
-      else { consumed = true; break; }
-    }
-    if (consumed) { game.bullets.splice(i, 1); continue; }
     for (const { chain, segment } of crossed) {
       const oldX = segment.x;
       const oldY = segment.y;
@@ -672,48 +647,6 @@ function updateCombatTimers(game, dt) {
   if (game.comboTimer === 0) game.comboCount = 0;
 }
 
-function updateNormalShots(game, dt) {
-  const normal = game.encounter === 'normal'
-    ? game.chains.find(chain => !chain.boss && !chain.dead) : null;
-  if (!normal) return;
-  game.normalShotTimer += dt;
-  const interval = game.chapter <= 5 ? 7.5 : 11;
-  if (game.normalShotTimer < interval) return;
-  game.normalShotTimer -= interval;
-  const source = normal.segments.filter(piece => piece.index > 0
-    && piece.y > 150 && piece.y < 550).sort((a, b) => b.y - a.y)[0];
-  if (!source) return;
-  const speed = 210;
-  const dx = game.player.x - source.x;
-  const dy = game.player.y - source.y;
-  const length = Math.hypot(dx, dy) || 1;
-  game.enemyBullets.push({ kind: 'spore', x: source.x, y: source.y + 15,
-    vx: dx / length * speed, vy: dy / length * speed, radius: 6, damage: 7 });
-}
-function updateEnemyBullets(game, dt) {
-  game.invulnerable = Math.max(0, game.invulnerable - dt);
-  for (let i = game.enemyBullets.length - 1; i >= 0; i--) {
-    const shot = game.enemyBullets[i];
-    shot.x += shot.vx * dt;
-    shot.y += shot.vy * dt;
-    if ((shot.ricochets || 0) > 0 && (shot.x < shot.radius || shot.x > WIDTH - shot.radius)) {
-      shot.x = Math.max(shot.radius, Math.min(WIDTH - shot.radius, shot.x));
-      shot.vx *= -1;
-      shot.ricochets--;
-    }
-    if (Math.abs(shot.x - game.player.x) < shot.radius + 15
-      && Math.abs(shot.y - game.player.y) < shot.radius + 15 && game.invulnerable === 0) {
-      game.enemyBullets.splice(i, 1);
-      game.core = Math.max(0, game.core - Math.max(2,
-        (shot.damage || 9) - (game.upgrades.shield || 0) * 2));
-      game.invulnerable = 0.7;
-      if (game.core <= 0) game.phase = 'defeat';
-    } else if (shot.y > HEIGHT + 20 || shot.x < -30 || shot.x > WIDTH + 30) {
-      game.enemyBullets.splice(i, 1);
-    }
-  }
-}
-
 function drawUpgradeChoices(game, previous = []) {
   const evolved = UPGRADES.filter(item => item.rarity === 'evolution'
     && !game.upgrades[item.id]
@@ -777,9 +710,6 @@ export function advance(game, dt, control = { aimAngle: game.player.aimAngle }) 
   updateChains(game, dt);
   if (game.phase !== 'playing') return;
   updateWeakpoints(game);
-  updateHazards(game, dt, game.encounter !== 'boss'
-    && activeStage(game).mechanics.includes('hazard'));
-  if (game.phase !== 'playing') return;
   fireCapsules(game, dt);
   fireSpecials(game, dt);
   if (game.phase !== 'playing') return;
@@ -789,8 +719,6 @@ export function advance(game, dt, control = { aimAngle: game.player.aimAngle }) 
   if (game.phase !== 'playing') return;
   updateEffects(game, dt);
   if (game.phase !== 'playing') return;
-  updateNormalShots(game, dt);
-  updateEnemyBullets(game, dt);
   if (game.phase === 'playing' && game.encounter === 'boss'
     && game.spawnCount >= activeStage(game).bossCount && game.bosses.length > 0
     && game.bosses.every(boss => boss.dead)) {
@@ -805,8 +733,6 @@ export function advance(game, dt, control = { aimAngle: game.player.aimAngle }) 
       game.chains = [];
       game.bosses = [];
       game.boss = null;
-      game.hazards = [];
-      game.hazardTimer = 0;
     } else game.phase = 'victory';
   }
 }

@@ -6,17 +6,19 @@ function simulate(chapter, seed, idle = false, build = 'base') {
   const profile = { fire: level, guard: level, scavenge: level,
     tactics: level, collector: level,
     equippedWeapon: chapter >= 15 ? 'rail' : 'capsule',
-    equippedOrgans: chapter >= 20 ? ['guard-membrane', 'tempo']
-      : chapter >= 10 ? ['guard-membrane'] : [] };
+    equippedOrgans: chapter >= 20 ? ['focus-lens', 'tempo']
+      : chapter >= 10 ? ['focus-lens'] : [] };
   const game = startRun(seed, profile, chapter);
   for (let step = 0; step < 9000 && !['victory', 'defeat'].includes(game.phase); step++) {
     if (game.phase === 'upgrade') {
+      // 真正的零輸入測試不會替玩家自動選技能；停在技能選擇畫面才是正確結果。
+      if (idle) break;
       chooseUpgrade(game, choosePilotUpgrade(game, build));
     }
     advance(game, 0.05, { aimAngle: idle ? -Math.PI / 2 : fixedAimAngle(game) });
   }
   return { phase: game.phase, sec: Math.round(game.runTime),
-    killed: game.normalDestroyed, core: Math.round(game.core),
+    killed: game.normalDestroyed,
     boss: game.bossDestroyed };
 }
 

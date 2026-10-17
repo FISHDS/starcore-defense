@@ -16,14 +16,16 @@ test('通過指定關卡會解鎖不同的永久裝備，並能裝備影響下�
     run.phase = 'victory';
     awardRun(storage, run);
   }
-  const profile = readProfile(storage);
+  let profile = readProfile(storage);
   assert.ok(profile.weapons.includes('scatter'));
-  assert.ok(profile.organs.includes('guard-membrane'));
+  assert.ok(profile.organs.includes('focus-lens'));
   assert.equal(equipItem(storage, 'weapon', 'scatter').success, true);
-  assert.equal(equipItem(storage, 'organ', 'guard-membrane').success, true);
-  const equipped = startRun(2, readProfile(storage), 11);
+  assert.equal(equipItem(storage, 'organ', 'focus-lens').success, true);
+  profile = readProfile(storage);
+  profile.collector = 1;
+  const equipped = startRun(2, profile, 11);
   assert.equal(equipped.equippedWeapon, 'scatter');
-  assert.ok(equipped.maxCore > startRun(2, {}, 11).maxCore);
+  assert.ok(equipped.equippedOrgans.includes('focus-lens'));
 });
 
 test('研究點可以解鎖不同流派裝備，未解鎖前不能裝備', () => {
@@ -56,16 +58,17 @@ test('第25關通關解鎖無盡模式，雙頭目倒下會接續下一輪', () 
   assert.equal(game.encounter, 'normal');
 });
 
-test('續玩會保留無盡輪次、裝備與射線預警', () => {
+test('續玩保留無盡輪次與裝備，並丟棄舊版攻擊預警', () => {
   const storage = memory();
   const game = startRun(9, { equippedWeapon: 'rail', equippedOrgans: ['tempo'] }, 26);
   game.endlessTier = 4;
-  game.hazardTimer = 3.2;
   game.hazards = [{ x: 100, phase: 'warning', time: 0.4 }];
+  game.enemyBullets = [{ kind: 'spore', x: 195, y: 715, vx: 0, vy: 10 }];
   saveCheckpoint(storage, game);
   const loaded = loadCheckpoint(storage);
   assert.equal(loaded.endlessTier, 4);
   assert.equal(loaded.equippedWeapon, 'rail');
   assert.deepEqual(loaded.equippedOrgans, ['tempo']);
-  assert.equal(loaded.hazards[0].phase, 'warning');
+  assert.equal('hazards' in loaded, false);
+  assert.equal('enemyBullets' in loaded, false);
 });

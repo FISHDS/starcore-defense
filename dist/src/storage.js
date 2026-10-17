@@ -1,17 +1,17 @@
-import { startRun, WAVES, UPGRADE_BY_ID } from './game.js?v=20261017-starcore-9';
+import { startRun, WAVES, UPGRADE_BY_ID } from './game.js?v=20261017-starcore-11';
 import { META_BY_ID, MILESTONE_REWARDS, ORGANS, WEAPONS } from './meta.js';
 import { createBossRig } from './boss-rig.js';
-import { bossProfileFor } from './boss-profiles.js?v=20261017-starcore-9';
+import { bossProfileFor } from './boss-profiles.js?v=20261017-starcore-11';
 
 const CHECKPOINT = 'starcore.checkpoint.v5';
 const BEST = 'starcore.best.v1';
 const PROFILE = 'starcore.profile.v2';
 const LEGACY_PROFILE = 'starcore.profile.v1';
-const RESEARCH = ['fire', 'guard', 'scavenge', 'tactics', 'collector'];
+const RESEARCH = ['fire', 'precision', 'scavenge', 'tactics', 'collector'];
 
 export function readProfile(storage) {
   const empty = {
-    dna: 0, fire: 0, guard: 0, scavenge: 0, tactics: 0, collector: 0,
+    dna: 0, fire: 0, precision: 0, scavenge: 0, tactics: 0, collector: 0,
     unlockedStage: 1, cleared: [], endlessUnlocked: false,
     weapons: ['capsule'], organs: [], equippedWeapon: 'capsule',
     equippedOrgans: [], bestEndless: 0,
@@ -23,7 +23,8 @@ export function readProfile(storage) {
     const result = { ...empty };
     result.dna = Number.isInteger(raw.dna) ? Math.max(0, Math.min(999999, raw.dna)) : 0;
     for (const id of RESEARCH) {
-      result[id] = Number.isInteger(raw[id]) ? Math.max(0, Math.min(4, raw[id])) : 0;
+      const savedLevel = id === 'precision' ? raw.precision ?? raw.guard : raw[id];
+      result[id] = Number.isInteger(savedLevel) ? Math.max(0, Math.min(4, savedLevel)) : 0;
     }
     result.unlockedStage = Number.isInteger(raw.unlockedStage)
       ? Math.max(1, Math.min(25, raw.unlockedStage)) : 1;
@@ -33,12 +34,15 @@ export function readProfile(storage) {
     result.weapons = Array.isArray(raw.weapons)
       ? [...new Set(['capsule', ...raw.weapons.filter(id => WEAPONS.some(item => item.id === id))])]
       : ['capsule'];
-    result.organs = Array.isArray(raw.organs)
-      ? [...new Set(raw.organs.filter(id => ORGANS.some(item => item.id === id)))] : [];
+    const legacyOrgans = Array.isArray(raw.organs)
+      ? raw.organs.map(id => id === 'guard-membrane' ? 'focus-lens' : id) : [];
+    result.organs = [...new Set(legacyOrgans.filter(id => ORGANS.some(item => item.id === id)))];
     result.equippedWeapon = result.weapons.includes(raw.equippedWeapon)
       ? raw.equippedWeapon : 'capsule';
-    result.equippedOrgans = Array.isArray(raw.equippedOrgans)
-      ? [...new Set(raw.equippedOrgans.filter(id => result.organs.includes(id)))].slice(0, 2) : [];
+    const equippedOrgans = Array.isArray(raw.equippedOrgans)
+      ? raw.equippedOrgans.map(id => id === 'guard-membrane' ? 'focus-lens' : id) : [];
+    result.equippedOrgans = [...new Set(equippedOrgans
+      .filter(id => result.organs.includes(id)))].slice(0, 2);
     result.bestEndless = Number.isInteger(raw.bestEndless)
       ? Math.max(0, raw.bestEndless) : 0;
     return result;
@@ -139,16 +143,12 @@ export function saveCheckpoint(storage, game) {
     fireTimer: game.fireTimer,
     specialTimers: game.specialTimers,
     normalShotTimer: game.normalShotTimer,
-    hazardTimer: game.hazardTimer,
-    hazards: game.hazards,
     chains: game.chains,
     bullets: game.bullets,
-    enemyBullets: game.enemyBullets,
     chargeFor: game.chargeFor,
     comboCount: game.comboCount,
     comboTimer: game.comboTimer,
     playerAimAngle: game.player.aimAngle,
-    core: game.core,
     score: game.score,
     upgrades: game.upgrades,
     choices: game.choices,
@@ -163,8 +163,7 @@ export function loadCheckpoint(storage) {
   try {
     const data = JSON.parse(storage.getItem(CHECKPOINT) || 'null');
     if (!data || data.version !== 5 || !Number.isInteger(data.wave)
-      || data.wave < 1 || data.wave > WAVES.length || !Number.isFinite(data.core)
-      || data.core <= 0 || !Number.isFinite(data.score)
+      || data.wave < 1 || data.wave > WAVES.length || !Number.isFinite(data.score)
       || !Number.isFinite(data.runTime) || data.runTime < 0 || data.runTime > 3600
       || !['playing', 'upgrade'].includes(data.phase)
       || !['normal', 'boss'].includes(data.encounter)
@@ -179,7 +178,6 @@ export function loadCheckpoint(storage) {
       equippedWeapon: data.equippedWeapon,
       equippedOrgans: data.equippedOrgans,
     }, data.chapter);
-    if (data.core > game.maxCore) return null;
     game.wave = data.wave;
     game.endlessTier = Number.isInteger(data.endlessTier)
       ? Math.max(1, Math.min(999, data.endlessTier)) : 1;
@@ -198,8 +196,6 @@ export function loadCheckpoint(storage) {
       ? data.specialTimers : {};
     game.normalShotTimer = Number.isFinite(data.normalShotTimer)
       ? data.normalShotTimer : 0;
-    game.hazardTimer = Number.isFinite(data.hazardTimer) ? data.hazardTimer : 0;
-    game.hazards = Array.isArray(data.hazards) ? data.hazards.slice(0, 8) : [];
     game.chains = data.chains;
     for (const chain of game.chains.filter(item => item.boss)) {
       chain.originalBodyCount ||= WAVES.at(-1).segments - 1;
@@ -210,8 +206,6 @@ export function loadCheckpoint(storage) {
       vx: Number.isFinite(bullet.vx) ? bullet.vx : 0,
       vy: Number.isFinite(bullet.vy) ? bullet.vy : -1250,
     })) : [];
-    game.enemyBullets = Array.isArray(data.enemyBullets)
-      ? data.enemyBullets.slice(0, 100) : [];
     game.pickups = [];
     game.chargeFor = Number.isFinite(data.chargeFor)
       ? Math.max(0, Math.min(5, data.chargeFor)) : 0;
@@ -223,15 +217,20 @@ export function loadCheckpoint(storage) {
       ? data.playerAimAngle : -Math.PI / 2;
     game.bosses = game.chains.filter(chain => chain.boss);
     game.boss = game.bosses[0] || null;
-    game.core = data.core;
     game.score = Math.max(0, data.score);
     game.upgrades = Object.fromEntries(Object.entries(data.upgrades || {})
       .filter(([id, level]) => UPGRADE_BY_ID[id] && Number.isInteger(level)
         && level >= 1 && level <= UPGRADE_BY_ID[id].max));
     if (data.phase === 'upgrade') {
-      if (!Array.isArray(data.choices) || data.choices.length !== 3
-        || data.choices.some(id => !UPGRADE_BY_ID[id])) return null;
-      game.choices = data.choices;
+      if (!Array.isArray(data.choices) || data.choices.length !== 3) return null;
+      const legacyUpgrade = { shield: 'frost', fury: 'power' };
+      const choices = [...new Set(data.choices.map(id =>
+        UPGRADE_BY_ID[id] ? id : legacyUpgrade[id]).filter(Boolean))];
+      for (const upgrade of Object.keys(UPGRADE_BY_ID)) {
+        if (choices.length === 3) break;
+        if (!choices.includes(upgrade)) choices.push(upgrade);
+      }
+      game.choices = choices;
       game.rerollsLeft = Number.isInteger(data.rerollsLeft)
         ? Math.max(0, Math.min(5, data.rerollsLeft)) : 1;
       game.upgradeSource = data.upgradeSource === 'gold' ? 'gold' : 'chest';

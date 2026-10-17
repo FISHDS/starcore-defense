@@ -63,13 +63,13 @@ test('25關各自的頭目路線都穿過畫面左右與前後區域後才收向
   }
 });
 
-test('頭目戰沒有會扣核心耐久的彈幕或攻擊預警', () => {
+test('頭目戰沒有敵方攻擊、扣血或攻擊預警', () => {
   const game = startRun(43, {}, 1);
   game.encounter = 'boss';
   for (let step = 0; step < 400; step++) advance(game, 0.05);
   assert.equal('bossAttackCount' in game, false);
-  assert.equal(game.enemyBullets.length, 0);
-    assert.equal(game.core, game.maxCore);
+  assert.equal('enemyBullets' in game, false);
+    assert.equal('core' in game, false);
     assert.ok(game.bosses.every(boss => !('telegraphFor' in boss.rig)));
     assert.ok(game.bosses.every(boss => !('shielded' in boss)
       && boss.segments.every(piece => piece.armorHp === 0)));

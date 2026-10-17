@@ -199,10 +199,9 @@ export function drawBiome(ctx, { zone = 0, time = 0, width = 390, height = 844 }
   ctx.restore();
 }
 
-export function drawGuardian(ctx, { x = 195, y = 744, time = 0, state = 'idle', invulnerable = 0 } = {}) {
+export function drawGuardian(ctx, { x = 195, y = 744, time = 0, state = 'idle' } = {}) {
   ctx.save();
   ctx.translate(x, y - 3 + Math.sin(time * 4) * 1.2);
-  if (invulnerable > 0 && Math.floor(time * 10) % 2) ctx.globalAlpha = 0.55;
   ellipse(ctx, 0, 13, 19, 6, '#0819276b');
   if (drawSprite(ctx, 'guardian', 0, -18, 76, 79)) {
     if (state === 'fire') {
@@ -479,7 +478,7 @@ export function drawProjectile(ctx, { x = 0, y = 0, time = 0, enemy = false } = 
 }
 
 function skillPalette(id) {
-  if (['power', 'blast', 'burn', 'fury', 'rebound', 'detonation'].includes(id)) return ['#f5826f', '#ffd2a6'];
+  if (['power', 'blast', 'burn', 'rebound', 'detonation'].includes(id)) return ['#f5826f', '#ffd2a6'];
   if (['rapid', 'orbit', 'focus', 'crit', 'rail', 'bounty', 'combo'].includes(id)) return ['#f6c96c', '#fff1b0'];
   if (['pierce', 'needle', 'saw', 'mark', 'pulse'].includes(id)) return ['#ae92e8', '#eed8ff'];
   if (['frost', 'arc', 'multi', 'scatter', 'echo', 'magnet', 'anchor', 'bankshot', 'superconductor'].includes(id)) return ['#7edee2', '#dbffff'];
@@ -564,7 +563,7 @@ export function drawSkillIcon(ctx, { id = 'power', x = 0, y = 0, size = 52, time
       break;
     case 'repair': case 'secondwind':
       crossIcon(ctx, fill); break;
-    case 'shield': case 'anchor':
+    case 'anchor':
       ctx.beginPath(); ctx.moveTo(0, -22); ctx.lineTo(19, -13); ctx.lineTo(16, 12);
       ctx.lineTo(0, 23); ctx.lineTo(-16, 12); ctx.lineTo(-19, -13); ctx.closePath();
       ctx.fillStyle = fill; ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = 3; ctx.stroke();
@@ -577,7 +576,7 @@ export function drawSkillIcon(ctx, { id = 'power', x = 0, y = 0, size = 52, time
       circle(ctx, 0, 0, 3, fill);
       for (const side of [-1, 1]) line(ctx, [[side * 21, 0], [side * 27, 0]], shine, 2);
       break;
-    case 'poison': case 'burn': case 'fury':
+    case 'poison': case 'burn':
       ctx.beginPath(); ctx.moveTo(0, -22); ctx.bezierCurveTo(13, -9, 18, 0, 13, 11);
       ctx.bezierCurveTo(6, 25, -11, 23, -14, 9); ctx.bezierCurveTo(-16, -3, -6, -14, 0, -22);
       ctx.fillStyle = fill; ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = 3; ctx.stroke();

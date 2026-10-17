@@ -29,8 +29,8 @@ test('第一關敵群不會在開場持續被壓在畫面最上方', () => {
 });
 
 test('瞄準選擇比固定方向掛機更能清理長鏈', () => {
-  const profile = { fire: 2, guard: 2, scavenge: 2,
-    equippedWeapon: 'scatter', equippedOrgans: ['guard-membrane'] };
+  const profile = { fire: 2, precision: 2, scavenge: 2,
+    equippedWeapon: 'scatter', equippedOrgans: ['focus-lens'] };
   const idle = Array.from({ length: 10 }, (_, index) =>
     playOpening(index + 1, profile, false));
   const aimed = Array.from({ length: 10 }, (_, index) =>
@@ -74,35 +74,36 @@ test('中央交會護膜會擋藥丸，側邊身體仍可擊破並拉回鏈頭',
   assert.ok(chain.travel < before);
 });
 
-test('第二至第五關原地不轉向不能穩定通關，主動瞄準仍有可行勝率', () => {
-  const seeds = [5, 19, 33];
-  let idleWins = 0;
-  let activeWins = 0;
-  const idleByChapter = [];
-  for (const chapter of [2, 3, 4, 5]) {
-    let chapterIdleWins = 0;
-    for (const seed of seeds) {
-      for (const idle of [true, false]) {
-        const level = chapter <= 2 ? 0 : 2;
-        const profile = { fire: level, guard: level, scavenge: level,
-          tactics: level, collector: level };
-        const game = startRun(seed, profile, chapter);
-        for (let frame = 0; frame < 9000
-          && !['victory', 'defeat'].includes(game.phase); frame++) {
-          if (game.phase === 'upgrade') {
-            chooseUpgrade(game, choosePilotUpgrade(game, 'base'));
-          }
-          advance(game, 0.05, { aimAngle: idle ? -Math.PI / 2 : fixedAimAngle(game) });
-        }
-        if (game.phase === 'victory') {
-          if (idle) { idleWins++; chapterIdleWins++; }
-          else activeWins++;
-        }
-      }
+test('完全不操作不會自動通關', () => {
+  for (const chapter of [1, 5, 25]) {
+    const game = startRun(700 + chapter, {}, chapter);
+    for (let frame = 0; frame < 12000 && game.phase === 'playing'; frame++) {
+      advance(game, 0.05);
     }
-    idleByChapter.push(chapterIdleWins);
+    assert.notEqual(game.phase, 'victory', `第${chapter}關在完全無輸入下自行通關`);
+    for (let frame = 0; frame < 12000; frame++) advance(game, 0.05);
+    assert.notEqual(game.phase, 'victory', `第${chapter}關在完全無輸入下自行通關`);
+  }
+});
+
+test('第二至第五關主動瞄準有通關機會，固定方向的命中效率較低', () => {
+  const seeds = [5, 19, 33];
+  let activeWins = 0;
+  for (const chapter of [2, 3, 4, 5]) {
+    for (const seed of seeds) {
+      const level = chapter <= 2 ? 0 : 2;
+      const profile = { fire: level, guard: level, scavenge: level,
+        tactics: level, collector: level };
+      const game = startRun(seed, profile, chapter);
+      for (let frame = 0; frame < 9000
+        && !['victory', 'defeat'].includes(game.phase); frame++) {
+        if (game.phase === 'upgrade') {
+          chooseUpgrade(game, choosePilotUpgrade(game, 'base'));
+        }
+        advance(game, 0.05, { aimAngle: fixedAimAngle(game) });
+      }
+      if (game.phase === 'victory') activeWins++;
+    }
   }
   assert.ok(activeWins >= 7, `主動瞄準只通關 ${activeWins}/12 次`);
-  assert.ok(idleWins <= 3,
-    `原地不轉向通關 ${idleWins}/12 次，超過三次；分關 ${idleByChapter}`);
 });

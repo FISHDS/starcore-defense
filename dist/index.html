@@ -7,8 +7,8 @@
   <meta name="description" content="星核防線：原創手機直式長鏈防線遊戲。擊破身體讓頭部後退，打開藏在敵群中的寶箱進化武器。">
   <title>星核防線 · Starcore Defense</title>
   <link rel="icon" type="image/svg+xml" href="./assets/icon.svg">
-  <link rel="stylesheet" href="./style.css?v=20261017-starcore-10">
-  <script type="module" src="./src/main.js?v=20261017-starcore-10"></script>
+  <link rel="stylesheet" href="./style.css?v=20261017-starcore-11">
+  <script type="module" src="./src/main.js?v=20261017-starcore-11"></script>
 </head>
 <body>
   <main class="game-shell" aria-label="星核防線遊戲">
@@ -21,10 +21,8 @@
       </div>
       <div class="progress-track"><span id="wave-progress"></span></div>
       <div class="hud-bottom">
-        <div class="core-readout"><span class="core-symbol">◈</span><span>星核耐久</span><strong id="core-value">100</strong></div>
         <div class="score-readout"><span>得分</span><strong id="score-value">0</strong></div>
       </div>
-      <div class="core-track"><span id="core-progress"></span></div>
     </div>
 
     <div id="hint" class="gesture-hint" hidden><span class="gesture-icon">⟳</span> 按住並拖動，原地轉向瞄準身體與寶箱</div>
@@ -97,7 +95,7 @@
       </div>
       <div class="research-list">
         <button class="research-item" data-research="fire" type="button"><span class="research-symbol">✦</span><span><strong>火力培養</strong><small>開局子彈傷害增加</small><em id="research-fire-level">等級 0 / 4</em></span><b id="research-fire-cost">◆ 45</b></button>
-        <button class="research-item" data-research="guard" type="button"><span class="research-symbol">♥</span><span><strong>韌性組織</strong><small>開局防線耐久增加</small><em id="research-guard-level">等級 0 / 4</em></span><b id="research-guard-cost">◆ 45</b></button>
+        <button class="research-item" data-research="precision" type="button"><span class="research-symbol">◎</span><span><strong>精準培養</strong><small>開局所有藥丸傷害增加</small><em id="research-precision-level">等級 0 / 4</em></span><b id="research-precision-cost">◆ 45</b></button>
         <button class="research-item" data-research="scavenge" type="button"><span class="research-symbol">▣</span><span><strong>補給解析</strong><small>寶箱更容易被打開</small><em id="research-scavenge-level">等級 0 / 4</em></span><b id="research-scavenge-cost">◆ 45</b></button>
         <button class="research-item" data-research="tactics" type="button"><span class="research-symbol">↻</span><span><strong>戰術推演</strong><small>每級增加一次寶箱重抽</small><em id="research-tactics-level">等級 0 / 4</em></span><b id="research-tactics-cost">◆ 45</b></button>
         <button class="research-item" data-research="collector" type="button"><span class="research-symbol">◎</span><span><strong>弱點解析</strong><small>擊中發亮的弱點與蓄力部位時傷害增加</small><em id="research-collector-level">等級 0 / 4</em></span><b id="research-collector-cost">◆ 45</b></button>

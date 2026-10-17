@@ -1,6 +1,6 @@
 // 全部魔王共用的畫法；外型差異由資料提供，路線與碰撞仍由遊戲管理。
 import { resolveBossEquipmentPose } from './boss-rig.js';
-import { BOSS_PROFILES } from './boss-profiles.js?v=20261017-starcore-9';
+import { BOSS_PROFILES } from './boss-profiles.js?v=20261017-starcore-11';
 
 const TAU = Math.PI * 2;
 const INK = '#172235';
@@ -82,7 +82,7 @@ if (typeof Image !== 'undefined') {
   }, { once: true });
   const loading99Atlas = new Image();
   loading99Atlas.decoding = 'async';
-  loading99Atlas.src = new URL('../assets/bosses/loading-99-atlas.svg?v=20261017-starcore-9', import.meta.url).href;
+  loading99Atlas.src = new URL('../assets/bosses/loading-99-atlas.svg?v=20261017-starcore-11', import.meta.url).href;
   loading99Atlas.addEventListener('load', () => {
     const parts = {
       head: [0, 0, 100, 104], ring: [105, 16, 72, 72],

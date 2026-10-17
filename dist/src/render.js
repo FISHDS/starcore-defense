@@ -1,10 +1,10 @@
-import { WIDTH, HEIGHT } from './game.js?v=20261017-starcore-9';
-import { routePosition } from './routes.js?v=20261017-starcore-9';
+import { WIDTH, HEIGHT } from './game.js?v=20261017-starcore-11';
+import { routePosition } from './routes.js?v=20261017-starcore-11';
 import { drawBiome, drawChestFocus, drawConnector, drawGuardian,
-  drawProjectile, drawSegment } from './art.js?v=20261017-starcore-9';
-import { BOSS_PROFILES, bossProfileFor } from './boss-profiles.js?v=20261017-starcore-9';
+  drawProjectile, drawSegment } from './art.js?v=20261017-starcore-11';
+import { BOSS_PROFILES, bossProfileFor } from './boss-profiles.js?v=20261017-starcore-11';
 import { resolveBossPose } from './boss-rig.js';
-import { drawBossConnector, drawBossSegment } from './boss-art.js?v=20261017-starcore-9';
+import { drawBossConnector, drawBossSegment } from './boss-art.js?v=20261017-starcore-11';
 
 const TAU = Math.PI * 2;
 const BACKGROUND_TONES = [
@@ -116,7 +116,7 @@ function background(ctx, time, wave = 1) {
   circle(ctx, 335, 420, 3, `rgba(182,209,210,${dust})`);
 }
 
-function rail(ctx, core, time) {
+function rail(ctx) {
   ctx.fillStyle = '#17253b';
   ctx.fillRect(0, 741, WIDTH, HEIGHT - 741);
   ctx.fillStyle = '#53617a';
@@ -132,24 +132,6 @@ function rail(ctx, core, time) {
     ctx.stroke();
     circle(ctx, x + 5, 754, 1.3, '#8da0ad');
   }
-  ctx.fillStyle = core < 30 ? '#fa777a' : '#69dfc6';
-  ctx.fillRect(0, 734, WIDTH * core / 100, 4);
-  if (core < 35) {
-    ctx.fillStyle = `rgba(255,94,110,${0.08 + 0.05 * Math.sin(time * 7)})`;
-    ctx.fillRect(0, 710, WIDTH, 80);
-  }
-}
-
-function centerCore(ctx, core, time, x, y) {
-  ctx.save();
-  ctx.strokeStyle = core < 30 ? '#ff7784' : '#6fe7d3';
-  ctx.lineWidth = 3;
-  ctx.shadowColor = ctx.strokeStyle;
-  ctx.shadowBlur = 12 + 3 * Math.sin(time * 4);
-  ctx.beginPath(); ctx.arc(x, y, 49, 0, TAU); ctx.stroke();
-  ctx.globalAlpha = 0.25;
-  ctx.beginPath(); ctx.arc(x, y, 60, 0, TAU); ctx.stroke();
-  ctx.restore();
 }
 
 function guardian(ctx, x, y, time, invulnerable = 0) {
@@ -454,91 +436,16 @@ export function render(ctx, game, time) {
     chain(ctx, preview, time, zone);
     healthNumbers(ctx, selectHealthLabels([preview]));
     chestHighlights(ctx, visibleChests([preview]), time);
-    rail(ctx, 100, time);
+    rail(ctx);
     drawGuardian(ctx, { x: WIDTH / 2, y: 744, time });
     return;
   }
   const chests = visibleChests(game.chains);
-  for (const hazard of game.hazards || []) {
-    ctx.save();
-    ctx.fillStyle = hazard.phase === 'warning' ? 'rgba(255,216,119,.16)'
-      : 'rgba(255,104,110,.38)';
-    ctx.fillRect(hazard.x - 38, 100, 76, 650);
-    ctx.strokeStyle = hazard.phase === 'warning' ? '#ffe18a' : '#ff696f';
-    ctx.lineWidth = hazard.phase === 'warning' ? 2 : 8;
-    ctx.setLineDash(hazard.phase === 'warning' ? [8, 9] : []);
-    ctx.beginPath(); ctx.moveTo(hazard.x, 90); ctx.lineTo(hazard.x, 748); ctx.stroke();
-    ctx.restore();
-  }
   for (const item of game.chains) chain(ctx, item, time, zone);
   for (const bullet of game.bullets) {
     drawProjectile(ctx, { x: bullet.x, y: bullet.y, time });
   }
-  for (const bullet of game.enemyBullets) {
-    if (bullet.kind === 'knifeSlash') {
-      ctx.save();
-      ctx.translate(bullet.x, bullet.y);
-      ctx.rotate(Math.atan2(bullet.vy, bullet.vx) - Math.PI / 2);
-      ctx.shadowColor = '#ffe8a0';
-      ctx.shadowBlur = 14;
-      ctx.strokeStyle = '#fff2c6';
-      ctx.lineWidth = 8;
-      ctx.lineCap = 'round';
-      ctx.beginPath(); ctx.arc(0, 0, 15, -2.6, 0.55); ctx.stroke();
-      ctx.strokeStyle = '#d66c55';
-      ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.arc(0, 0, 21, -2.4, 0.35); ctx.stroke();
-      ctx.restore();
-    } else if (bullet.kind === 'notification') {
-      ctx.save();
-      ctx.translate(bullet.x, bullet.y);
-      ctx.rotate(Math.atan2(bullet.vy, bullet.vx));
-      ctx.fillStyle = '#ff6477'; ctx.strokeStyle = '#fff1dc'; ctx.lineWidth = 2.5;
-      ctx.beginPath(); ctx.roundRect(-11, -8, 22, 16, 5); ctx.fill(); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(-4, 7); ctx.lineTo(-8, 13); ctx.lineTo(1, 8);
-      ctx.fillStyle = '#ff6477'; ctx.fill(); ctx.stroke();
-      for (const x of [-5, 0, 5]) {
-        ctx.beginPath(); ctx.arc(x, 0, 1.35, 0, TAU); ctx.fillStyle = '#fff7e9'; ctx.fill();
-      }
-      ctx.restore();
-    } else if (bullet.kind === 'loadingScan') {
-      ctx.save(); ctx.translate(bullet.x, bullet.y);
-      ctx.rotate(Math.atan2(bullet.vy, bullet.vx));
-      ctx.shadowColor = '#ff796e'; ctx.shadowBlur = 12;
-      ctx.strokeStyle = '#ffe1a1'; ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.arc(0, 0, 10, -2.25, 1.45); ctx.stroke();
-      ctx.strokeStyle = '#ff796e'; ctx.lineWidth = 4;
-      ctx.beginPath(); ctx.arc(0, 0, 15, -1.95, 1.05); ctx.stroke();
-      ctx.restore();
-    } else if (bullet.kind === 'sonicWave') {
-      ctx.save(); ctx.translate(bullet.x, bullet.y);
-      ctx.strokeStyle = '#e5fcff'; ctx.lineWidth = 6;
-      ctx.shadowColor = '#51dff4'; ctx.shadowBlur = 10;
-      ctx.beginPath(); ctx.arc(0, 0, 18, .17, Math.PI - .17); ctx.stroke();
-      ctx.strokeStyle = '#36cce4'; ctx.lineWidth = 4;
-      ctx.beginPath(); ctx.arc(0, 0, 26, .26, Math.PI - .26); ctx.stroke();
-      ctx.restore();
-    } else drawProjectile(ctx, { x: bullet.x, y: bullet.y, time, enemy: true });
-  }
   for (const effect of game.effects) drawEffect(ctx, effect, time);
-  for (const pickup of game.pickups || []) {
-    if (pickup.y < -15 || pickup.y > 790) continue;
-    const shield = pickup.kind === 'shield';
-    ctx.save();
-    ctx.translate(pickup.x, pickup.y);
-    ctx.shadowColor = shield ? '#9af7d6' : '#ffd36d';
-    ctx.shadowBlur = 14;
-    ctx.fillStyle = shield ? '#8ce9cf' : '#ffcc64';
-    ctx.strokeStyle = '#15344b';
-    ctx.lineWidth = 2.5;
-    ctx.beginPath(); ctx.moveTo(0, -10); ctx.lineTo(9, 0);
-    ctx.lineTo(0, 10); ctx.lineTo(-9, 0); ctx.closePath();
-    ctx.fill(); ctx.stroke();
-    ctx.fillStyle = '#15344b';
-    ctx.font = '900 12px system-ui'; ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle'; ctx.fillText(shield ? '+' : 'ϟ', 0, 1);
-    ctx.restore();
-  }
   healthNumbers(ctx, selectHealthLabels(game.chains));
   damageNumbers(ctx, selectDamagePopups(game.popups, chests));
   if (game.comboCount >= 3 && game.comboTimer > 0) {
@@ -551,9 +458,7 @@ export function render(ctx, game, time) {
     ctx.fillText(`${game.comboCount} 連擊`, WIDTH / 2, 157);
     ctx.restore();
   }
-  if (game.player.y < 600) centerCore(ctx,
-    game.core / game.maxCore * 100, time, game.player.x, game.player.y);
-  else rail(ctx, game.core / game.maxCore * 100, time);
+  if (game.player.y >= 600) rail(ctx);
   chestHighlights(ctx, chests, time);
   ctx.save();
   const aimEndX = game.player.x + Math.cos(game.player.aimAngle) * 62;
@@ -571,6 +476,5 @@ export function render(ctx, game, time) {
     ctx.beginPath(); ctx.arc(game.player.x, game.player.y - 11, 38, 0, TAU); ctx.stroke();
     ctx.restore();
   }
-  drawGuardian(ctx, { x: game.player.x, y: game.player.y, time,
-    invulnerable: game.invulnerable });
+  drawGuardian(ctx, { x: game.player.x, y: game.player.y, time });
 }

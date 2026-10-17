@@ -18,20 +18,36 @@ test('長局戰鬥可從進行中的區域續玩', () => {
   game.wave = 3;
   game.waveTime = 11;
   game.runTime = 107;
-  game.core = 63;
   game.score = 140;
-  game.upgrades = { rapid: 2, shield: 1 };
+  game.upgrades = { rapid: 2, power: 1 };
   game.player.aimAngle = 1.1;
   saveCheckpoint(storage, game);
   const restored = loadCheckpoint(storage);
   assert.equal(restored.wave, 3);
   assert.equal(restored.runTime, 107);
-  assert.equal(restored.core, 63);
+  assert.equal('core' in restored, false);
   assert.equal(restored.score, 140);
-  assert.deepEqual(restored.upgrades, { rapid: 2, shield: 1 });
+  assert.deepEqual(restored.upgrades, { rapid: 2, power: 1 });
   assert.equal(restored.player.x, 195);
   assert.equal(restored.player.aimAngle, 1.1);
   assert.equal(restored.chains.length, 0);
+});
+
+test('舊版寶箱存檔仍可續玩，舊耐久與敵方攻擊資料不會帶回', () => {
+  const storage = memoryStorage();
+  storage.setItem('starcore.checkpoint.v5', JSON.stringify({
+    version: 5, seed: 44, chapter: 1, wave: 1, phase: 'upgrade',
+    encounter: 'normal', normalDestroyed: 0, score: 50, runTime: 12,
+    chains: [], core: 3, hazards: [{ x: 195 }], enemyBullets: [{ kind: 'spore' }],
+    choices: ['power', 'shield', 'fury'], upgrades: { shield: 2, fury: 1 },
+  }));
+  const restored = loadCheckpoint(storage);
+  assert.equal(restored.phase, 'upgrade');
+  assert.equal(restored.choices.length, 3);
+  assert.ok(restored.choices.every(id => !['shield', 'fury'].includes(id)));
+  assert.equal('core' in restored, false);
+  assert.equal('enemyBullets' in restored, false);
+  assert.equal('hazards' in restored, false);
 });
 
 test('最佳成績只會提高，不會被較低成績覆蓋', () => {

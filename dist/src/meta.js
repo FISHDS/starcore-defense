@@ -6,7 +6,7 @@ export const WEAPONS = [
 ];
 
 export const ORGANS = [
-  { id: 'guard-membrane', name: '護膜', description: '增加初始耐久 20 點', cost: 140 },
+  { id: 'focus-lens', name: '弱點透鏡', description: '擊中頭目弱點時傷害提高 20%', cost: 140 },
   { id: 'salvage', name: '拾荒囊', description: '寶箱更容易打開，研究點收入提升', cost: 200 },
   { id: 'tempo', name: '速搏心', description: '開局射擊間隔縮短', cost: 260 },
   { id: 'anchor-organ', name: '定錨腺', description: '每擊破一節，敵群後退更明顯', cost: 300 },
@@ -16,7 +16,7 @@ export const META_ITEMS = [...WEAPONS, ...ORGANS];
 export const META_BY_ID = Object.fromEntries(META_ITEMS.map(item => [item.id, item]));
 export const MILESTONE_REWARDS = {
   5: { kind: 'weapon', id: 'scatter' },
-  10: { kind: 'organ', id: 'guard-membrane' },
+  10: { kind: 'organ', id: 'focus-lens' },
   15: { kind: 'weapon', id: 'rail' },
   20: { kind: 'organ', id: 'tempo' },
   25: { kind: 'weapon', id: 'prism' },

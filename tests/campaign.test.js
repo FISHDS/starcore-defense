@@ -119,7 +119,7 @@ test('擊破前段後，長鏈不能長時間縮到畫面外', () => {
   for (let i = 0; i < 18000 && !['victory', 'defeat'].includes(game.phase); i++) {
     if (game.phase === 'upgrade') {
       const rank = ['power', 'multi', 'rapid', 'rail', 'arc', 'drone',
-        'pierce', 'blast', 'frost', 'repair', 'shield'];
+        'pierce', 'blast', 'frost', 'poison', 'burn'];
       chooseUpgrade(game, rank.find(id => game.choices.includes(id)) || game.choices[0]);
     }
     const chains = game.chains.filter(chain => !chain.dead);
@@ -131,14 +131,6 @@ test('擊破前段後，長鏈不能長時間縮到畫面外', () => {
     const near = bodies.sort((a, b) => b.y - a.y)[0];
     const guard = threat?.segments.slice(1, 8).find(piece => piece.y < 710);
     let x = guard?.x ?? chest?.x ?? near?.x ?? 195;
-    const hazard = game.hazards.find(item => item.phase === 'warning'
-      && Math.abs(item.x - x) < 52);
-    if (hazard) x = hazard.x < 195 ? Math.min(366, hazard.x + 85)
-      : Math.max(24, hazard.x - 85);
-    const bullet = game.enemyBullets.find(item => item.y > 580 && item.y < 735
-      && Math.abs(item.x - x) < 35);
-    if (bullet) x = bullet.x < 195 ? Math.min(366, bullet.x + 65)
-      : Math.max(24, bullet.x - 65);
     advance(game, 0.05, x);
     const chain = game.chains.find(item => !item.boss && !item.dead);
     const visible = chain?.segments.filter(piece => piece.y > 40 && piece.y < 730

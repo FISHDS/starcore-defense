@@ -52,7 +52,7 @@ test('所有關卡的頭目只沿路行軍，不發射彈幕或累積攻擊預�
     game.encounter = 'boss';
     for (let frame = 0; frame < 80 && game.phase === 'playing'; frame++) advance(game, 0.05);
     assert.ok(game.bosses.length > 0, `第${stage.id}關應生成頭目`);
-    assert.equal(game.enemyBullets.length, 0, `第${stage.id}關不可出現頭目彈幕`);
+    assert.equal('enemyBullets' in game, false, `第${stage.id}關不可生成敵方彈幕`);
     assert.ok(game.bosses.every(boss => !('telegraphFor' in boss.rig)),
       `第${stage.id}關不可顯示頭目攻擊預警`);
     assert.ok(game.bosses.every(boss => !boss.rig.loadingFollowup));

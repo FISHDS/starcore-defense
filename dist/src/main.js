@@ -1,12 +1,12 @@
-import { advance, CHAPTERS, chooseUpgrade, createBossShowcase, getRunProgress, HEIGHT, rerollUpgrades, startRun, UPGRADE_BY_ID, WAVES, WIDTH } from './game.js?v=20261017-starcore-9';
+import { advance, CHAPTERS, chooseUpgrade, createBossShowcase, getRunProgress, HEIGHT, rerollUpgrades, startRun, UPGRADE_BY_ID, WAVES, WIDTH } from './game.js?v=20261017-starcore-11';
 import { pointerToAimAngle } from './input.js';
-import { render } from './render.js?v=20261017-starcore-9';
-import { awardRun, buyResearch, buyItem, equipItem, clearCheckpoint, loadCheckpoint, readProfile, researchCost, saveCheckpoint, updateBest } from './storage.js?v=20261017-starcore-9';
+import { render } from './render.js?v=20261017-starcore-11';
+import { awardRun, buyResearch, buyItem, equipItem, clearCheckpoint, loadCheckpoint, readProfile, researchCost, saveCheckpoint, updateBest } from './storage.js?v=20261017-starcore-11';
 import { ORGANS, WEAPONS } from './meta.js';
-import { drawSkillIcon } from './art.js?v=20261017-starcore-9';
-import { createAudioEngine, musicThemeForChapter } from './audio.js?v=20261017-starcore-5';
+import { drawSkillIcon } from './art.js?v=20261017-starcore-11';
+import { createAudioEngine, musicThemeForChapter } from './audio.js?v=20261017-starcore-11';
 import { getBattleHint } from './tutorial.js';
-import { bossProfileFor } from './boss-profiles.js?v=20261017-starcore-9';
+import { bossProfileFor } from './boss-profiles.js?v=20261017-starcore-11';
 
 const $ = id => document.getElementById(id);
 const canvas = $('arena');
@@ -103,18 +103,16 @@ function refreshHud() {
   $('wave-name').textContent = game.preview && game.encounter === 'boss'
     ? encounterName
     : `${game.chapter === 26 ? '無盡挑戰' : CHAPTERS[game.chapter - 1].name} · ${encounterName}`;
-  $('core-value').textContent = String(Math.ceil(game.core));
   $('score-value').textContent = game.score.toLocaleString('zh-TW');
   const progress = getRunProgress(game);
   $('wave-progress').style.width = `${Math.max(0, progress) * 100}%`;
-  $('core-progress').style.width = `${game.core / game.maxCore * 100}%`;
 }
 
 function refreshResearch() {
   const profile = readProfile(storage);
   $('menu-dna').textContent = `◆ ${profile.dna}`;
   $('research-dna').textContent = String(profile.dna);
-  for (const id of ['fire', 'guard', 'scavenge', 'tactics', 'collector']) {
+  for (const id of ['fire', 'precision', 'scavenge', 'tactics', 'collector']) {
     const level = profile[id];
     const cost = researchCost(level);
     $(`research-${id}-level`).textContent = `等級 ${level} / 4`;
@@ -493,7 +491,6 @@ function frame(timestamp) {
     if (keys.right) targetAimAngle += dt * 2.5;
     const oldPhase = game.phase;
     const oldEncounter = game.encounter;
-    const oldCore = game.core;
     const oldShots = game.shotCount;
     const oldDestroyed = game.normalDestroyed + game.bossDestroyed;
     const priorEffects = new Set(game.effects);
@@ -507,7 +504,6 @@ function frame(timestamp) {
     } else if (game.effects.some(effect => effect.kind === 'hit' && !priorEffects.has(effect))) {
       audio.playSfx('hit');
     }
-    if (game.core < oldCore) audio.playSfx('hurt');
     if (oldEncounter !== game.encounter && game.encounter === 'boss') audio.playSfx('boss');
     if (game.phase !== oldPhase) {
       if (game.phase === 'upgrade') audio.playSfx('chest');

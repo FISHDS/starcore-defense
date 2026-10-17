@@ -22,7 +22,7 @@ test('群組長頭目不送通知彈、沒有攻擊預警或護罩', () => {
   game.encounter = 'boss';
   advance(game, 0.05);
   for (let step = 0; step < 100; step++) advance(game, 0.05);
-  assert.equal(game.enemyBullets.length, 0);
+  assert.equal('enemyBullets' in game, false);
   assert.equal('telegraphFor' in game.bosses[0].rig, false);
   assert.equal('shielded' in game.bosses[0], false);
 });

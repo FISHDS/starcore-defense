@@ -17,7 +17,7 @@ test('破音貓以繞道與逐節受擊帶來挑戰，不對固定角色發射�
   const game = startRun(74, {}, 2);
   game.encounter = 'boss';
   for (let step = 0; step < 120; step++) advance(game, 0.05);
-  assert.equal(game.enemyBullets.length, 0);
-  assert.equal(game.core, game.maxCore);
+  assert.equal('enemyBullets' in game, false);
+  assert.equal('core' in game, false);
   assert.equal('telegraphFor' in game.boss.rig, false);
 });

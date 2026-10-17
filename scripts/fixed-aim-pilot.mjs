@@ -1,13 +1,6 @@
-// 模擬固定角色的瞄準策略：先處理迫近彈，再鎖定寶箱或最危險的身體節。
+// 模擬固定角色的瞄準策略：優先鎖定弱點、寶箱與最迫近的身體節。
 export function fixedAimAngle(game) {
   const player = game.player;
-  const projectile = game.enemyBullets
-    .filter(shot => Math.hypot(shot.x - player.x, shot.y - player.y) < 300)
-    .sort((a, b) => Math.hypot(a.x - player.x, a.y - player.y)
-      - Math.hypot(b.x - player.x, b.y - player.y))[0];
-  if (projectile) return Math.atan2(projectile.y - player.y,
-    projectile.x - player.x);
-
   const visible = game.chains.filter(chain => !chain.dead)
     .flatMap(chain => chain.segments.filter(piece => piece.index > 0
       && piece.hp > 0 && piece.x >= 0 && piece.x <= 390

@@ -53,28 +53,3 @@ export function updateWeakpoints(game) {
     }
   }
 }
-
-export function updateHazards(game, dt, enabled) {
-  if (!Array.isArray(game.hazards)) game.hazards = [];
-  if (enabled) {
-    game.hazardTimer += dt;
-    if (game.hazardTimer >= 6) {
-      game.hazardTimer -= 6;
-      game.hazards.push({ x: game.player.x, phase: 'warning', time: 0.75 });
-    }
-  }
-  for (let index = game.hazards.length - 1; index >= 0; index--) {
-    const hazard = game.hazards[index];
-    hazard.time -= dt;
-    if (hazard.time > 0) continue;
-    if (hazard.phase === 'warning') {
-      hazard.phase = 'active';
-      hazard.time = 0.2;
-      const y = 95;
-      const flight = Math.max(0.65, (game.player.y - y) / 270);
-      game.enemyBullets.push({ kind: 'hazardPulse', x: hazard.x, y,
-        vx: (game.player.x - hazard.x) / flight, vy: 270,
-        radius: 10, damage: 16 });
-    } else game.hazards.splice(index, 1);
-  }
-}

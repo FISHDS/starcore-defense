@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { advance, canInterceptProjectile, hitSegment, startRun } from '../dist/src/game.js';
+import { advance, hitSegment, startRun } from '../dist/src/game.js';
 import { chainSpeed } from '../dist/src/mechanics.js';
 
 function launched(stage) {
@@ -81,24 +81,12 @@ test('加速節被擊破後，長鏈的前進速度下降', () => {
   assert.ok(chainSpeed(chain) < before);
 });
 
-test('射線先顯示預警，再成為可射擊擊落的脈衝彈', () => {
+test('導管關卡不再顯示攻擊預警或向固定玩家發射彈幕', () => {
   const game = launched(17);
-  for (let i = 0; i < 180 && !game.hazards?.length; i++) advance(game, 0.05, 195);
-  assert.equal(game.hazards?.[0]?.phase, 'warning');
-  const hp = game.core;
-  for (let i = 0; i < 20 && game.hazards[0]?.phase === 'warning'; i++) {
-    advance(game, 0.05, { aimAngle: -Math.PI / 2 });
-  }
-  assert.ok(game.enemyBullets.some(shot => shot.kind === 'hazardPulse'));
-  assert.equal(game.core, hp);
-});
-
-test('敵彈必須在玩家瞄準的扇區內才會被藥丸打落', () => {
-  const player = { x: 195, y: 744 };
-  const diagonal = { x: 205, y: 714 };
-  assert.equal(canInterceptProjectile(player, diagonal, -Math.PI / 2), false);
-  assert.equal(canInterceptProjectile(player, diagonal,
-    Math.atan2(diagonal.y - player.y, diagonal.x - player.x)), true);
+  for (let i = 0; i < 180; i++) advance(game, 0.05, 195);
+  assert.equal('hazards' in game, false);
+  assert.equal('enemyBullets' in game, false);
+  assert.equal('core' in game, false);
 });
 
 test('補給窗口關卡讓寶箱比同深度一般節點容易打開', () => {
@@ -155,27 +143,23 @@ test('第24關的高階金箱確實比一般關卡更多', () => {
   assert.ok(countGold(treasure) > countGold(ordinary));
 });
 
-test('普通長鏈會發射可瞄準擊落的孢子，不要求移動閃避', () => {
+test('普通長鏈不會發射攻擊或要求玩家閃避', () => {
   const game = startRun(31);
   game.fireTimer = -10000;
-  let seen = false;
   for (let i = 0; i < 260; i++) {
     advance(game, 0.05, 195);
-    seen ||= game.enemyBullets.some(shot => shot.kind === 'spore');
   }
-  assert.equal(seen, true);
-  assert.equal(game.phase, 'playing');
+  assert.equal('enemyBullets' in game, false);
+  assert.equal('core' in game, false);
 });
 
-test('玩家轉向迎擊即可擊落彈道上的頭目彈，不必移動角色', () => {
+test('移除敵方彈幕後玩家只需轉向攻擊，毋須迎擊或移動角色', () => {
   const game = startRun(32);
   advance(game, 0.05);
   const origin = { x: game.player.x, y: game.player.y };
   game.bullets = [{ x: 195, y: 724, vx: 0, vy: -520, speed: 520,
     damage: 1, width: 4, hit: [], pierce: 0 }];
-  game.enemyBullets = [{ kind: 'spore', x: 195, y: 715,
-    vx: 0, vy: 10, radius: 6, damage: 7 }];
   advance(game, 0.05, { aimAngle: -Math.PI / 2 });
-  assert.equal(game.enemyBullets.length, 0);
+  assert.equal('enemyBullets' in game, false);
   assert.deepEqual({ x: game.player.x, y: game.player.y }, origin);
 });

@@ -31,7 +31,7 @@ test('擊破身體不會生成需要移動取得的回血或補給物', () => {
     hitSegment(game, chain, segment, segment.hp + 1);
   }
   assert.equal(game.pickups.length, 0);
-  assert.equal(game.core, game.maxCore);
+  assert.equal('core' in game, false);
 });
 
 test('局內成長改由擊破後直接獲得，不掉落回血或移動拾取物', () => {
@@ -43,10 +43,10 @@ test('局內成長改由擊破後直接獲得，不掉落回血或移動拾取�
     if (piece.chest) continue;
     hitSegment(game, chain, piece, piece.hp + 1);
   }
-  const before = game.core;
+  const before = game.phase;
   advance(game, 0.05, { aimAngle: 0 });
   assert.equal(game.pickups.length, 0);
-  assert.equal(game.core, before);
+  assert.equal(game.phase, before);
 });
 
 test('高階毒素在長鏈上累積成有感的持續傷害', () => {

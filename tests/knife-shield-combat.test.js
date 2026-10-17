@@ -32,6 +32,6 @@ test('刀盾外型的頭目沒有會阻擋傷害的護盾，也不會發射斬�
   hitSegment(game, boss, piece, 200);
   assert.equal(piece.hp, before - 200);
   for (let step = 0; step < 100; step++) advance(game, 0.05);
-  assert.equal(game.enemyBullets.length, 0);
+  assert.equal('enemyBullets' in game, false);
   assert.equal('shielded' in boss, false);
 });
