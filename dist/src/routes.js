@@ -1,7 +1,7 @@
 // 每條長鏈沿同一條有實際長度的折返路線前進，身體共用該路線。
 const ROWS = 9;
-const TOP = 162;
-const ROW_STEP = 64;
+const TOP = 250;
+const ROW_STEP = 51;
 const routeCache = new Map();
 
 function rowBounds(path, row, boss, lane) {

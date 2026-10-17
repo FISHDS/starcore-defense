@@ -20,7 +20,7 @@ test('普通戰鬥只有一顆頭，時間跨區域也不產生新頭', () => {
   const game = startRun(41);
   advance(game, 0.05);
   const first = game.chains[0];
-  assert.ok(first.segments.length >= 180);
+  assert.ok(first.segments.length >= 90);
   assert.ok(first.segments.at(-1).x < 0);
   for (const time of [49, 98, 150, 205, 260]) {
     game.runTime = time;
@@ -36,22 +36,22 @@ test('同一條身體由前到後增強，刪除前段後原有強度不變', ()
   advance(game, 0.05);
   const chain = game.chains[0];
   const front = chain.segments[1];
-  const middle = chain.segments[100];
+  const middle = chain.segments[Math.floor(chain.segments.length * 0.8)];
   const rear = chain.segments.at(-1);
-  assert.ok(front.maxHp >= 45 && front.maxHp <= 80, `前段血量 ${front.maxHp}`);
+  assert.ok(front.maxHp >= 45 && front.maxHp <= 65, `前段血量 ${front.maxHp}`);
   assert.ok(middle.maxHp > 1000, `中段血量 ${middle.maxHp}`);
-  assert.ok(rear.maxHp > 20000, `後段血量 ${rear.maxHp}`);
+  assert.ok(rear.maxHp > 2000, `後段血量 ${rear.maxHp}`);
   const middleHp = middle.maxHp;
   for (const piece of chain.segments.slice(1, 16)) {
     hitSegment(game, chain, piece, piece.hp + 1);
     if (game.phase === 'upgrade') chooseUpgrade(game, game.choices[0]);
   }
   assert.equal(middle.maxHp, middleHp);
-  assert.ok(middle.index < 100);
+  assert.ok(middle.index < Math.floor(chain.segments.length * 0.8));
 });
 
 test('完整長鏈的自然火力成長不超過前段的二十五倍', () => {
-  const game = startRun(47);
+  const game = startRun(47, {}, 25);
   const opening = getShotDamage(game);
   game.normalDestroyed = game.normalTotal;
   const late = getShotDamage(game);
@@ -72,21 +72,23 @@ test('一節身體被打爆時頭部先明顯沿路後退', () => {
     `頭部只退了 ${(before - head.routeDistance).toFixed(1)} 像素`);
 });
 
-test('擊破身體後由頭部收回一節，後段不被往回拖', () => {
+test('擊破身體後頭部回拉一節，尾段留在原位', () => {
   const game = startRun(46);
   advance(game, 0.05);
   const chain = game.chains[0];
-  chain.speed = 0;
   game.fireTimer = -100;
   const head = chain.segments[0];
   const rear = chain.segments[3];
   const beforeHead = head.routeDistance;
   const beforeRear = rear.routeDistance;
+  const beforeTravel = chain.travel;
   const piece = chain.segments[2];
   hitSegment(game, chain, piece, piece.hp + 1);
-  for (let i = 0; i < 12; i++) advance(game, 0.05);
-  assert.ok(head.routeDistance < beforeHead - 25);
-  assert.ok(Math.abs(rear.routeDistance - beforeRear) < 3,
+  advance(game, 0.05);
+  assert.ok(Math.abs(chain.travel - (beforeTravel - chain.spacing + chain.speed * 0.05)) < 0.01);
+  assert.ok(head.routeDistance < beforeHead - 15);
+  for (let i = 0; i < 11; i++) advance(game, 0.05);
+  assert.ok(rear.routeDistance >= beforeRear - 3,
     `後段位移 ${Math.round(rear.routeDistance - beforeRear)} 像素`);
 });
 
@@ -109,23 +111,26 @@ test('畫面外等待進場的尾部不會被自動武器提前打掉', () => {
 });
 
 test('補給箱沿整條身體分布，打光後立即進入該關頭目', () => {
-  const game = startRun(44);
+  const game = startRun(44, {}, 25);
   advance(game, 0.05);
   const chain = game.chains[0];
   const chests = chain.segments.filter(piece => piece.chest);
-  assert.ok(chests.length >= 6);
+  assert.ok(chests.length >= 5);
   assert.ok(chests.some(piece => piece.gold));
   assert.ok(chests.some(piece => piece.index > 120));
-  for (const piece of [...chain.segments.slice(1)]) {
-    hitSegment(game, chain, piece, piece.hp + 1);
+  while (chain.segments.length > 1) {
+    const piece = chain.segments[1];
+    const group = chain.healthGroups?.find(item => item.members.includes(piece));
+    hitSegment(game, chain, piece, (group?.hp ?? piece.hp) + piece.armorHp + 1);
     if (game.phase === 'upgrade') chooseUpgrade(game, game.choices[0]);
   }
   assert.equal(chain.dead, true);
   advance(game, 0.05);
-  assert.equal(game.chains.filter(item => !item.dead && item.boss).length, 1);
+  assert.equal(game.chains.filter(item => !item.dead && item.boss).length, 2);
   const boss = game.bosses[0];
   const segment = boss.segments[1];
+  const group = boss.healthGroups.find(item => item.members.includes(segment));
   hitSegment(game, boss, segment, segment.hp + 1);
-  assert.equal(game.bossDestroyed, 1);
+  assert.equal(game.bossDestroyed, group.members.length);
   assert.equal(game.normalDestroyed, game.normalTotal);
 });

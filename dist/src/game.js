@@ -1,9 +1,9 @@
-import { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID } from './content.js?v=20261017-starcore-14';
-import { routeLength, routePosition } from './routes.js?v=20261017-starcore-14';
+import { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID } from './content.js?v=20261017-starcore-16';
+import { routeLength, routePosition } from './routes.js?v=20261017-starcore-16';
 import { assignTraits, chainSpeed, chestGuarded, steerBullet,
-  updateWeakpoints } from './mechanics.js?v=20261017-starcore-14';
-import { createBossRig, updateBossRig } from './boss-rig.js?v=20261017-starcore-14';
-import { bossProfileFor, bossRosterIndexFor } from './boss-profiles.js?v=20261017-starcore-14';
+  updateWeakpoints } from './mechanics.js?v=20261017-starcore-16';
+import { createBossRig, updateBossRig } from './boss-rig.js?v=20261017-starcore-16';
+import { bossProfileFor, bossRosterIndexFor } from './boss-profiles.js?v=20261017-starcore-16';
 
 export { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID };
 export const WIDTH = 390;
@@ -18,6 +18,11 @@ function playerPosition(chapter) {
 function activeStage(game) {
   return CHAPTERS[game.chapter === 26
     ? 20 + ((game.endlessTier - 1) % 5) : game.chapter - 1];
+}
+
+function normalSegmentsForChapter(chapter) {
+  return chapter === 26 ? WAVES[0].segments
+    : Math.min(WAVES[0].segments, Math.round(90 + (chapter - 1) * 5.42));
 }
 
 export function startRun(seed = Date.now(), profile = {}, chapter = 1) {
@@ -36,7 +41,7 @@ export function startRun(seed = Date.now(), profile = {}, chapter = 1) {
     chapter: chapter === 26 || CHAPTERS.some(item => item.id === chapter) ? chapter : 1,
     endlessTier: 1, equippedWeapon: weapon, equippedOrgans: organs.slice(0, 2), shotCount: 0,
     wave: 1, waveTime: 0, runTime: 0,
-    encounter: 'normal', normalTotal: WAVES[0].segments - 1,
+    encounter: 'normal', normalTotal: normalSegmentsForChapter(chapter) - 1,
     normalDestroyed: 0, bossDestroyed: 0,
     spawnCount: 0, nextId: 1,
     fireTimer: 0, specialTimers: {}, normalShotTimer: 0,
@@ -117,6 +122,15 @@ export function createBossShowcase(seed = Date.now(), chapter = 1) {
     piece.hp = piece.maxHp;
     piece.armorHp = 0;
   }
+  for (const group of boss.healthGroups) {
+    group.maxHp = Math.round(group.members.reduce((total, piece) => total + piece.maxHp, 0)
+      / group.members.length * 2);
+    group.hp = group.maxHp;
+    for (const piece of group.members) {
+      piece.maxHp = group.maxHp;
+      piece.hp = group.hp;
+    }
+  }
   game.previewBodyTotal = boss.originalBodyCount;
   return game;
 }
@@ -133,7 +147,8 @@ function configuredWave(game, index) {
     ...source,
     path,
     tint: chapter.tints[index],
-    segments: source.boss ? chapter.bossSegments : source.segments,
+    segments: source.boss ? chapter.bossSegments
+      : source === WAVES[0] ? normalSegmentsForChapter(game.chapter) : source.segments,
     hp: Math.round(source.hp * chapter.hpScale * (game.chapter === 26
       ? 1 + (game.endlessTier - 1) * 0.18 : 1)
       * (source.boss ? chapter.bossHpScale : 1)),
@@ -142,13 +157,15 @@ function configuredWave(game, index) {
   };
 }
 
-function initialTravel(path, boss, preview = false) {
+function initialTravel(path, boss, preview = false, lane = 0) {
   if (boss) return preview ? 500 : -500;
-  if (path.startsWith('center-')) return 1020;
-  if (path === 'tide') return 760;
-  if (path === 'fork' || path === 'fork-right' || path === 'narrow') return 950;
-  if (path === 'weave') return 1200;
-  return 1700;
+  // 每條路線由入口外開始，避免開始作戰時頭目或長鏈已經在戰場內。
+  for (let distance = -60; distance >= -800; distance -= 10) {
+    const point = routePosition(path, false, lane, distance);
+    if (point.x < -24 || point.x > WIDTH + 24
+      || point.y < -24 || point.y > HEIGHT + 24) return distance;
+  }
+  return -800;
 }
 
 function reposition(chain, dt = 0) {
@@ -178,10 +195,10 @@ function spawnChain(game, wave, lane = game.spawnCount) {
   const count = wave.segments;
   const chain = {
     id: game.nextId++, boss, dead: false, path: wave.path, lane, stage: game.wave,
-    tint: wave.tint, travel: initialTravel(wave.path, boss, game.preview),
+    tint: wave.tint, travel: initialTravel(wave.path, boss, game.preview, lane),
     spacing: boss ? 31 : 29, speed: wave.speed, actualSpeed: wave.speed,
     feedSpeed: 0,
-    slowFor: 0, recoil: 0, segments: [],
+    slowFor: 0, recoil: 0, entryComplete: boss, segments: [],
     originalBodyCount: boss ? count - 1 : 0,
     rig: boss ? createBossRig(bossProfileFor(game.chapter, lane).id) : null,
   };
@@ -206,6 +223,7 @@ function spawnChain(game, wave, lane = game.spawnCount) {
     assignTraits(piece, stage, boss, chestIndices);
     chain.segments.push(piece);
   }
+  if (boss) buildBossHealthGroups(chain);
   if (chain.rig?.profileId === 'meme-seen-zone-admin') {
     const phone = chain.segments[3];
     if (phone) {
@@ -241,6 +259,36 @@ function spawnChain(game, wave, lane = game.spawnCount) {
   return chain;
 }
 
+function buildBossHealthGroups(chain) {
+  const runs = [];
+  let run = [];
+  const flush = () => {
+    while (run.length >= 3) {
+      const remainder = run.length - 4;
+      const size = remainder === 1 || remainder === 2 ? 3 : 4;
+      runs.push(run.splice(0, size));
+    }
+    if (run.length) runs.push(run.splice(0));
+  };
+  for (const piece of chain.segments) {
+    if (piece.index === 0 || piece.chest) flush();
+    if (piece.index > 0 && !piece.chest) run.push(piece);
+  }
+  flush();
+  chain.healthGroups = runs.filter(members => members.length >= 2).map((members, index) => {
+    const hp = Math.round(members.reduce((total, piece) => total + piece.maxHp, 0)
+      / members.length * 2);
+    const group = { id: `${chain.id}-hp-${index}`, hp, maxHp: hp, members };
+    for (const piece of members) {
+      piece.healthGroupId = group.id;
+      piece.healthGroupLeader = piece === members[Math.floor(members.length / 2)];
+      piece.maxHp = hp;
+      piece.hp = hp;
+    }
+    return group;
+  });
+}
+
 function addPopup(game, x, y, value, weak = false) {
   game.popups.push({ x, y, value: Math.round(value), life: 0.63, weak });
   if (game.popups.length > 65) game.popups.shift();
@@ -261,9 +309,14 @@ export function hitSegment(game, chain, segment, amount, options = {}) {
     * (1 + segment.mark)
     * (supplyGuarded ? 0.35 : 1)
     * (segment.weakpoint ? (segment.weakOpen ? 1.6 : chain.boss ? 1 : 0.28) : 1)));
+  const healthGroup = chain.boss && segment.healthGroupId
+    ? chain.healthGroups.find(group => group.id === segment.healthGroupId) : null;
   const armor = Math.min(segment.armorHp || 0, damage);
   if (armor > 0) segment.armorHp -= armor;
-  segment.hp -= damage - armor;
+  if (healthGroup) {
+    healthGroup.hp -= damage - armor;
+    for (const member of healthGroup.members) member.hp = healthGroup.hp;
+  } else segment.hp -= damage - armor;
   addPopup(game, segment.x, segment.y - 12, damage, critical || segment.chest);
   game.effects.push({ kind: 'hit', x: segment.x, y: segment.y, life: 0.2, maxLife: 0.2 });
   if (chain.boss && chain.rig && !options.dot) chain.rig.hurtFor = 0.14;
@@ -283,24 +336,29 @@ export function hitSegment(game, chain, segment, amount, options = {}) {
         getShotDamage(game) * 0.28, { dot: true });
     }
   }
-  if (segment.hp > 0) return true;
+  if ((healthGroup?.hp ?? segment.hp) > 0) return true;
   const position = chain.segments.indexOf(segment);
-  const neighbors = [chain.segments[position - 1], chain.segments[position + 1]];
-  chain.segments.splice(position, 1);
+  const defeatedSegments = healthGroup ? [...healthGroup.members] : [segment];
+  const neighbors = [chain.segments[position - 1],
+    chain.segments[position + defeatedSegments.length]];
+  const positions = defeatedSegments.map(piece => ({ x: piece.x, y: piece.y }));
+  const defeatedIds = new Set(defeatedSegments.map(piece => piece.id));
+  chain.segments = chain.segments.filter(piece => !defeatedIds.has(piece.id));
+  if (healthGroup) chain.healthGroups = chain.healthGroups.filter(group => group !== healthGroup);
   chain.actualSpeed = chainSpeed(chain);
   chain.segments.forEach((piece, index) => { piece.index = index; });
-  // 收掉一節時把鏈頭的目標位置退一節；後段的路線位置因此保持不變。
-  chain.travel -= chain.spacing;
+  // 身體變短的距離由頭部沿路收回，尾段因索引前移而留在原位。
+  chain.travel -= chain.spacing * defeatedSegments.length;
   chain.recoil = Math.max(chain.recoil || 0,
     0.18 + (game.upgrades.anchor || 0) * 0.04
       + (game.equippedOrgans.includes('anchor-organ') ? 0.05 : 0));
   if (!chain.boss) {
-    game.normalDestroyed++;
+    game.normalDestroyed += defeatedSegments.length;
     const nextWave = Math.min(5, 1 + Math.floor(game.normalDestroyed
       / (game.normalTotal / 5)));
     if (game.wave !== nextWave) { game.wave = nextWave; game.waveTime = 0; }
-  } else game.bossDestroyed++;
-  game.score += chain.boss ? 30 : 12;
+  } else game.bossDestroyed += defeatedSegments.length;
+  game.score += (chain.boss ? 30 : 12) * defeatedSegments.length;
   game.comboCount = game.comboTimer > 0 ? Math.min(99, game.comboCount + 1) : 1;
   game.comboTimer = 2.5;
   if (!segment.chest && !options.dot && (game.upgrades.shatter || 0) > 0) {
@@ -311,7 +369,8 @@ export function hitSegment(game, chain, segment, amount, options = {}) {
       }
     }
   }
-  game.effects.push({ kind: 'burst', x: segment.x, y: segment.y, life: 0.43, maxLife: 0.43 });
+  for (const position of positions) game.effects.push({ kind: 'burst',
+    x: position.x, y: position.y, life: 0.43, maxLife: 0.43 });
   if (chain.segments.length === 1) {
     chain.dead = true;
     if (chain.rig) {
@@ -348,10 +407,11 @@ function updateChains(game, dt) {
     chain.recoil = Math.max(0, chain.recoil - dt);
     const visible = chain.segments.filter(piece => piece.index > 0
       && piece.y > 40 && piece.y < 730 && piece.x > -20 && piece.x < 410).length;
-    const sparseFeed = !chain.boss && chain.segments.length > 30
+    if (visible >= 8) chain.entryComplete = true;
+    const sparseFeed = chain.entryComplete && !chain.boss && chain.segments.length > 30
       && chain.segments[0].y < 500
       ? visible < 8 ? 165 : visible < 14 ? 75 : 0 : 0;
-    const tailPressure = !chain.boss && chain.speed > 0 && chain.segments.length > 30
+    const tailPressure = chain.entryComplete && !chain.boss && chain.speed > 0 && chain.segments.length > 30
       ? Math.min(95, Math.max(0, (390 - chain.segments[0].y) * 0.5)) : 0;
     const feedTarget = Math.max(sparseFeed, tailPressure);
     chain.feedSpeed = (chain.feedSpeed || 0)

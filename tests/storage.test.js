@@ -91,6 +91,28 @@ test('續玩保留選擇的關卡與當時長鏈的剩餘身體', () => {
   assert.equal(restored.normalDestroyed, game.normalDestroyed);
 });
 
+test('續玩頭目戰會重建共享血量與身體節點的連結', () => {
+  const storage = memoryStorage();
+  const game = startRun(49, {}, 5);
+  game.encounter = 'boss';
+  game.wave = 6;
+  advance(game, 0.05);
+  const original = game.bosses[0];
+  const group = original.healthGroups[0];
+  hitSegment(game, original, group.members[0], 100);
+  saveCheckpoint(storage, game);
+  const restored = loadCheckpoint(storage);
+  const boss = restored.bosses[0];
+  const restoredGroup = boss.healthGroups.find(item => item.id === group.id);
+  assert.ok(restoredGroup);
+  assert.ok(restoredGroup.members.every(piece => boss.segments.includes(piece)),
+    '共享血量組必須指向續玩後真正留在場上的節點');
+  const before = restoredGroup.hp;
+  hitSegment(restored, boss, restoredGroup.members[0], 50);
+  assert.equal(restoredGroup.hp, before - 50);
+  assert.ok(restoredGroup.members.every(piece => piece.hp === restoredGroup.hp));
+});
+
 test('開箱後未選技能或已刷新時也能原樣續玩', () => {
   const storage = memoryStorage();
   const game = startRun(83);

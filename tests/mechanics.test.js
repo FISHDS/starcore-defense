@@ -42,7 +42,7 @@ test('護箱節還在時寶箱較耐打，先清護衛能解除保護', () => {
 test('磁節會偏折鄰近藥丸，破壞後停止作用', () => {
   const game = launched(11);
   const chain = game.chains[0];
-  const magnet = chain.segments.find(piece => piece.magnet && piece.x > 30 && piece.x < 360);
+  const magnet = chain.segments.find(piece => piece.magnet);
   assert.ok(magnet);
   const bullet = { x: magnet.x + 35, y: magnet.y + 50,
     vx: 0, vy: -520, speed: 520, damage: 1, pierce: 0, hit: [], width: 4 };

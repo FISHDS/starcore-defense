@@ -89,6 +89,114 @@ test('每一關的頭目都由畫面外逐段進場，開場不會鋪滿整條�
   }
 });
 
+test('第1與第2關真正開始作戰時，普通長鏈從畫外逐節進場', () => {
+  for (const chapter of [1, 2]) {
+    const game = startRun(808 + chapter, {}, chapter);
+    advance(game, 0.001);
+    const chain = game.chains[0];
+    const visibleCount = () => chain.segments.filter(piece => piece.index > 0
+      && piece.y > 40 && piece.y < 730 && piece.x > -20 && piece.x < 410).length;
+    const head = chain.segments[0];
+    assert.ok(head.x < 0 || head.x > 390 || head.y < 0 || head.y > 844,
+      `第${chapter}關開局頭部已在畫面內 (${head.x.toFixed(0)}, ${head.y.toFixed(0)})`);
+    assert.equal(visibleCount(), 0,
+      `第${chapter}關開局已有 ${visibleCount()} 節身體等在畫面內`);
+    for (let frame = 0; frame < 400; frame++) {
+      if (game.phase === 'upgrade') chooseUpgrade(game, game.choices[0]);
+      advance(game, 0.05);
+    }
+    assert.ok(visibleCount() > 0, `第${chapter}關長鏈一直沒有進場`);
+    assert.ok(visibleCount() < chain.segments.length - 1,
+      `第${chapter}關長鏈整條過快進場`);
+  }
+});
+
+test('第1與第2關開場身節不會被兩發基礎藥丸打爆', () => {
+  for (const chapter of [1, 2]) {
+    const game = startRun(818 + chapter, {}, chapter);
+    advance(game, 0.001);
+    const firstBody = game.chains[0].segments[1];
+    assert.ok(firstBody.maxHp >= 50,
+      `第${chapter}關第一節只有 ${firstBody.maxHp} 耐久`);
+  }
+});
+
+test('前段長鏈先給可完成的長度，後續關卡逐步增加並放大尾段數值', () => {
+  const samples = [1, 2, 5, 25].map(chapter => {
+    const game = startRun(828 + chapter, {}, chapter);
+    advance(game, 0.001);
+    const chain = game.chains[0];
+    return { chapter, length: chain.segments.length,
+      tailHp: chain.segments.at(-1).maxHp };
+  });
+  assert.ok(samples[0].length < samples[1].length);
+  assert.ok(samples[1].length < samples[2].length);
+  assert.ok(samples[2].length < samples[3].length);
+  assert.ok(samples[0].tailHp >= 2000, `第1關尾段只有 ${samples[0].tailHp} 耐久`);
+  assert.ok(samples[2].tailHp > samples[1].tailHp * 2,
+    '第5關尾段應比第2關明顯耐打');
+});
+
+test('擊破一組頭目身體時頭部回拉，間隔行軍後仍能再向前', () => {
+  const game = startRun(909, {}, 1);
+  game.encounter = 'boss';
+  game.wave = WAVES.length;
+  game.fireTimer = -100000;
+  advance(game, 0.001);
+  const boss = game.bosses[0];
+  for (let count = 0; count < 3; count++) {
+    const group = boss.healthGroups.find(item => item.members.length >= 3);
+    const before = boss.travel;
+    const beforeHead = boss.segments[0].routeDistance;
+    const body = group.members[0];
+    assert.ok(body, '頭目身節應該還有可破壞目標');
+    hitSegment(game, boss, body, group.hp + body.armorHp + 1);
+    assert.equal(boss.travel, before - group.members.length * boss.spacing,
+      '頭部回拉距離要對應整組被移除的身體');
+    advance(game, 0.05);
+    assert.ok(boss.segments[0].routeDistance < beforeHead,
+      '整組破壞後頭部必須沿路回拉');
+    for (let frame = 0; frame < 99; frame++) advance(game, 0.05);
+    assert.ok(boss.travel > before - group.members.length * boss.spacing,
+      '回拉後頭目應能恢復行軍');
+  }
+});
+
+test('第1、2、5關頭目每3至4節共享一個血量池', () => {
+  for (const chapter of [1, 2, 5]) {
+    const game = startRun(919 + chapter, {}, chapter);
+    game.encounter = 'boss';
+    game.wave = WAVES.length;
+    game.fireTimer = -100000;
+    advance(game, 0.001);
+    const boss = game.bosses[0];
+    const groups = boss.healthGroups.filter(group => group.members.length >= 3);
+    assert.ok(groups.length > 0, `第${chapter}關沒有共用血量的頭目身體段`);
+    assert.ok(groups.every(group => group.members.length <= 4),
+      `第${chapter}關有超過4節共用一個血量池`);
+
+    const group = groups[0];
+    const before = group.hp;
+    const beforeTravel = boss.travel;
+    assert.equal(hitSegment(game, boss, group.members[0], 100), true);
+    assert.equal(group.hp, before - 100);
+    assert.ok(group.members.every(member => member.hp === group.hp),
+      `第${chapter}關同組節點沒有同步顯示共用耐久`);
+    assert.equal(boss.travel, beforeTravel,
+      '同組尚未打破前不能造成整組回拉');
+
+    const segmentCount = boss.segments.length;
+    const destroyedCount = group.members.length;
+    assert.equal(hitSegment(game, boss, group.members[0], group.hp + 1), true);
+    assert.equal(boss.segments.length, segmentCount - destroyedCount,
+      `第${chapter}關共用血量歸零後沒有整組破壞`);
+    assert.equal(game.bossDestroyed, destroyedCount,
+      `第${chapter}關破壞進度沒有按整組節點計算`);
+    assert.ok(Math.abs(beforeTravel - boss.travel - destroyedCount * boss.spacing) < 0.01,
+      `第${chapter}關整組破壞後頭部沒有按身體長度回拉`);
+  }
+});
+
 test('普通長鏈轉頭目戰時不會把舊攻擊帶進來', () => {
   const game = startRun(404, {}, 1);
   advance(game, 0.05);

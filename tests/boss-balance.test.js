@@ -16,8 +16,13 @@ function estimateBossSeconds(chapter) {
   game.upgrades = { power: 2, rapid: 2, multi: 2, crit: 2, echo: 1, volley: 1 };
   advance(game, 0.01, { aimAngle: -Math.PI / 2 });
 
-  const bossHealth = game.bosses.flatMap(boss => boss.segments.slice(1))
-    .reduce((total, segment) => total + segment.maxHp, 0);
+  const bossHealth = game.bosses.reduce((total, boss) => {
+    const groupedIds = new Set(boss.healthGroups.flatMap(group =>
+      group.members.map(piece => piece.id)));
+    return total + boss.healthGroups.reduce((sum, group) => sum + group.maxHp, 0)
+      + boss.segments.filter(segment => segment.index > 0
+        && !groupedIds.has(segment.id)).reduce((sum, segment) => sum + segment.maxHp, 0);
+  }, 0);
   const interval = 0.19 / (1 + game.upgrades.rapid * 0.18)
     * (hasTempo ? 0.9 : 1);
   const projectileCount = 1 + game.upgrades.multi + (hasScatter ? 1 : 0)

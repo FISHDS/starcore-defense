@@ -1,10 +1,10 @@
-import { WIDTH, HEIGHT } from './game.js?v=20261017-starcore-14';
-import { routePosition } from './routes.js?v=20261017-starcore-14';
+import { WIDTH, HEIGHT } from './game.js?v=20261017-starcore-16';
+import { routePosition } from './routes.js?v=20261017-starcore-16';
 import { drawBiome, drawChestFocus, drawConnector, drawGuardian,
-  drawProjectile, drawSegment } from './art.js?v=20261017-starcore-14';
-import { BOSS_PROFILES, bossProfileFor } from './boss-profiles.js?v=20261017-starcore-14';
-import { resolveBossPose } from './boss-rig.js?v=20261017-starcore-14';
-import { drawBossConnector, drawBossSegment } from './boss-art.js?v=20261017-starcore-14';
+  drawProjectile, drawSegment } from './art.js?v=20261017-starcore-16';
+import { BOSS_PROFILES, bossProfileFor } from './boss-profiles.js?v=20261017-starcore-16';
+import { resolveBossPose } from './boss-rig.js?v=20261017-starcore-16';
+import { drawBossConnector, drawBossSegment } from './boss-art.js?v=20261017-starcore-16';
 
 const TAU = Math.PI * 2;
 const BACKGROUND_TONES = [
@@ -31,10 +31,12 @@ export function visibleChests(chains) {
 
 export function selectHealthLabels(chains) {
   const chests = visibleChests(chains);
-  const candidates = chains.filter(chain => !chain.dead).flatMap(chain => chain.segments)
-    .filter(piece => piece.index > 0 && !piece.chest && piece.hp > 0
+  const candidates = chains.filter(chain => !chain.dead).flatMap(chain =>
+    chain.segments.filter(piece => piece.index > 0 && !piece.chest && piece.hp > 0
       && piece.y >= 35 && piece.y <= 710 && piece.x >= 20
-      && piece.x <= WIDTH - 20 && piece.index % 6 === 2)
+      && piece.x <= WIDTH - 20
+      && (chain.boss ? piece.healthGroupLeader : piece.index % 6 === 2))
+      .map(piece => ({ ...piece, sharedHealth: chain.boss })))
     .sort((a, b) => b.y - a.y);
   const selected = [];
   for (const piece of candidates) {
@@ -382,6 +384,13 @@ function healthNumbers(ctx, labels) {
     ctx.fillRect(piece.x - width / 2, piece.y - 7, width, 17);
     ctx.fillStyle = '#f4fdff';
     ctx.fillText(value, piece.x, piece.y + 2);
+    if (piece.sharedHealth) {
+      const ratio = Math.max(0, Math.min(1, piece.hp / Math.max(1, piece.maxHp)));
+      ctx.fillStyle = 'rgba(5,12,22,.85)';
+      ctx.fillRect(piece.x - 21, piece.y + 12, 42, 4);
+      ctx.fillStyle = '#ff6e7d';
+      ctx.fillRect(piece.x - 21, piece.y + 12, 42 * ratio, 4);
+    }
   }
   ctx.restore();
 }

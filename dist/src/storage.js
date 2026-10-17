@@ -1,7 +1,7 @@
-import { startRun, WAVES, UPGRADE_BY_ID } from './game.js?v=20261017-starcore-14';
-import { META_BY_ID, MILESTONE_REWARDS, ORGANS, WEAPONS } from './meta.js?v=20261017-starcore-14';
-import { createBossRig } from './boss-rig.js?v=20261017-starcore-14';
-import { bossProfileFor } from './boss-profiles.js?v=20261017-starcore-14';
+import { startRun, WAVES, UPGRADE_BY_ID } from './game.js?v=20261017-starcore-16';
+import { META_BY_ID, MILESTONE_REWARDS, ORGANS, WEAPONS } from './meta.js?v=20261017-starcore-16';
+import { createBossRig } from './boss-rig.js?v=20261017-starcore-16';
+import { bossProfileFor } from './boss-profiles.js?v=20261017-starcore-16';
 
 const CHECKPOINT = 'starcore.checkpoint.v5';
 const BEST = 'starcore.best.v1';
@@ -200,6 +200,17 @@ export function loadCheckpoint(storage) {
     for (const chain of game.chains.filter(item => item.boss)) {
       chain.originalBodyCount ||= WAVES.at(-1).segments - 1;
       chain.rig ||= createBossRig(bossProfileFor(game.chapter, chain.lane).id);
+      const groups = new Map();
+      for (const piece of chain.segments) {
+        if (!piece.healthGroupId) continue;
+        const group = groups.get(piece.healthGroupId) || {
+          id: piece.healthGroupId, hp: piece.hp, maxHp: piece.maxHp, members: [],
+        };
+        group.members.push(piece);
+        group.hp = Math.min(group.hp, piece.hp);
+        groups.set(group.id, group);
+      }
+      chain.healthGroups = [...groups.values()];
     }
     game.bullets = Array.isArray(data.bullets) ? data.bullets.slice(0, 150).map(bullet => ({
       ...bullet,

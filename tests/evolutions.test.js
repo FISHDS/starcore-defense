@@ -71,14 +71,20 @@ test('連鎖電弧必須對準方向；自動技能不會替玩家掃完整畫�
   advance(game, 0.05);
   game.fireTimer = -10000;
   game.upgrades.arc = 2;
-  const target = game.chains[0].segments.find(item => item.index > 0
-    && !item.chest && item.hp > 0 && item.y > 45 && item.y < 730);
+  const target = game.chains[0].segments.find(item => item.index > 0 && !item.chest);
+  for (let frame = 0; frame < 500 && (target.x < 0 || target.x > 390
+    || target.y < 45 || target.y > 730); frame++) {
+    advance(game, 0.05, { aimAngle: -Math.PI / 2 });
+  }
+  assert.ok(target.x >= 0 && target.x <= 390 && target.y >= 45 && target.y <= 730,
+    '目標應隨長鏈逐步進場');
   const before = target.hp;
+  const angle = Math.atan2(target.y - game.player.y, target.x - game.player.x);
   game.specialTimers.arc = 2;
-  advance(game, 0.05, { aimAngle: -Math.PI / 2 });
+  advance(game, 0.05, { aimAngle: angle + Math.PI });
   assert.equal(target.hp, before, '目標不在準星前方時不應被電弧擊中');
   game.specialTimers.arc = 2;
-  const angle = Math.atan2(target.y - game.player.y, target.x - game.player.x);
-  advance(game, 0.05, { aimAngle: angle });
+  const currentAngle = Math.atan2(target.y - game.player.y, target.x - game.player.x);
+  advance(game, 0.05, { aimAngle: currentAngle });
   assert.ok(target.hp < before, '轉向目標後電弧應造成傷害');
 });

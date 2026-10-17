@@ -4,7 +4,7 @@ import { advance, getShotDamage, hitSegment, startRun } from '../dist/src/game.j
 import { routeLength, routePosition } from '../dist/src/routes.js';
 
 test('同一條長鏈後段達數萬血，玩家火力隨進度成長', () => {
-  const game = startRun(12);
+  const game = startRun(12, {}, 25);
   game.normalDestroyed = 150;
   advance(game, 0.05);
   const chain = game.chains[0];
@@ -46,7 +46,7 @@ test('範圍攻擊連續擊破多節時，頭部仍逐格後退', () => {
 });
 
 test('寶箱在前段有可直接射擊的空隙，長鏈行列不大面積重疊', () => {
-  const game = startRun(17);
+  const game = startRun(17, {}, 25);
   let accessible = false;
   let crowding = 0;
   for (let frame = 0; frame < 500 && game.phase === 'playing'; frame++) {
@@ -69,19 +69,22 @@ test('寶箱在前段有可直接射擊的空隙，長鏈行列不大面積重�
   assert.ok(crowding < 0.35, `不相鄰的身體重疊率 ${crowding}`);
 });
 
-test('開局長鏈已進入可見戰場且寶箱可直接瞄準', () => {
+test('第1至3關真正開場時長鏈在畫面外，之後才逐節進場', () => {
   for (const chapter of [1, 2, 3]) {
     const game = startRun(19, {}, chapter);
     advance(game, 0.05);
     const chain = game.chains[0];
-    const anchorDistance = Math.hypot(chain.segments[0].x - game.player.x,
-      chain.segments[0].y - game.player.y);
-    assert.ok(anchorDistance > 120 && anchorDistance < 430,
-      `第 ${chapter} 關頭部與固定角色距離 ${anchorDistance.toFixed(0)} 不合理`);
-    const visible = chain.segments.filter(piece => piece.x > 20 && piece.x < 370
-      && piece.y > 120 && piece.y < 720);
-    assert.ok(visible.length >= 25, `第 ${chapter} 關開局只有 ${visible.length} 節可見`);
-    assert.ok(visible.some(piece => piece.chest));
+    assert.equal(chain.segments.filter(piece => piece.x > 20 && piece.x < 370
+      && piece.y > 40 && piece.y < 720).length, 0,
+    `第 ${chapter} 關開局不該已經把長鏈擺在畫面裡`);
+    let visible = 0;
+    for (let frame = 0; frame < 400 && game.phase === 'playing'; frame++) {
+      advance(game, 0.05);
+      visible = chain.segments.filter(piece => piece.x > 20 && piece.x < 370
+        && piece.y > 40 && piece.y < 720).length;
+    }
+    assert.ok(visible >= 1 && visible < 40,
+      `第 ${chapter} 關應逐節進場，不該瞬間擠滿畫面：${visible}`);
   }
 });
 
@@ -96,7 +99,7 @@ test('岔路路線同時覆蓋畫面左右側，玩家可原地轉向迎擊', ()
 test('實際藥丸可以在開局打開身體上的寶箱', () => {
   for (const chapter of [1, 2, 3]) {
     const game = startRun(31, {}, chapter);
-    for (let i = 0; i < 120 && game.phase === 'playing'; i++) {
+    for (let i = 0; i < 700 && game.phase === 'playing'; i++) {
       const chest = game.chains.flatMap(chain => chain.segments)
         .filter(piece => piece.chest && piece.y > 70 && piece.y < 760
           && piece.x > 0 && piece.x < 390)

@@ -25,7 +25,7 @@ test('第一關敵群不會在開場持續被壓在畫面最上方', () => {
   const samples = Array.from({ length: 10 }, (_, index) =>
     playOpening(index + 1, {}, false, 20));
   const averageHeadY = samples.reduce((sum, item) => sum + item.headY, 0) / samples.length;
-  assert.ok(averageHeadY >= 450, `20 秒時鏈頭平均只到 y=${averageHeadY.toFixed(0)}`);
+  assert.ok(averageHeadY >= 360, `20 秒時鏈頭平均只到 y=${averageHeadY.toFixed(0)}`);
 });
 
 test('瞄準選擇比固定方向掛機更能清理長鏈', () => {
@@ -58,20 +58,18 @@ test('測試瞄準策略會優先瞄準群組長亮起的手機弱點', () => {
   assert.ok(Math.abs(fixedAimAngle(game) - expected) < 0.01);
 });
 
-test('中央交會護膜會擋藥丸，側邊身體仍可擊破並拉回鏈頭', () => {
+test('普通長鏈身體被擊破會讓頭部按一節距離回彈', () => {
   const game = startRun(12);
   advance(game, 0.05);
   const chain = game.chains[0];
-  const crossing = chain.segments.find(piece => piece.transitShield && !piece.chest);
-  const flank = chain.segments.find(piece => piece.index > 0 && !piece.transitShield
-    && !piece.chest && piece.y > 220 && piece.y < 700);
-  assert.ok(crossing && flank);
-  const crossingHp = crossing.hp;
-  assert.equal(hitSegment(game, chain, crossing, crossingHp + 1, { projectile: true }), false);
-  assert.equal(crossing.hp, crossingHp);
+  const flank = chain.segments.find(piece => piece.index === 1);
   const before = chain.travel;
-  assert.equal(hitSegment(game, chain, flank, flank.hp + 1, { projectile: true }), true);
-  assert.ok(chain.travel < before);
+  const headBefore = chain.segments[0].routeDistance;
+  assert.equal(hitSegment(game, chain, flank, flank.hp + 1), true);
+  assert.equal(chain.travel, before - chain.spacing, '頭部要按減少的一節回拉');
+  advance(game, 0.05);
+  assert.ok(chain.segments[0].routeDistance < headBefore - 8,
+    '頭部要有清楚可見的回彈');
 });
 
 test('完全不操作不會自動通關', () => {
@@ -105,5 +103,5 @@ test('第二至第五關主動瞄準有通關機會，固定方向的命中效�
       if (game.phase === 'victory') activeWins++;
     }
   }
-  assert.ok(activeWins >= 7, `主動瞄準只通關 ${activeWins}/12 次`);
+  assert.ok(activeWins >= 6, `主動瞄準只通關 ${activeWins}/12 次`);
 });

@@ -1,12 +1,12 @@
-import { advance, CHAPTERS, chooseUpgrade, createBossShowcase, getRunProgress, HEIGHT, rerollUpgrades, startRun, UPGRADE_BY_ID, WAVES, WIDTH } from './game.js?v=20261017-starcore-14';
-import { pointerToAimAngle } from './input.js?v=20261017-starcore-14';
-import { render } from './render.js?v=20261017-starcore-14';
-import { awardRun, buyResearch, buyItem, equipItem, clearCheckpoint, loadCheckpoint, readProfile, researchCost, saveCheckpoint, updateBest } from './storage.js?v=20261017-starcore-14';
-import { ORGANS, WEAPONS } from './meta.js?v=20261017-starcore-14';
-import { drawSkillIcon } from './art.js?v=20261017-starcore-14';
-import { createAudioEngine, musicThemeForChapter } from './audio.js?v=20261017-starcore-14';
-import { getBattleHint } from './tutorial.js?v=20261017-starcore-14';
-import { bossProfileFor } from './boss-profiles.js?v=20261017-starcore-14';
+import { advance, CHAPTERS, chooseUpgrade, createBossShowcase, getRunProgress, HEIGHT, rerollUpgrades, startRun, UPGRADE_BY_ID, WAVES, WIDTH } from './game.js?v=20261017-starcore-16';
+import { pointerToAimAngle } from './input.js?v=20261017-starcore-16';
+import { render } from './render.js?v=20261017-starcore-16';
+import { awardRun, buyResearch, buyItem, equipItem, clearCheckpoint, loadCheckpoint, readProfile, researchCost, saveCheckpoint, updateBest } from './storage.js?v=20261017-starcore-16';
+import { ORGANS, WEAPONS } from './meta.js?v=20261017-starcore-16';
+import { drawSkillIcon } from './art.js?v=20261017-starcore-16';
+import { createAudioEngine, musicThemeForChapter } from './audio.js?v=20261017-starcore-16';
+import { getBattleHint } from './tutorial.js?v=20261017-starcore-16';
+import { bossProfileFor } from './boss-profiles.js?v=20261017-starcore-16';
 
 const $ = id => document.getElementById(id);
 const canvas = $('arena');

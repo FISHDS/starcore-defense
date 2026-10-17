@@ -68,7 +68,7 @@ test('擊破進度會改變感染區，但普通怪保持同一顆頭', () => {
   const game = startRun(9);
   advance(game, 0.05);
   const chain = game.chains[0];
-  for (const piece of [...chain.segments.slice(1, 48)]) {
+  for (const piece of [...chain.segments.slice(1, 20)]) {
     hitSegment(game, chain, piece, piece.hp + 1);
     if (game.phase === 'upgrade') chooseUpgrade(game, game.choices[0]);
   }

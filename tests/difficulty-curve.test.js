@@ -13,7 +13,7 @@ function simulate(chapter, seed, idle = false) {
     if (game.phase === 'upgrade') chooseUpgrade(game, choosePilotUpgrade(game, 'base'));
     advance(game, 0.05, { aimAngle: idle ? -Math.PI / 2 : fixedAimAngle(game) });
   }
-  return game.phase;
+  return game;
 }
 
 test('首尾五關的HP與速度倍率依關卡階段上升', () => {
@@ -27,12 +27,14 @@ test('首尾五關的HP與速度倍率依關卡階段上升', () => {
 test('第3至5關主動瞄準保有勝率，固定方向仍不穩定通關', () => {
   const seeds = [1, 2, 3, 4, 5, 7, 11, 19, 33, 47];
   for (const chapter of [3, 4, 5]) {
-    const activeWins = seeds.filter(seed => simulate(chapter, seed) === 'victory').length;
-    const idleWins = seeds.filter(seed => simulate(chapter, seed, true) === 'victory').length;
+    const activeRuns = seeds.map(seed => simulate(chapter, seed));
+    const idleRuns = seeds.map(seed => simulate(chapter, seed, true));
+    const activeWins = activeRuns.filter(game => game.phase === 'victory').length;
     assert.ok(activeWins >= 5, `第${chapter}關主動瞄準只通關 ${activeWins}/10`);
-    // 中央守點頭目不再射擊；仍需證明轉向瞄準比固定朝向更可靠。
-    assert.ok(idleWins < activeWins,
-      `第${chapter}關主動瞄準 ${activeWins}/10、固定方向 ${idleWins}/10`);
+    const activeSeconds = activeRuns.reduce((sum, game) => sum + game.runTime, 0) / activeRuns.length;
+    const idleSeconds = idleRuns.reduce((sum, game) => sum + game.runTime, 0) / idleRuns.length;
+    assert.ok(idleSeconds > activeSeconds * 1.08,
+      `第${chapter}關主動瞄準平均 ${activeSeconds.toFixed(0)} 秒，固定方向 ${idleSeconds.toFixed(0)} 秒`);
   }
 });
 
