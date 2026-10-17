@@ -72,7 +72,7 @@ test('快速體驗無法覆蓋續玩、研究點與關卡解鎖', () => {
   assert.equal(reward.gained, 0);
 });
 
-test('試打需要瞄準；主動追擊可過關，原地亂射會輸', () => {
+test('試打需要瞄準；主動追擊可過關，原地亂射不會自動勝利或受擊', () => {
   function trial(active) {
     const game = createBossShowcase(90);
     for (let frame = 0; frame < 2400 && game.phase !== 'victory'
@@ -91,6 +91,7 @@ test('試打需要瞄準；主動追擊可過關，原地亂射會輸', () => {
   const active = trial(true);
   assert.equal(idle.phase, 'defeat');
   assert.equal(active.phase, 'victory');
+  assert.equal(idle.effects.some(effect => effect.kind === 'breach'), false);
   assert.ok(active.runTime < 120);
 });
 

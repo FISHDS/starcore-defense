@@ -1,9 +1,9 @@
-import { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID } from './content.js?v=20261017-starcore-13';
-import { routePosition } from './routes.js?v=20261017-starcore-13';
+import { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID } from './content.js?v=20261017-starcore-14';
+import { routeLength, routePosition } from './routes.js?v=20261017-starcore-14';
 import { assignTraits, chainSpeed, chestGuarded, steerBullet,
-  updateWeakpoints } from './mechanics.js?v=20261017-starcore-13';
-import { createBossRig, updateBossRig } from './boss-rig.js?v=20261017-starcore-13';
-import { bossProfileFor, bossRosterIndexFor } from './boss-profiles.js?v=20261017-starcore-13';
+  updateWeakpoints } from './mechanics.js?v=20261017-starcore-14';
+import { createBossRig, updateBossRig } from './boss-rig.js?v=20261017-starcore-14';
+import { bossProfileFor, bossRosterIndexFor } from './boss-profiles.js?v=20261017-starcore-14';
 
 export { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID };
 export const WIDTH = 390;
@@ -108,7 +108,7 @@ export function createBossShowcase(seed = Date.now(), chapter = 1) {
   game.upgrades = { power: 1, rapid: 1 };
   advance(game, 0.01);
   const boss = game.bosses[0];
-  boss.segments = boss.segments.slice(0, 24);
+  boss.segments = boss.segments.slice(0, 22);
   boss.originalBodyCount = boss.segments.length - 1;
   boss.speed = 27;
   for (const piece of boss.segments) {
@@ -357,16 +357,16 @@ function updateChains(game, dt) {
     chain.feedSpeed = (chain.feedSpeed || 0)
       + (feedTarget - (chain.feedSpeed || 0)) * Math.min(1, dt * 2);
     chain.actualSpeed = chainSpeed(chain) + chain.feedSpeed;
-    chain.travel += chain.actualSpeed * (chain.slowFor > 0 ? 0.58 : 1) * dt;
+    const nextTravel = chain.travel
+      + chain.actualSpeed * (chain.slowFor > 0 ? 0.58 : 1) * dt;
+    chain.travel = Math.min(routeLength(chain.path, chain.boss, chain.lane), nextTravel);
     chain.slowFor = Math.max(0, chain.slowFor - dt);
     reposition(chain, dt);
     const head = chain.segments[0];
-    const atCore = game.player.y < 600
-      ? Math.hypot(head.x - game.player.x, head.y - game.player.y) < 36
-      : head.y >= RAIL_Y - 8;
-    if (atCore) {
-      game.effects.push({ kind: 'breach', x: head.x,
-        y: game.player.y, life: 0.55, maxLife: 0.55 });
+    const escaped = game.player.y < 600
+      ? Math.hypot(head.x - game.player.x, head.y - game.player.y) < 80
+      : head.y >= 680;
+    if (escaped) {
       game.phase = 'defeat';
       return;
     }

@@ -1,12 +1,12 @@
-import { advance, CHAPTERS, chooseUpgrade, createBossShowcase, getRunProgress, HEIGHT, rerollUpgrades, startRun, UPGRADE_BY_ID, WAVES, WIDTH } from './game.js?v=20261017-starcore-13';
-import { pointerToAimAngle } from './input.js?v=20261017-starcore-13';
-import { render } from './render.js?v=20261017-starcore-13';
-import { awardRun, buyResearch, buyItem, equipItem, clearCheckpoint, loadCheckpoint, readProfile, researchCost, saveCheckpoint, updateBest } from './storage.js?v=20261017-starcore-13';
-import { ORGANS, WEAPONS } from './meta.js?v=20261017-starcore-13';
-import { drawSkillIcon } from './art.js?v=20261017-starcore-13';
-import { createAudioEngine, musicThemeForChapter } from './audio.js?v=20261017-starcore-13';
-import { getBattleHint } from './tutorial.js?v=20261017-starcore-13';
-import { bossProfileFor } from './boss-profiles.js?v=20261017-starcore-13';
+import { advance, CHAPTERS, chooseUpgrade, createBossShowcase, getRunProgress, HEIGHT, rerollUpgrades, startRun, UPGRADE_BY_ID, WAVES, WIDTH } from './game.js?v=20261017-starcore-14';
+import { pointerToAimAngle } from './input.js?v=20261017-starcore-14';
+import { render } from './render.js?v=20261017-starcore-14';
+import { awardRun, buyResearch, buyItem, equipItem, clearCheckpoint, loadCheckpoint, readProfile, researchCost, saveCheckpoint, updateBest } from './storage.js?v=20261017-starcore-14';
+import { ORGANS, WEAPONS } from './meta.js?v=20261017-starcore-14';
+import { drawSkillIcon } from './art.js?v=20261017-starcore-14';
+import { createAudioEngine, musicThemeForChapter } from './audio.js?v=20261017-starcore-14';
+import { getBattleHint } from './tutorial.js?v=20261017-starcore-14';
+import { bossProfileFor } from './boss-profiles.js?v=20261017-starcore-14';
 
 const $ = id => document.getElementById(id);
 const canvas = $('arena');
@@ -269,17 +269,18 @@ function setResult() {
       : game.chapter === 2 ? '你看到了破音貓的專屬外型、盤繞路線和寶箱。正式關卡仍等你挑戰。'
         : '你看到了專屬外型、繞場路線和弱點窗口。正式關卡仍等你挑戰。';
     $('result-copy').textContent = won ? previewCopy
-      : '這是練習戰。看清頭目預警，再試一次。';
+      : '頭目沒有攻擊你；長鏈已突破外圍終點。再試一次並持續追瞄。';
     $('retry-label').textContent = '再次試打';
     return;
   }
   clearCheckpoint(storage);
   const best = updateBest(storage, game.score);
   const reward = awardRun(storage, game);
-  $('result-kicker').textContent = won ? 'MISSION COMPLETE' : 'SIGNAL LOST';
+  $('result-kicker').textContent = won ? 'MISSION COMPLETE' : 'ROUTE BREACHED';
   $('result-emblem').textContent = won ? '✦' : '◇';
-  $('result-title').textContent = won ? '防線守住了' : '防線失守';
-  $('result-copy').textContent = won ? '這片培養區暫時安全了。' : '調整武器與器官，下一次守住它。';
+  $('result-title').textContent = won ? '區域已淨化' : '行軍路線遭突破';
+  $('result-copy').textContent = won ? '你已清除這片培養區的長鏈與頭目。'
+    : '敵群越過外圍終點，核心沒有扣除耐久。調整瞄準與裝備再戰。';
   $('final-score').textContent = game.score.toLocaleString('zh-TW');
   $('best-score').textContent = best.toLocaleString('zh-TW');
   $('dna-gained').textContent = `+${reward.gained}`;

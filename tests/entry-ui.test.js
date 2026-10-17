@@ -19,10 +19,11 @@ test('結果按鈕有獨立文字節點與圖示', () => {
   assert.match(html, /id="retry-button"[^>]*>[\s\S]*?aria-hidden="true"/);
 });
 
-test('首頁失敗提示適用中央守點與底線迎擊', () => {
+test('首頁明確告知頭目不會攻擊且沒有守點耐久判敗', () => {
   const html = readFileSync(new URL('../dist/index.html', import.meta.url), 'utf8');
-  assert.match(html, /頭部碰到守點即敗/);
-  assert.doesNotMatch(html, /頭部碰底線即敗/);
+  assert.match(html, /頭目不發動攻擊/);
+  assert.match(html, /突破外圍終點，任務即告失敗/);
+  assert.doesNotMatch(html, /星核耐久|碰到守點即敗|碰底線即敗|星核仍在等你/);
 });
 
 test('戰鬥畫面不顯示遮住戰場的常駐頭目提示', () => {

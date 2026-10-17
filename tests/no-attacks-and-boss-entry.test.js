@@ -48,6 +48,47 @@ test('第1至25關的頭目都從可視範圍外逐步進場', () => {
   }
 });
 
+test('25關頭目突破時只判定路線失守，不攻擊玩家或扣除核心耐久', () => {
+  for (const stage of CHAPTERS) {
+    const game = startRun(505 + stage.id, {}, stage.id);
+    game.encounter = 'boss';
+    game.wave = WAVES.length;
+    game.fireTimer = -100000;
+    advance(game, 0.001);
+    for (let frame = 0; frame < 6000 && game.phase === 'playing'; frame++) {
+      advance(game, 0.05);
+    }
+    assert.equal(game.phase, 'defeat', `第${stage.id}關頭目路線未能抵達外圍終點`);
+    assert.equal(game.effects.some(effect => effect.kind === 'breach'), false,
+      `第${stage.id}關仍播放撞擊玩家特效`);
+    assert.ok(game.bosses.every(boss => Math.hypot(
+      boss.segments[0].x - game.player.x, boss.segments[0].y - game.player.y) >= 60),
+    `第${stage.id}關頭目判敗前已碰到玩家`);
+    assert.equal('core' in game, false);
+  }
+});
+
+test('每一關的頭目都由畫面外逐段進場，開場不會鋪滿整條身體', () => {
+  for (const stage of CHAPTERS) {
+    const game = startRun(606 + stage.id, {}, stage.id);
+    game.encounter = 'boss';
+    game.wave = WAVES.length;
+    game.fireTimer = -100000;
+    advance(game, 0.001);
+    const boss = game.bosses[0];
+    const visibleCount = () => boss.segments.filter(piece => piece.index > 0
+      && piece.y > 40 && piece.y < 730 && piece.x > -20 && piece.x < 410).length;
+    assert.ok(boss.segments[0].x < 0 || boss.segments[0].x > 390
+      || boss.segments[0].y < 0 || boss.segments[0].y > 844,
+    `第${stage.id}關頭目開場已在畫面內`);
+    assert.equal(visibleCount(), 0, `第${stage.id}關開場已有一整段身體`);
+    for (let frame = 0; frame < 800; frame++) advance(game, 0.05);
+    assert.ok(visibleCount() > 0, `第${stage.id}關頭目一直沒有進場`);
+    assert.ok(visibleCount() < boss.segments.length - 1,
+      `第${stage.id}關頭目開場後過快整條灌入畫面`);
+  }
+});
+
 test('普通長鏈轉頭目戰時不會把舊攻擊帶進來', () => {
   const game = startRun(404, {}, 1);
   advance(game, 0.05);

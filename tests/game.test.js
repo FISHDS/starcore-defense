@@ -1,7 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { advance, chooseUpgrade, hitSegment, rerollUpgrades, startRun, UPGRADES, WAVES } from '../dist/src/game.js';
-import { routeLength } from '../dist/src/routes.js';
 import { choosePilotUpgrade, fixedAimAngle } from '../scripts/fixed-aim-pilot.mjs';
 
 test('長鏈頭部不受傷，身體被打爆會使頭部沿路後退', () => {
@@ -49,7 +48,7 @@ test('每條正式長鏈都帶有普通與金色寶箱', () => {
   assert.ok(chests.some(segment => !segment.gold));
 });
 
-test('單頭長鏈持續施壓，固定不射擊會在下一階段前失敗', () => {
+test('單頭長鏈不攻擊玩家；固定不射擊會因路線突破而失敗', () => {
   const game = startRun(9);
   game.fireTimer = -100000;
   let peakChains = 0;
@@ -59,7 +58,9 @@ test('單頭長鏈持續施壓，固定不射擊會在下一階段前失敗', ()
   }
   assert.equal(peakChains, 1);
   assert.equal(game.phase, 'defeat');
-  assert.ok(game.runTime > 30, `只撐了 ${game.runTime} 秒`);
+  assert.ok(game.runTime > 30, `只測了 ${game.runTime} 秒`);
+  assert.equal('core' in game, false);
+  assert.equal(game.effects.some(effect => effect.kind === 'breach'), false);
   assert.ok(new Set(WAVES.map(wave => wave.path)).size >= 5);
 });
 
@@ -76,19 +77,24 @@ test('擊破進度會改變感染區，但普通怪保持同一顆頭', () => {
   assert.equal(game.chains[0].id, chain.id);
 });
 
-test('任何頭部碰到底線立刻失敗，不會整條瞬移退回', () => {
-  for (const bossFight of [false, true]) {
-    const game = startRun(10);
-    if (bossFight) { game.encounter = 'boss'; game.wave = 6; }
-    advance(game, 0.05);
-    const chain = game.chains.find(item => item.boss === bossFight);
-    assert.ok(chain);
-    chain.travel = routeLength(chain.path, chain.boss, chain.lane) + 5;
-    chain.segments[0].routeDistance = chain.travel;
-    const before = chain.travel;
-    advance(game, 0.05);
-    assert.equal(game.phase, 'defeat');
-    assert.ok(chain.travel >= before);
+test('敵人突破路線終點前就判敗，不碰撞角色也不造成耐久傷害', () => {
+  for (const chapter of [1, 3]) {
+    for (const bossFight of [false, true]) {
+      const game = startRun(10, {}, chapter);
+      if (bossFight) { game.encounter = 'boss'; game.wave = WAVES.length; }
+      game.fireTimer = -100000;
+      advance(game, 0.05);
+      const chain = game.chains.find(item => item.boss === bossFight);
+      assert.ok(chain);
+      for (let frame = 0; frame < 5000 && game.phase === 'playing'; frame++) {
+        advance(game, 0.05);
+      }
+      assert.equal(game.phase, 'defeat');
+      const head = chain.segments[0];
+      const distance = Math.hypot(head.x - game.player.x, head.y - game.player.y);
+      assert.ok(chapter === 3 ? distance >= 70 : head.y < game.player.y - 25);
+      assert.equal(game.effects.some(effect => effect.kind === 'breach'), false);
+    }
   }
 });
 

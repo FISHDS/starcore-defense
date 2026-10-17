@@ -37,7 +37,7 @@ function makeCoreRoute(path, boss, lane) {
   const steps = 220;
   for (let index = 0; index <= steps; index++) {
     const t = index / steps;
-    let radius = 1 - t;
+    const radius = 0.1 + 0.9 * (1 - t);
     const angle = start + (reverse ? -1 : 1) * turns * Math.PI * 2 * t;
     let xRadius = 185 * radius;
     let yRadius = 350 * radius;
@@ -81,8 +81,9 @@ function makeBossRoute(index, center, lane) {
       const closeAt = 0.78 + (routeId % 3) * 0.025;
       const closing = Math.max(0, (t - closeAt) / (1 - closeAt));
       const orbit = 0.93 + 0.035 * Math.sin(t * Math.PI * (2 + shape));
+      const safeRadius = 0.1;
       const radius = (shape === 1 ? orbit : shape === 2 ? orbit * 0.94 : orbit)
-        * (1 - closing);
+        * (1 - closing * (1 - safeRadius));
       const xRadius = 120 * radius + 20
         + Math.sin(angle * (2.2 + shape)) * (routeId % 5) * 1.5;
       const yRadius = 185 * radius + 24 + Math.cos(angle * 2.7) * (shape === 3 ? 16 : 5);
@@ -116,7 +117,8 @@ function makeBossRoute(index, center, lane) {
         const t2 = (t - orbitEnd) / (1 - orbitEnd);
         const start = points.at(-1);
         const side = lane % 2 ? 1 : -1;
-        const c1 = { x: Math.max(45, Math.min(345, start.x + side * 120)), y: 650 };
+        const c1 = { x: Math.max(45, Math.min(345, start.x + side * 120)),
+          y: 650 };
         const c2 = { x: 195 - side * 130, y: 675 };
         const end = { x: 195, y: 760 };
         const inv = 1 - t2;
@@ -194,7 +196,7 @@ export function routePosition(path, boss, lane, distance) {
     return { x: points[0].x + dx / length * -distance,
       y: points[0].y + dy / length * -distance };
   }
-  if (distance >= length) return { x: points.at(-1).x, y: points.at(-1).y + distance - length };
+  if (distance >= length) return points.at(-1);
   let low = 1;
   let high = lengths.length - 1;
   while (low < high) {

@@ -7,8 +7,8 @@
   <meta name="description" content="星核防線：原創手機直式長鏈防線遊戲。擊破身體讓頭部後退，打開藏在敵群中的寶箱進化武器。">
   <title>星核防線 · Starcore Defense</title>
   <link rel="icon" type="image/svg+xml" href="./assets/icon.svg">
-  <link rel="stylesheet" href="./style.css?v=20261017-starcore-13">
-  <script type="module" src="./src/main.js?v=20261017-starcore-13"></script>
+  <link rel="stylesheet" href="./style.css?v=20261017-starcore-14">
+  <script type="module" src="./src/main.js?v=20261017-starcore-14"></script>
 </head>
 <body>
   <main class="game-shell" aria-label="星核防線遊戲">
@@ -33,7 +33,7 @@
         <p class="kicker">守住最後一道光</p>
         <h1 id="game-title">星核<span>防線</span></h1>
         <p class="english-title">STARCORE DEFENSE</p>
-        <p class="menu-copy">一條長鏈從畫面外持續進場，越後段越強。<br>擊破身體讓頭部退後，打開寶箱進化武器。<br>清空長鏈後迎戰關卡頭目；頭部碰到守點即敗。</p>
+        <p class="menu-copy">一條長鏈從畫面外逐段進場，越後段越強。<br>擊破身體讓頭部退後，打開寶箱進化武器。<br>頭目不發動攻擊；若長鏈突破外圍終點，任務即告失敗。</p>
       </div>
       <div class="menu-actions">
         <button id="stage-button" class="stage-shortcut" type="button"><span>目前關卡 <strong id="selected-stage">第 1 關 · 孢子初潮</strong></span><span>選擇關卡 ›</span></button>
@@ -107,7 +107,7 @@
       <div class="pause-panel">
         <span class="eyebrow">PAUSED</span>
         <h2 id="pause-title">戰鬥暫停</h2>
-        <p>深呼吸。星核仍在等你。</p>
+        <p>沒有頭目攻擊或核心耐久；轉向追擊長鏈與發亮弱點。</p>
         <div class="audio-controls pause-audio-controls" role="group" aria-label="聲音設定"><button class="audio-toggle" data-audio="music" type="button" aria-label="關閉背景音樂">♫ 音樂</button><button class="audio-toggle" data-audio="effects" type="button" aria-label="關閉音效">♪ 音效</button></div>
         <button id="resume-button" class="primary-button" type="button">繼續作戰 <span aria-hidden="true">↗</span></button>
         <button id="menu-button" class="text-button" type="button">返回主畫面</button>
@@ -118,7 +118,7 @@
       <div class="result-panel">
         <span id="result-kicker" class="eyebrow">MISSION COMPLETE</span>
         <div id="result-emblem" class="result-emblem">✦</div>
-        <h2 id="result-title">星核守住了</h2>
+        <h2 id="result-title">區域已淨化</h2>
         <p id="result-copy">你讓這片星空繼續發光。</p>
         <div id="result-reward" class="result-reward">獲得研究點 <strong id="dna-gained">+0</strong></div>
         <div id="result-stats" class="result-stats"><div><span>本次得分</span><strong id="final-score">0</strong></div><div><span>最佳紀錄</span><strong id="best-score">0</strong></div></div>

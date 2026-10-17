@@ -38,7 +38,8 @@ test('中央守點頭目環繞可戰鬥區域，不被頂部狀態列遮住', ()
   assert.ok(Math.min(...points.map(point => point.y)) >= 225,
     '頭部半徑需與頂部狀態列留出空隙');
   assert.ok(Math.max(...points.map(point => point.y)) > 620);
-  assert.ok(Math.hypot(points.at(-1).x - 195, points.at(-1).y - 422) < 2);
+  assert.ok(Math.hypot(points.at(-1).x - 195, points.at(-1).y - 422) < 2,
+    '頭目路徑最後應抵達核心路線終點');
 });
 
 test('25關各自的頭目路線都穿過畫面左右與前後區域後才收向終點', () => {
@@ -58,7 +59,8 @@ test('25關各自的頭目路線都穿過畫面左右與前後區域後才收向
     if (stage.positionMode === 'center') {
       assert.ok(Math.hypot(points.at(-1).x - 195, points.at(-1).y - 422) < 2);
     } else {
-      assert.ok(points.at(-1).y >= 758);
+      assert.ok(points.at(-1).y >= 758,
+        '底線頭目終點應越過畫面外圍');
     }
   }
 });

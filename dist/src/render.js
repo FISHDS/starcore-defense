@@ -1,10 +1,10 @@
-import { WIDTH, HEIGHT } from './game.js?v=20261017-starcore-13';
-import { routePosition } from './routes.js?v=20261017-starcore-13';
+import { WIDTH, HEIGHT } from './game.js?v=20261017-starcore-14';
+import { routePosition } from './routes.js?v=20261017-starcore-14';
 import { drawBiome, drawChestFocus, drawConnector, drawGuardian,
-  drawProjectile, drawSegment } from './art.js?v=20261017-starcore-13';
-import { BOSS_PROFILES, bossProfileFor } from './boss-profiles.js?v=20261017-starcore-13';
-import { resolveBossPose } from './boss-rig.js?v=20261017-starcore-13';
-import { drawBossConnector, drawBossSegment } from './boss-art.js?v=20261017-starcore-13';
+  drawProjectile, drawSegment } from './art.js?v=20261017-starcore-14';
+import { BOSS_PROFILES, bossProfileFor } from './boss-profiles.js?v=20261017-starcore-14';
+import { resolveBossPose } from './boss-rig.js?v=20261017-starcore-14';
+import { drawBossConnector, drawBossSegment } from './boss-art.js?v=20261017-starcore-14';
 
 const TAU = Math.PI * 2;
 const BACKGROUND_TONES = [
@@ -361,10 +361,10 @@ function drawEffect(ctx, effect, time) {
     ctx.lineTo(effect.x, effect.y + reach);
     ctx.stroke();
   } else {
-    ctx.strokeStyle = effect.kind === 'breach' ? '#ff747e' : '#d6fff5';
-    ctx.lineWidth = 5;
+    ctx.strokeStyle = '#d6fff5';
+    ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.arc(effect.x, effect.y, (1 - progress) * (effect.kind === 'breach' ? 110 : 35) + 5, 0, TAU);
+    ctx.arc(effect.x, effect.y, (1 - progress) * 35 + 5, 0, TAU);
     ctx.stroke();
   }
   ctx.restore();
