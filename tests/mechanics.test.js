@@ -120,22 +120,32 @@ test('輪轉頭目兩條長鏈的弱點窗口錯開', () => {
   assert.notEqual(a.weakOpen, b.weakOpen);
 });
 
-test('終局雙頭目輪流保護身體，玩家要換目標攻擊', () => {
+test('終局雙頭目不再輪流套護罩，兩條長鏈都能直接受傷', () => {
   const game = startRun(25, {}, 25);
   game.encounter = 'boss';
   advance(game, 0.05);
-  assert.notEqual(game.bosses[0].shielded, game.bosses[1].shielded);
-  const chain = game.bosses.find(item => item.shielded);
-  const piece = chain.segments.find(item => item.depth === 3);
-  const before = piece.hp;
-  hitSegment(game, chain, piece, 100);
-  const shieldDamage = before - piece.hp;
-  chain.shielded = false;
-  hitSegment(game, chain, piece, 100);
-  assert.ok(before - shieldDamage - piece.hp > shieldDamage * 2);
-  game.fireTimer = -10000;
-  for (let i = 0; i < 65; i++) advance(game, 0.05);
-  assert.equal(chain.shielded, false);
+  for (const chain of game.bosses) {
+    assert.equal('shielded' in chain, false);
+    const piece = chain.segments.find(item => item.depth === 3
+      && !item.chest && !item.weakpoint && !item.armorHp);
+    assert.ok(piece);
+    const before = piece.hp;
+    hitSegment(game, chain, piece, 100);
+    assert.equal(piece.hp, before - 100);
+  }
+});
+
+test('頭目弱點未開窗仍承受完整基本傷害，不形成假免疫', () => {
+  const game = startRun(641, {}, 15);
+  game.encounter = 'boss';
+  advance(game, 0.05);
+  const boss = game.bosses[0];
+  const weakpoint = boss.segments.find(piece => piece.index > 0 && piece.weakpoint);
+  assert.ok(weakpoint);
+  weakpoint.weakOpen = false;
+  const hp = weakpoint.hp;
+  hitSegment(game, boss, weakpoint, 50);
+  assert.equal(weakpoint.hp, hp - 50);
 });
 
 test('第24關的高階金箱確實比一般關卡更多', () => {

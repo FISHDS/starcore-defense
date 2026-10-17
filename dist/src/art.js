@@ -248,7 +248,7 @@ export function drawGuardian(ctx, { x = 195, y = 744, time = 0, state = 'idle', 
 }
 
 export function drawConnector(ctx, { from, to, zone = 0, boss = false,
-  lane = 0, shielded = false, time = 0 } = {}) {
+  lane = 0, time = 0 } = {}) {
   if (!from || !to || from.hp <= 0 || to.hp <= 0) return;
   const biome = BIOMES[zoneIndex(zone)];
   ctx.save();
@@ -256,11 +256,6 @@ export function drawConnector(ctx, { from, to, zone = 0, boss = false,
   line(ctx, [[from.x, from.y], [to.x, to.y]], INK, boss ? 33 : 29);
   line(ctx, [[from.x, from.y], [to.x, to.y]], boss && lane % 2 ? '#785cb5'
     : boss ? biome.shade : biome.enemy, boss ? 27 : 23);
-  if (shielded) {
-    ctx.globalAlpha = 0.52 + Math.sin(time * 5) * 0.12;
-    line(ctx, [[from.x, from.y], [to.x, to.y]], '#a4f5ff', 6);
-    ctx.globalAlpha = 1;
-  }
   ctx.globalAlpha = 0.33 + Math.sin(time * 3) * 0.05;
   line(ctx, [[from.x - 4, from.y - 5], [to.x - 4, to.y - 5]], biome.pale, boss ? 5 : 4);
   ctx.restore();
@@ -442,15 +437,6 @@ export function drawSegment(ctx, { piece, chain = {}, time = 0, zone = 0 } = {})
       line(ctx, [[11, 20], [21, 12]], '#f4ffff', 1.6);
       ctx.restore();
     }
-  }
-  if (chain.shielded && (piece.index === 0 || piece.chest)) {
-    ctx.strokeStyle = '#a4f5ff';
-    ctx.shadowColor = '#6cdeff';
-    ctx.shadowBlur = 13;
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.arc(0, 0, (piece.radius || 20) + 8 + Math.sin(time * 5) * 1.5, 0, TAU);
-    ctx.stroke();
   }
   ctx.restore();
 }

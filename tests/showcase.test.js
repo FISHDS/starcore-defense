@@ -80,7 +80,10 @@ test('試打需要瞄準；主動追擊可過關，原地亂射會輸', () => {
       if (game.phase === 'upgrade') chooseUpgrade(game, game.choices[0]);
       const target = game.boss.segments.filter(piece => piece.index > 0
         && piece.y > 120 && piece.y < 710).sort((a, b) => b.y - a.y)[0];
-      advance(game, 0.05, active && target ? target.x : 195);
+      const aimAngle = active && target
+        ? Math.atan2(target.y - game.player.y, target.x - game.player.x)
+        : -Math.PI / 2;
+      advance(game, 0.05, { aimAngle });
     }
     return game;
   }
@@ -106,9 +109,10 @@ test('首頁及直接連結都能進入快速體驗介紹', () => {
   assert.match(main, /URLSearchParams\(window\.location\.search\)/);
 });
 
-test('中央守點頭目的試玩說明強調行軍逼近，不再顯示攻擊招式', () => {
+test('頭目試玩說明呈現繞場路線與固定守點，不再介紹彈幕或護罩', () => {
   const main = readFileSync(new URL('../dist/src/main.js', import.meta.url), 'utf8');
-  assert.match(main, /positionMode === 'center'[\s\S]*?頭目不會發動攻擊/);
-  assert.match(main, /頭目沿行軍路線逼近核心/);
-  assert.match(main, /activeChapter\.positionMode === 'center'/);
+  assert.match(main, /頭目會穿梭畫面左右與上下區域/);
+  assert.match(main, /沒有頭目彈幕或免疫護罩/);
+  assert.match(main, /原地 360 度轉向/);
+  assert.doesNotMatch(main, /boss\.attackHint|招牌攻擊/);
 });

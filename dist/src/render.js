@@ -1,11 +1,10 @@
-import { WIDTH, HEIGHT } from './game.js?v=20261017-starcore-7';
-import { routePosition } from './routes.js?v=20261017-starcore-7';
+import { WIDTH, HEIGHT } from './game.js?v=20261017-starcore-9';
+import { routePosition } from './routes.js?v=20261017-starcore-9';
 import { drawBiome, drawChestFocus, drawConnector, drawGuardian,
-  drawProjectile, drawSegment } from './art.js?v=20261017-starcore-7';
-import { BOSS_PROFILES, bossProfileFor } from './boss-profiles.js?v=20261017-starcore-7';
+  drawProjectile, drawSegment } from './art.js?v=20261017-starcore-9';
+import { BOSS_PROFILES, bossProfileFor } from './boss-profiles.js?v=20261017-starcore-9';
 import { resolveBossPose } from './boss-rig.js';
-import { bossVolleyFor } from './boss-attacks.js';
-import { drawBossConnector, drawBossSegment } from './boss-art.js?v=20261017-starcore-7';
+import { drawBossConnector, drawBossSegment } from './boss-art.js?v=20261017-starcore-9';
 
 const TAU = Math.PI * 2;
 const BACKGROUND_TONES = [
@@ -259,70 +258,6 @@ function chain(ctx, item, time, zone = 0) {
   const profile = item.boss ? (BOSS_PROFILES.find(candidate => candidate.id === item.rig?.profileId)
     || bossProfileFor(zone * 5 + 1, item.lane)) : null;
   const pose = profile ? resolveBossPose(item, profile, time) : null;
-  if (item.rig?.telegraphFor > 0 && item.segments[0].y > 70) {
-    const source = item.segments[0];
-    ctx.save();
-    ctx.setLineDash([9, 8]);
-    const groupAdmin = item.rig.profileId === 'meme-seen-zone-admin';
-    const loading99 = item.rig.profileId === 'meme-loading-99';
-    ctx.strokeStyle = groupAdmin || loading99 ? '#ff596b' : profile.colors.glow;
-    ctx.lineWidth = 3 + Math.sin(time * 22) * .8;
-    const knifeShield = item.rig.profileId === 'meme-knife-shield';
-    const screechCat = item.rig.profileId === 'meme-screech-cat';
-    const coffinLeader = item.rig.profileId === 'meme-last-shift-coffin-leader';
-    const mode = item.rig.attackPattern;
-    const spreads = groupAdmin ? [-0.16, 0, 0.16]
-      : screechCat ? [-0.18, 0, 0.18]
-      : coffinLeader ? [0]
-      : loading99 ? (item.rig.phase === 2 ? [-0.2, 0, 0.2] : [-0.13, 0, 0.13])
-      : knifeShield ? [(item.rig.phase === 2 ? -32 : 32) * Math.PI / 180]
-        : mode === 'armor' ? [-72, 0, 72].map(value => value * Math.PI / 180)
-          : mode === 'guard' ? [0]
-            : mode === 'weakpoint' ? [-20, 20].map(value => value * Math.PI / 180)
-              : mode === 'speed' ? [-32, 32].map(value => value * Math.PI / 180)
-                : [-40, 40].map(value => value * Math.PI / 180);
-    const angle = item.rig.targetAngle ?? Math.atan2(
-      (item.rig.targetY ?? source.y) - source.y,
-      (item.rig.targetX ?? source.x) - source.x);
-    const reach = Math.hypot((item.rig.targetX ?? source.x) - source.x,
-      (item.rig.targetY ?? 744) - source.y);
-    const customBoss = groupAdmin || screechCat || coffinLeader || loading99 || knifeShield;
-    const previewShots = customBoss ? null : bossVolleyFor(item.rig.attackStyle,
-      { x: source.x, y: source.y + 22 }, angle, item.rig.phase, item.rig.attackCount || 0);
-    const warningLines = previewShots
-      ? previewShots.map(shot => ({
-        x: shot.x + shot.vx * Math.min(1.6, reach / Math.hypot(shot.vx, shot.vy)),
-        y: shot.y + shot.vy * Math.min(1.6, reach / Math.hypot(shot.vx, shot.vy)),
-        radius: shot.radius,
-      }))
-      : spreads.map(spread => ({
-        x: source.x + Math.cos(angle + spread) * reach,
-        y: source.y + Math.sin(angle + spread) * reach,
-        radius: screechCat ? 8 : 7,
-      }));
-    for (const line of warningLines) {
-      const endX = line.x;
-      const endY = line.y;
-      if (knifeShield) {
-        ctx.globalAlpha = 0.2;
-        ctx.lineWidth = 34;
-        ctx.beginPath(); ctx.moveTo(source.x, source.y + 22);
-        ctx.lineTo(endX, endY); ctx.stroke();
-        ctx.globalAlpha = 1;
-      }
-      ctx.lineWidth = screechCat ? 4 : 3;
-      ctx.beginPath(); ctx.moveTo(source.x, source.y + 22);
-      ctx.lineTo(endX, endY); ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.fillStyle = screechCat ? '#7af4ff' : coffinLeader ? '#ffe17a'
-        : loading99 ? '#ff796e' : '#ff9d8f';
-      if (groupAdmin) ctx.fillStyle = '#ff596b';
-      circle(ctx, endX, endY, line.radius, ctx.fillStyle);
-      ctx.setLineDash([9, 8]);
-    }
-    ctx.setLineDash([]);
-    ctx.restore();
-  }
   for (let i = item.segments.length - 1; i > 0; i--) {
     const a = item.segments[i];
     const b = item.segments[i - 1];
@@ -330,7 +265,7 @@ function chain(ctx, item, time, zone = 0) {
       || (a.x < -35 && b.x < -35) || (a.x > WIDTH + 35 && b.x > WIDTH + 35)) continue;
     if (profile) drawBossConnector(ctx, { from: a, to: b, profile, pose, index: i });
     else drawConnector(ctx, { from: a, to: b, zone, boss: item.boss,
-      lane: item.lane, shielded: item.shielded, time });
+      lane: item.lane, time });
   }
   for (let i = item.segments.length - 1; i >= 0; i--) {
     if (!item.segments[i].chest) {
@@ -415,9 +350,37 @@ function drawEffect(ctx, effect, time) {
     ctx.lineTo(midX, midY);
     ctx.lineTo(effect.x2, effect.y2);
     ctx.stroke();
+  } else if (effect.kind === 'blast') {
+    const radius = (effect.radius || 55) * (0.16 + 0.84 * (1 - progress));
+    ctx.strokeStyle = '#ffd477';
+    ctx.lineWidth = 3;
+    for (let piece = 0; piece < 4; piece++) {
+      const start = piece * Math.PI / 2 + 0.12;
+      ctx.beginPath();
+      ctx.arc(effect.x, effect.y, radius, start, start + 0.68);
+      ctx.stroke();
+    }
+    ctx.fillStyle = '#fff0b5';
+    for (let piece = 0; piece < 4; piece++) {
+      const angle = piece * Math.PI / 2 + Math.PI / 4;
+      ctx.beginPath();
+      ctx.arc(effect.x + Math.cos(angle) * radius,
+        effect.y + Math.sin(angle) * radius, 2.2, 0, TAU);
+      ctx.fill();
+    }
+  } else if (effect.kind === 'hit') {
+    const reach = 4 + (1 - progress) * 5;
+    ctx.strokeStyle = '#edfff6';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(effect.x - reach, effect.y);
+    ctx.lineTo(effect.x + reach, effect.y);
+    ctx.moveTo(effect.x, effect.y - reach);
+    ctx.lineTo(effect.x, effect.y + reach);
+    ctx.stroke();
   } else {
-    ctx.strokeStyle = effect.kind === 'breach' ? '#ff747e' : effect.kind === 'blast' ? '#ffca7e' : '#d6fff5';
-    ctx.lineWidth = effect.kind === 'hit' ? 2 : 5;
+    ctx.strokeStyle = effect.kind === 'breach' ? '#ff747e' : '#d6fff5';
+    ctx.lineWidth = 5;
     ctx.beginPath();
     ctx.arc(effect.x, effect.y, (1 - progress) * (effect.kind === 'breach' ? 110 : 35) + 5, 0, TAU);
     ctx.stroke();

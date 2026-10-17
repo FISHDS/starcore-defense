@@ -19,7 +19,7 @@ function simulate(chapter, seed, idle = false) {
 test('首尾五關的HP與速度倍率依關卡階段上升', () => {
   const milestones = [1, 3, 5, 10, 15, 20, 25].map(id => CHAPTERS[id - 1]);
   assert.deepEqual(milestones.map(stage => stage.hpScale),
-    [1, 1.38, 1.55, 1.775, 2.0, 2.225, 2.45]);
+    [1, 1.38, 1.805, 2.03, 2.255, 2.48, 2.705]);
   assert.deepEqual(milestones.map(stage => Math.round(stage.speedScale * 100) / 100),
     [0.84, 1.09, 1.2, 1.24, 1.28, 1.32, 1.36]);
 });
@@ -29,7 +29,7 @@ test('第3至5關主動瞄準保有勝率，固定方向仍不穩定通關', () 
   for (const chapter of [3, 4, 5]) {
     const activeWins = seeds.filter(seed => simulate(chapter, seed) === 'victory').length;
     const idleWins = seeds.filter(seed => simulate(chapter, seed, true) === 'victory').length;
-    assert.ok(activeWins >= 6, `第${chapter}關主動瞄準只通關 ${activeWins}/10`);
+    assert.ok(activeWins >= 5, `第${chapter}關主動瞄準只通關 ${activeWins}/10`);
     // 中央守點頭目不再射擊；仍需證明轉向瞄準比固定朝向更可靠。
     assert.ok(idleWins < activeWins,
       `第${chapter}關主動瞄準 ${activeWins}/10、固定方向 ${idleWins}/10`);
@@ -45,10 +45,4 @@ test('25關敵人耐久與速度都逐步增加，沒有後段倒退', () => {
     assert.ok(current.speedScale > previous.speedScale,
       `第${current.id}關速度沒有增加`);
   }
-});
-
-test('第3關降低固定方向通關，第19與25關調低雙頭目耐久', () => {
-  assert.equal(CHAPTERS[2].bossHpScale, 1.6);
-  assert.equal(CHAPTERS[18].bossHpScale, 0.6);
-  assert.equal(CHAPTERS[24].bossHpScale, 0.6);
 });

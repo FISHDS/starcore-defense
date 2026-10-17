@@ -91,17 +91,13 @@ const SFX = {
   upgrade: { cooldown: 0, notes: [[587, 0, .12, .18], [880, .11, .24, .2]] },
   hurt: { cooldown: .25, notes: [[172, 0, .23, .23, 75]] },
   warning: { cooldown: .8, notes: [[440, 0, .12, .17], [415, .18, .15, .16]] },
-  guard: { cooldown: .6, notes: [[172, 0, .19, .19, 125], [344, .06, .13, .12, 280]] },
-  slash: { cooldown: .6, notes: [[850, 0, .12, .19, 250], [155, .05, .18, .16, 95]] },
-  inhale: { cooldown: .6, notes: [[280, 0, .24, .14, 510], [430, .18, .25, .12, 700]] },
-  screech: { cooldown: .5, notes: [[720, 0, .22, .2, 190], [420, .06, .27, .16, 125]] },
   boss: { cooldown: 0, notes: [[110, 0, .4, .23, 75], [165, .12, .43, .13]] },
   victory: { cooldown: 0, notes: [[523, 0, .18, .2], [659, .18, .18, .2],
     [784, .36, .19, .21], [1046, .55, .5, .22]] },
   defeat: { cooldown: 0, notes: [[330, 0, .28, .2, 220], [247, .23, .32, .17, 155],
     [165, .47, .52, .15, 95]] },
 };
-const PRIORITY_SFX = new Set(['chest', 'upgrade', 'hurt', 'warning', 'guard', 'slash', 'inhale', 'screech', 'boss',
+const PRIORITY_SFX = new Set(['chest', 'upgrade', 'hurt', 'warning', 'boss',
   'victory', 'defeat']);
 
 function loadSettings(storage) {

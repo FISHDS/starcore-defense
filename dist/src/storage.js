@@ -1,7 +1,7 @@
-import { startRun, WAVES, UPGRADE_BY_ID } from './game.js?v=20261017-starcore-7';
+import { startRun, WAVES, UPGRADE_BY_ID } from './game.js?v=20261017-starcore-9';
 import { META_BY_ID, MILESTONE_REWARDS, ORGANS, WEAPONS } from './meta.js';
 import { createBossRig } from './boss-rig.js';
-import { bossProfileFor } from './boss-profiles.js?v=20261017-starcore-7';
+import { bossProfileFor } from './boss-profiles.js?v=20261017-starcore-9';
 
 const CHECKPOINT = 'starcore.checkpoint.v5';
 const BEST = 'starcore.best.v1';
@@ -138,7 +138,6 @@ export function saveCheckpoint(storage, game) {
     nextId: game.nextId,
     fireTimer: game.fireTimer,
     specialTimers: game.specialTimers,
-    bossShotTimer: game.bossShotTimer,
     normalShotTimer: game.normalShotTimer,
     hazardTimer: game.hazardTimer,
     hazards: game.hazards,
@@ -197,7 +196,6 @@ export function loadCheckpoint(storage) {
     game.fireTimer = Number.isFinite(data.fireTimer) ? data.fireTimer : 0;
     game.specialTimers = data.specialTimers && typeof data.specialTimers === 'object'
       ? data.specialTimers : {};
-    game.bossShotTimer = Number.isFinite(data.bossShotTimer) ? data.bossShotTimer : 0;
     game.normalShotTimer = Number.isFinite(data.normalShotTimer)
       ? data.normalShotTimer : 0;
     game.hazardTimer = Number.isFinite(data.hazardTimer) ? data.hazardTimer : 0;

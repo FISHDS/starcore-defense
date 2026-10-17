@@ -18,7 +18,7 @@ const LEVELS = [
   ['孢子初潮', 'tide', [], 'knife-shield'],
   ['窄膜通道', 'narrow', ['narrow'], 'screech-cat'],
   ['已讀風暴', 'weave', ['switchback', 'weakpoint'], 'group-admin'],
-  ['甲殼試煉', 'mirror', ['armor'], 'armor'],
+  ['甲殼試煉', 'mirror', ['armor'], 'weakpoint'],
   ['最後一班', 'spiral', ['switchback', 'weakpoint'], 'coffin-dance'],
   ['左岔菌路', 'fork', ['forkLeft'], 'loading-99'],
   ['右岔誘餌', 'fork-right', ['forkRight', 'guard'], 'cover'],
@@ -62,6 +62,16 @@ const POSITION_MODES = [
 const BOSS_PATHS = ['tide', 'narrow', 'weave', 'mirror', 'spiral',
   'fork', 'fork-right', 'sine', 'cross'];
 
+// 依每發命中頭目、一般長鏈清除後火力、代表性局外研究與常見技能配法校準。
+// 目標頭目時間由第 1 關約 45 秒，逐關增加到第 25 關約 74 秒。
+const BOSS_HP_SCALES = [
+  2.077, 2.011, 1.981, 1.906, 1.853,
+  3.002, 2.026, 3.177, 2.140, 2.197,
+  3.437, 2.345, 3.610, 2.424, 2.481,
+  3.870, 2.595, 4.042, 2.707, 3.071,
+  4.779, 3.197, 4.969, 5.065, 3.384,
+];
+
 export const CHAPTERS = LEVELS.map(([name, path, mechanics, bossMode], index) => {
   const id = index + 1;
   const zone = Math.floor(index / 5);
@@ -69,19 +79,19 @@ export const CHAPTERS = LEVELS.map(([name, path, mechanics, bossMode], index) =>
   const tint = zoneInfo.tint;
   const bossCount = BOSS_COUNTS[index];
   const difficulty = id === 4
-    ? { hp: 1.47, speed: 1.1, bossHp: 1.5 }
+    ? { hp: 1.76, speed: 1.1 }
     : id === 5
-      ? { hp: 1.55, speed: 1.2, bossHp: 1.25 }
+      ? { hp: 1.805, speed: 1.2 }
       : id === 3
-        ? { hp: 1.38, speed: 1.09, bossHp: 1.6 }
+        ? { hp: 1.38, speed: 1.09 }
         : id < 4
           ? { hp: 1 + index * 0.06,
             speed: (id === 1 ? 0.84 : 1) + index * 0.016 }
-          : { hp: 1.55 + (id - 5) * 0.045,
+          : { hp: 1.805 + (id - 5) * 0.045,
             speed: 1.2 + (id - 5) * 0.008 };
-  const details = id === 1 ? '舉盾後斜斬 · 換手反擊'
-    : id === 2 ? '聲浪安全帶 · 半血變奏'
-      : id === 5 ? '棺材舞長鏈 · 承重手可打斷交替節拍牌'
+  const details = id === 1 ? '刀盾外圈折返 · 半血弱點移位'
+    : id === 2 ? '破音貓反向盤行 · 弱點窗口變化'
+      : id === 5 ? '棺材舞交錯長鏈 · 可擊破承重節'
       : mechanics.length ? mechanics.map(rule => MECHANIC_NAMES[rule]).join(' · ')
         : '連綿長鏈 · 基礎瞄準';
   return {
@@ -90,8 +100,7 @@ export const CHAPTERS = LEVELS.map(([name, path, mechanics, bossMode], index) =>
     mechanics, bossMode, path, bossCount,
     positionMode: POSITION_MODES[index],
     bossSegments: bossCount === 1 ? 54 : 42,
-    bossHpScale: id === 19 ? 0.6 : id === 25 ? 0.6
-      : difficulty.bossHp ?? (bossCount === 1 ? 1.25 : 1.02),
+    bossHpScale: BOSS_HP_SCALES[index],
     summary: `${positionModeName(POSITION_MODES[index])} · ${details} · ${bossCount === 1 ? '單頭長戰' : '雙頭交疊'}`,
     paths: [path, path, path, path, path,
       id === 6 ? 'coil' : BOSS_PATHS[index % BOSS_PATHS.length]],

@@ -20,22 +20,21 @@ test('第一區出現「我的刀盾」，並指定可動的原創部件', () =>
   }
 });
 
-test('舉盾、揮刀、受擊和死亡有可辨識的不同姿勢', () => {
+test('移動、受擊和死亡姿勢有差異，舊攻擊狀態不會套用', () => {
   const idle = resolveBossEquipmentPose('idle', 1, 0);
-  const telegraph = resolveBossEquipmentPose('telegraph', 1, 0);
-  const strike = resolveBossEquipmentPose('strike', 1, 0);
+  const moving = resolveBossEquipmentPose('move', 1, 0);
   const hurt = resolveBossEquipmentPose('hurt', 1, 0);
   const dying = resolveBossEquipmentPose('dying', 1, 0);
-  assert.ok(telegraph.shieldLift > idle.shieldLift);
-  assert.ok(strike.knifeSwing > idle.knifeSwing + 0.4);
+  assert.notDeepEqual(moving, idle);
   assert.ok(hurt.recoil > idle.recoil);
   assert.ok(dying.fall > hurt.fall);
-  assert.notDeepEqual(idle, telegraph);
+  assert.deepEqual(resolveBossEquipmentPose('telegraph', 1, 0), idle);
+  assert.deepEqual(resolveBossEquipmentPose('strike', 1, 0), idle);
 });
 
-test('半血後換手，攻擊視覺方向翻轉', () => {
-  const first = resolveBossEquipmentPose('strike', 1, 0);
-  const second = resolveBossEquipmentPose('strike', 2, 0);
+test('半血後刀盾換到另一側，仍只作為角色外型', () => {
+  const first = resolveBossEquipmentPose('move', 1, 0);
+  const second = resolveBossEquipmentPose('move', 2, 0);
   assert.equal(first.weaponSide, -second.weaponSide);
   assert.equal(first.knifeSwing, -second.knifeSwing);
 });

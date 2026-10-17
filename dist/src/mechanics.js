@@ -4,14 +4,8 @@ export function assignTraits(piece, stage, boss, chestIndices) {
   const rules = stage.mechanics || [];
   const mode = boss ? stage.bossMode : '';
   const has = id => rules.includes(id);
-  if ((has('armor') && piece.depth % 13 === 6)
-    || (boss && mode === 'armor' && piece.depth % 7 === 3)
-    || (boss && mode === 'final' && piece.depth % 9 === 4)) {
+  if (!boss && has('armor') && piece.depth % 13 === 6) {
     piece.armorHp = Math.round(piece.maxHp * 0.45);
-  }
-  if (boss && mode === 'armor') {
-    piece.weakpoint = true;
-    piece.weakOpen = false;
   }
   if (has('guard') && chestIndices.some(index => piece.depth === index + 2)) {
     piece.guard = true;
@@ -57,14 +51,6 @@ export function updateWeakpoints(game) {
       if (piece.weakpoint) piece.weakOpen = (game.runTime + piece.depth * 0.09
         + (chain.boss && chain.lane % 2 ? 1.2 : 0)) % 2.4 < 0.8;
     }
-  }
-}
-
-export function updateBossShields(game, mode) {
-  const live = game.bosses.filter(chain => !chain.dead);
-  for (const chain of game.bosses) {
-    chain.shielded = mode === 'final' && live.length > 1
-      && chain.lane % 2 === Math.floor(game.runTime / 3) % 2;
   }
 }
 

@@ -1,11 +1,9 @@
-import { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID } from './content.js?v=20261017-starcore-7';
-import { routePosition } from './routes.js?v=20261017-starcore-7';
+import { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID } from './content.js?v=20261017-starcore-9';
+import { routePosition } from './routes.js?v=20261017-starcore-9';
 import { assignTraits, chainSpeed, chestGuarded, steerBullet,
-  updateBossShields, updateHazards, updateWeakpoints } from './mechanics.js';
+  updateHazards, updateWeakpoints } from './mechanics.js';
 import { createBossRig, updateBossRig } from './boss-rig.js';
-import { bossProfileFor, bossRosterIndexFor } from './boss-profiles.js?v=20261017-starcore-7';
-import { bossVolleyFor } from './boss-attacks.js';
-import { knifeShieldDamageMultiplier, knifeShieldSlash } from './knife-shield.js';
+import { bossProfileFor, bossRosterIndexFor } from './boss-profiles.js?v=20261017-starcore-9';
 
 export { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID };
 export const WIDTH = 390;
@@ -41,8 +39,8 @@ export function startRun(seed = Date.now(), profile = {}, chapter = 1) {
     wave: 1, waveTime: 0, runTime: 0,
     encounter: 'normal', normalTotal: WAVES[0].segments - 1,
     normalDestroyed: 0, bossDestroyed: 0,
-    spawnCount: 0, bossAttackCount: 0, nextId: 1,
-    fireTimer: 0, specialTimers: {}, bossShotTimer: 0, normalShotTimer: 0,
+    spawnCount: 0, nextId: 1,
+    fireTimer: 0, specialTimers: {}, normalShotTimer: 0,
     regenTimer: 0,
     hazardTimer: 0, hazards: [],
     maxCore, core: maxCore, baseDamage: 40 + profileLevels.fire * 5,
@@ -74,6 +72,22 @@ export function getShotDamage(game) {
     * (game.equippedWeapon === 'rail' ? 1.2 : 1));
 }
 
+export function addBlastEffect(game, x, y, rank = 1) {
+  const radius = 40 + Math.max(1, rank) * 11;
+  const nearby = game.effects.find(effect => effect.kind === 'blast'
+    && Math.hypot(effect.x - x, effect.y - y) < radius * 0.55);
+  if (nearby) {
+    nearby.life = Math.max(nearby.life, 0.18);
+    nearby.radius = Math.max(nearby.radius || 0, radius);
+    return nearby;
+  }
+  const blasts = game.effects.filter(effect => effect.kind === 'blast');
+  if (blasts.length >= 12) game.effects.splice(game.effects.indexOf(blasts[0]), 1);
+  const effect = { kind: 'blast', x, y, radius, life: 0.22, maxLife: 0.22 };
+  game.effects.push(effect);
+  return effect;
+}
+
 export function getRunProgress(game) {
   if (game.phase === 'victory') return 1;
   if (game.preview) return Math.min(1, game.bossDestroyed / game.previewBodyTotal);
@@ -92,17 +106,17 @@ export function createBossShowcase(seed = Date.now(), chapter = 1) {
   game.preview = true;
   game.encounter = 'boss';
   game.wave = WAVES.length;
-  // 體驗局只縮短身體與調整試打火力；頭目招式沿用正式戰鬥。
+  // 體驗局保留長鏈，但提高耐久，讓玩家必須持續轉向追擊才趕得上守點。
   game.normalDestroyed = 105;
   game.upgrades = { power: 1, rapid: 1 };
   advance(game, 0.01);
   const boss = game.bosses[0];
   boss.segments = boss.segments.slice(0, 24);
   boss.originalBodyCount = boss.segments.length - 1;
-  boss.speed = 35;
+  boss.speed = 27;
   for (const piece of boss.segments) {
     if (piece.index === 0) continue;
-    piece.maxHp = Math.round((piece.chest ? 800 : 1550) * (1 + piece.index * 0.045));
+    piece.maxHp = Math.round((piece.chest ? 4000 : 7750) * (1 + piece.index * 0.045));
     piece.hp = piece.maxHp;
     piece.armorHp = 0;
   }
@@ -126,8 +140,8 @@ function configuredWave(game, index) {
     hp: Math.round(source.hp * chapter.hpScale * (game.chapter === 26
       ? 1 + (game.endlessTier - 1) * 0.18 : 1)
       * (source.boss ? chapter.bossHpScale : 1)),
-    speed: source.speed * chapter.speedScale * (game.chapter === 26
-      ? 1 + (game.endlessTier - 1) * 0.04 : 1),
+    speed: source.speed * chapter.speedScale * (source.boss ? 0.75 : 1)
+      * (game.chapter === 26 ? 1 + (game.endlessTier - 1) * 0.04 : 1),
   };
 }
 
@@ -174,10 +188,6 @@ function spawnChain(game, wave, lane = game.spawnCount) {
     originalBodyCount: boss ? count - 1 : 0,
     rig: boss ? createBossRig(bossProfileFor(game.chapter, lane).id) : null,
   };
-  if (chain.rig) {
-    chain.rig.attackPattern = stage.bossMode;
-    chain.rig.attackStyle = bossProfileFor(game.chapter, lane).attackStyle;
-  }
   const chestIndices = boss ? [5, 15, 26, 38]
     : [5, 18, 36, 60, 84, 110, 138, 168, 198];
   for (let index = 0; index < count; index++) {
@@ -242,21 +252,17 @@ function addPopup(game, x, y, value, weak = false) {
 export function hitSegment(game, chain, segment, amount, options = {}) {
   if (game.phase !== 'playing' || chain.dead || !chain.segments.includes(segment)
     || segment.index === 0 || segment.hp <= 0
-    || (segment.transitShield && (options.projectile || options.special || options.dot))
+    || (!chain.boss && segment.transitShield
+      && (options.projectile || options.special || options.dot))
     || (segment.chest && (options.special || options.dot))) return false;
-  const bossGuarded = chain.boss && game.bosses.some(other => other !== chain && !other.dead
-    && other.segments.some(piece => piece.index > 0 && piece.y > segment.y
-      && piece.y < segment.y + 76 && Math.abs(piece.x - segment.x) < 48));
-  const supplyGuarded = chestGuarded(chain, segment);
+  const supplyGuarded = !chain.boss && chestGuarded(chain, segment);
   const critical = !options.dot && random(game) < (game.upgrades.crit || 0) * 0.1;
   const weakpoint = segment.weakpoint && segment.weakOpen;
   const damage = Math.max(1, Math.round(amount * (critical ? 2 : 1)
     * (weakpoint ? 1 + game.profileLevels.collector * 0.12 : 1)
-    * (1 + segment.mark) * (bossGuarded ? 0.66 : 1)
-    * (chain.shielded ? 0.25 : 1)
-    * knifeShieldDamageMultiplier(chain, segment)
+    * (1 + segment.mark)
     * (supplyGuarded ? 0.35 : 1)
-    * (segment.weakpoint ? (segment.weakOpen ? 1.6 : 0.28) : 1)));
+    * (segment.weakpoint ? (segment.weakOpen ? 1.6 : chain.boss ? 1 : 0.28) : 1)));
   const armor = Math.min(segment.armorHp || 0, damage);
   if (armor > 0) segment.armorHp -= armor;
   segment.hp -= damage - armor;
@@ -272,8 +278,7 @@ export function hitSegment(game, chain, segment, amount, options = {}) {
   if (game.upgrades.detonation && !options.dot && segment.poisonFor > 0
     && segment.burnFor > 0 && (segment.detonationCooldown || 0) <= 0) {
     segment.detonationCooldown = 1.2;
-    game.effects.push({ kind: 'blast', x: segment.x, y: segment.y,
-      life: 0.35, maxLife: 0.35 });
+    addBlastEffect(game, segment.x, segment.y, 1);
     const blastIndex = chain.segments.indexOf(segment);
     for (const near of [chain.segments[blastIndex - 1], chain.segments[blastIndex + 1]]) {
       if (near?.index > 0 && !near.chest) hitSegment(game, chain, near,
@@ -281,15 +286,6 @@ export function hitSegment(game, chain, segment, amount, options = {}) {
     }
   }
   if (segment.hp > 0) return true;
-  if (['meme-seen-zone-admin', 'meme-last-shift-coffin-leader', 'meme-loading-99']
-    .includes(chain.rig?.profileId)
-    && segment.id === chain.rig.weakpointId && chain.rig.telegraphFor > 0) {
-    chain.rig.telegraphFor = 0;
-    chain.rig.attackCancelled = true;
-    chain.rig.hurtFor = Math.max(chain.rig.hurtFor || 0, 0.4);
-    chain.recoil = Math.max(chain.recoil || 0, 0.35);
-    game.audioCues.push('break');
-  }
   const position = chain.segments.indexOf(segment);
   const neighbors = [chain.segments[position - 1], chain.segments[position + 1]];
   chain.segments.splice(position, 1);
@@ -391,7 +387,7 @@ function fireCapsules(game, dt) {
     const extra = random(game) < (game.upgrades.echo || 0) * 0.22 ? 1 : 0;
     for (let shot = 0; shot < count + extra; shot++) {
       const angle = game.player.aimAngle
-        + (shot - (count + extra - 1) / 2) * (0.035 + (game.upgrades.scatter || 0) * 0.025);
+        + (shot - (count + extra - 1) / 2) * 0.035;
       const velocity = 520 + (game.upgrades.needle || 0) * 70;
       const vx = Math.cos(angle) * velocity;
       const vy = Math.sin(angle) * velocity;
@@ -603,7 +599,7 @@ function updateBullets(game, dt) {
             if (game.phase !== 'playing') break;
           }
         }
-        game.effects.push({ kind: 'blast', x: oldX, y: oldY, life: 0.28, maxLife: 0.28 });
+        addBlastEffect(game, oldX, oldY, game.upgrades.blast);
       }
       if (game.upgrades.bankshot && game.phase === 'playing') {
         const next = activeBodies(game).filter(item => !item.segment.chest
@@ -676,236 +672,24 @@ function updateCombatTimers(game, dt) {
   if (game.comboTimer === 0) game.comboCount = 0;
 }
 
-function updateBossShots(game, dt) {
-  const bossAttacksDisabled = activeStage(game).positionMode === 'center';
-  for (const boss of game.bosses) {
-    const followup = boss.rig?.loadingFollowup;
-    if (!followup) continue;
-    if (bossAttacksDisabled) {
-      boss.rig.loadingFollowup = null;
-      boss.rig.telegraphFor = 0;
-      boss.rig.telegraphLocked = false;
-      boss.rig.strikeFor = 0;
-      continue;
-    }
-    if (boss.dead) {
-      boss.rig.loadingFollowup = null;
-      continue;
-    }
-    followup.time -= dt;
-    if (followup.time > 0) continue;
-    const head = boss.segments[0];
-    game.enemyBullets.push({ kind: 'loadingScan', x: head.x, y: head.y + 18,
-      vx: Math.cos(followup.angle) * followup.speed,
-      vy: Math.sin(followup.angle) * followup.speed,
-      radius: 10, damage: 12 });
-    boss.rig.loadingFollowup = null;
-    boss.rig.loadingFollowupCount = (boss.rig.loadingFollowupCount || 0) + 1;
-    game.audioCues.push('warning');
-  }
-  const normal = game.chains.find(chain => !chain.boss && !chain.dead);
-  if (normal) {
-    game.normalShotTimer += dt;
-    const interval = game.chapter <= 5 ? 7.5 : 11;
-    if (game.normalShotTimer >= interval) {
-      game.normalShotTimer -= interval;
-      const source = normal.segments.filter(piece => piece.index > 0
-        && piece.y > 150 && piece.y < 550).sort((a, b) => b.y - a.y)[0];
-      if (source) {
-        const vy = 210;
-        const flight = Math.max(0.7, (game.player.y - source.y) / vy);
-        const dx = game.player.x - source.x;
-        const dy = game.player.y - source.y;
-        const length = Math.hypot(dx, dy) || 1;
-        game.enemyBullets.push({ kind: 'spore', x: source.x, y: source.y + 15,
-          vx: dx / length * vy, vy: dy / length * vy, radius: 6, damage: 7 });
-      }
-    }
-  }
-  if (bossAttacksDisabled) {
-    game.bossShotTimer = 0;
-    for (const boss of game.bosses) {
-      if (!boss.rig) continue;
-      boss.rig.telegraphFor = 0;
-      boss.rig.telegraphLocked = false;
-      boss.rig.strikeFor = 0;
-      boss.rig.loadingFollowup = null;
-    }
-    return;
-  }
-  if (!game.bosses.some(boss => !boss.dead)) return;
-  const pattern = activeStage(game).bossMode;
-  game.bossShotTimer += dt;
-  const phaseTwo = game.bosses.some(boss => !boss.dead && boss.rig?.phase === 2);
-  const bossInterval = (game.chapter <= 5 ? 3.1
-    : game.chapter <= 10 ? 2.7 : 2.2)
-    * (phaseTwo ? (game.chapter <= 5 ? 0.94 : 0.82) : 1)
-    * (pattern === 'speed' ? 0.88 : 1);
-  const isKnifeShield = game.bosses.some(boss => !boss.dead
-    && boss.rig?.profileId === 'meme-knife-shield');
-  const isScreechCat = game.bosses.some(boss => !boss.dead
-    && boss.rig?.profileId === 'meme-screech-cat');
-  const isGroupAdmin = game.bosses.some(boss => !boss.dead
-    && boss.rig?.profileId === 'meme-seen-zone-admin');
-  const isCoffinLeader = game.bosses.some(boss => !boss.dead
-    && boss.rig?.profileId === 'meme-last-shift-coffin-leader');
-  const isLoading99 = game.bosses.some(boss => !boss.dead
-    && boss.rig?.profileId === 'meme-loading-99');
-  const interval = isScreechCat ? (phaseTwo ? 2.4 : 3.1)
-    : isGroupAdmin ? (phaseTwo ? 2.35 : 3.1)
-      : isCoffinLeader ? (phaseTwo ? 2.55 : 3.1)
-        : isLoading99 ? (phaseTwo ? 2.45 : 3.05) : bossInterval;
-  const warningTime = isKnifeShield ? 0.85 : isScreechCat ? 0.9
-    : isGroupAdmin ? 1.1 : isCoffinLeader ? 0.85 : isLoading99 ? 0.9
-    : pattern === 'armor' ? 0.72 : pattern === 'speed' ? 0.72 : 0.55;
-  const liveBosses = game.bosses.filter(boss => !boss.dead);
-  const attackBosses = pattern === 'alternating' && liveBosses.length > 1
-    ? [liveBosses[(game.bossAttackCount || 0) % liveBosses.length]] : liveBosses;
-  if (game.bossShotTimer >= interval - warningTime) {
-    for (const boss of attackBosses) {
-      if (boss.dead || boss.segments[0].y < 120 || !boss.rig) continue;
-      if (!boss.rig.telegraphLocked) {
-        boss.rig.targetX = game.player.x;
-        boss.rig.targetY = game.player.y;
-        const aimAngle = Math.atan2(game.player.y - boss.segments[0].y,
-          game.player.x - boss.segments[0].x);
-        if (boss.rig.profileId === 'meme-last-shift-coffin-leader') {
-          boss.rig.attackDirection = (boss.rig.attackCount || 0) % 2 ? 1 : -1;
-          boss.rig.targetAngle = aimAngle + boss.rig.attackDirection * 0.48;
-        } else boss.rig.targetAngle = aimAngle;
-        boss.rig.telegraphLocked = true;
-        if (boss.rig.profileId === 'meme-seen-zone-admin') {
-          boss.rig.attackCancelled = false;
-          const phone = boss.segments.find(piece => piece.id === boss.rig.weakpointId);
-          if (phone) phone.weakOpen = true;
-        }
-        if (boss.rig.profileId === 'meme-last-shift-coffin-leader') {
-          boss.rig.attackCancelled = false;
-          const hand = boss.segments.find(piece => piece.id === boss.rig.weakpointId);
-          if (hand) hand.weakOpen = true;
-        }
-        if (boss.rig.profileId === 'meme-loading-99') {
-          boss.rig.attackCancelled = false;
-          const glitch = boss.segments.find(piece => piece.id === boss.rig.weakpointId);
-          if (glitch) glitch.weakOpen = true;
-        }
-        if (boss.rig.profileId === 'meme-knife-shield') game.audioCues.push('guard');
-        if (boss.rig.profileId === 'meme-screech-cat') {
-          game.audioCues.push('inhale');
-        }
-      }
-      boss.rig.telegraphFor = Math.max(0, interval - game.bossShotTimer);
-    }
-  }
-  while (game.bossShotTimer >= interval) {
-    game.bossShotTimer -= interval;
-    for (const boss of attackBosses) {
-      if (boss.dead || boss.segments[0].y < 120) continue;
-      const head = boss.segments[0];
-      if (boss.rig) {
-        boss.rig.telegraphFor = 0;
-        boss.rig.telegraphLocked = false;
-        boss.rig.strikeFor = boss.rig.profileId === 'meme-knife-shield' ? 0.65 : 0.32;
-      }
-      if (boss.rig?.profileId === 'meme-seen-zone-admin') {
-        const phone = boss.segments.find(piece => piece.id === boss.rig.weakpointId);
-        if (phone) phone.weakOpen = false;
-        if (boss.rig.attackCancelled) {
-          boss.rig.attackCancelled = false;
-          continue;
-        }
-        const angle = boss.rig.targetAngle ?? Math.atan2(game.player.y - head.y,
-          game.player.x - head.x);
-        const spreads = phaseTwo ? [-0.24, -0.12, 0, 0.12, 0.24] : [-0.16, 0, 0.16];
-        const speed = phaseTwo ? 255 : 215;
-        for (const spread of spreads) {
-          game.enemyBullets.push({ kind: 'notification', x: head.x, y: head.y + 25,
-            vx: Math.cos(angle + spread) * speed,
-            vy: Math.sin(angle + spread) * speed, radius: 8,
-            damage: phaseTwo ? 28 : 20 });
-        }
-        boss.rig.attackCount = (boss.rig.attackCount || 0) + 1;
-        game.audioCues.push('warning');
-        continue;
-      }
-      if (boss.rig?.profileId === 'meme-last-shift-coffin-leader') {
-        const hand = boss.segments.find(piece => piece.id === boss.rig.weakpointId);
-        if (hand) hand.weakOpen = false;
-        if (boss.rig.attackCancelled) {
-          boss.rig.attackCancelled = false;
-          continue;
-        }
-        const angle = boss.rig.targetAngle ?? Math.atan2(game.player.y - head.y,
-          game.player.x - head.x);
-        const spreads = [0];
-        const speed = phaseTwo ? 250 : 215;
-        for (const spread of spreads) {
-          game.enemyBullets.push({ kind: 'coffin-card', x: head.x, y: head.y + 24,
-            vx: Math.cos(angle + spread) * speed,
-            vy: Math.sin(angle + spread) * speed,
-            radius: phaseTwo ? 12 : 10, damage: phaseTwo ? 22 : 17 });
-        }
-        boss.rig.attackCount = (boss.rig.attackCount || 0) + 1;
-        game.audioCues.push('warning');
-        continue;
-      }
-      if (boss.rig?.profileId === 'meme-loading-99') {
-        const glitch = boss.segments.find(piece => piece.id === boss.rig.weakpointId);
-        if (glitch) glitch.weakOpen = false;
-        if (boss.rig.attackCancelled) {
-          boss.rig.attackCancelled = false;
-          continue;
-        }
-        const angle = boss.rig.targetAngle ?? Math.atan2(game.player.y - head.y,
-          game.player.x - head.x);
-        const spread = phaseTwo ? 0.2 : 0.13;
-        const speed = phaseTwo ? 245 : 205;
-        for (const offset of [-spread, 0, spread]) {
-          game.enemyBullets.push({ kind: 'loadingScan', x: head.x, y: head.y + 18,
-            vx: Math.cos(angle + offset) * speed,
-            vy: Math.sin(angle + offset) * speed,
-            radius: phaseTwo ? 10 : 9, damage: phaseTwo ? 15 : 11 });
-        }
-        if (phaseTwo) {
-          const direction = (boss.rig.attackCount || 0) % 2 ? 1 : -1;
-          boss.rig.loadingFollowup = { time: 0.44,
-            angle: angle + direction * 0.42, speed: 225 };
-        }
-        boss.rig.attackCount = (boss.rig.attackCount || 0) + 1;
-        game.audioCues.push('warning');
-        continue;
-      }
-      if (boss.rig?.profileId === 'meme-knife-shield') {
-        game.enemyBullets.push(knifeShieldSlash(head, game.player, boss.rig.phase));
-        game.audioCues.push('slash');
-        continue;
-      }
-      if (boss.rig?.profileId === 'meme-screech-cat') {
-        const angle = boss.rig.targetAngle ?? Math.atan2(game.player.y - head.y,
-          game.player.x - head.x);
-        const speed = phaseTwo ? 285 : 245;
-        for (const spread of [-0.18, 0, 0.18]) {
-          game.enemyBullets.push({ kind: 'sonicWave', x: head.x, y: head.y + 22,
-            vx: Math.cos(angle + spread) * speed,
-            vy: Math.sin(angle + spread) * speed, radius: 16,
-            damage: phaseTwo ? 32 : 24 });
-        }
-        boss.rig.attackCount = (boss.rig.attackCount || 0) + 1;
-        game.audioCues.push('screech');
-        continue;
-      }
-      if (pattern === 'alternating' && liveBosses.length > 1) game.bossAttackCount++;
-      const aimAngle = boss.rig?.targetAngle ?? Math.atan2(
-        game.player.y - head.y, game.player.x - head.x);
-      const style = boss.rig?.attackStyle || 'spore-bloom';
-      game.enemyBullets.push(...bossVolleyFor(style,
-        { x: head.x, y: head.y + 25 }, aimAngle,
-        boss.rig?.phase || (phaseTwo ? 2 : 1), boss.rig?.attackCount || 0));
-      if (boss.rig) boss.rig.attackCount = (boss.rig.attackCount || 0) + 1;
-    }
-  }
+function updateNormalShots(game, dt) {
+  const normal = game.encounter === 'normal'
+    ? game.chains.find(chain => !chain.boss && !chain.dead) : null;
+  if (!normal) return;
+  game.normalShotTimer += dt;
+  const interval = game.chapter <= 5 ? 7.5 : 11;
+  if (game.normalShotTimer < interval) return;
+  game.normalShotTimer -= interval;
+  const source = normal.segments.filter(piece => piece.index > 0
+    && piece.y > 150 && piece.y < 550).sort((a, b) => b.y - a.y)[0];
+  if (!source) return;
+  const speed = 210;
+  const dx = game.player.x - source.x;
+  const dy = game.player.y - source.y;
+  const length = Math.hypot(dx, dy) || 1;
+  game.enemyBullets.push({ kind: 'spore', x: source.x, y: source.y + 15,
+    vx: dx / length * speed, vy: dy / length * speed, radius: 6, damage: 7 });
 }
-
 function updateEnemyBullets(game, dt) {
   game.invulnerable = Math.max(0, game.invulnerable - dt);
   for (let i = game.enemyBullets.length - 1; i >= 0; i--) {
@@ -993,9 +777,8 @@ export function advance(game, dt, control = { aimAngle: game.player.aimAngle }) 
   updateChains(game, dt);
   if (game.phase !== 'playing') return;
   updateWeakpoints(game);
-  updateBossShields(game, activeStage(game).bossMode);
-  updateHazards(game, dt, activeStage(game).mechanics.includes('hazard')
-    || (game.encounter === 'boss' && ['hazard', 'final'].includes(activeStage(game).bossMode)));
+  updateHazards(game, dt, game.encounter !== 'boss'
+    && activeStage(game).mechanics.includes('hazard'));
   if (game.phase !== 'playing') return;
   fireCapsules(game, dt);
   fireSpecials(game, dt);
@@ -1006,7 +789,7 @@ export function advance(game, dt, control = { aimAngle: game.player.aimAngle }) 
   if (game.phase !== 'playing') return;
   updateEffects(game, dt);
   if (game.phase !== 'playing') return;
-  updateBossShots(game, dt);
+  updateNormalShots(game, dt);
   updateEnemyBullets(game, dt);
   if (game.phase === 'playing' && game.encounter === 'boss'
     && game.spawnCount >= activeStage(game).bossCount && game.bosses.length > 0

@@ -1,12 +1,12 @@
-import { advance, CHAPTERS, chooseUpgrade, createBossShowcase, getRunProgress, HEIGHT, rerollUpgrades, startRun, UPGRADE_BY_ID, WAVES, WIDTH } from './game.js?v=20261017-starcore-7';
+import { advance, CHAPTERS, chooseUpgrade, createBossShowcase, getRunProgress, HEIGHT, rerollUpgrades, startRun, UPGRADE_BY_ID, WAVES, WIDTH } from './game.js?v=20261017-starcore-9';
 import { pointerToAimAngle } from './input.js';
-import { render } from './render.js?v=20261017-starcore-7';
-import { awardRun, buyResearch, buyItem, equipItem, clearCheckpoint, loadCheckpoint, readProfile, researchCost, saveCheckpoint, updateBest } from './storage.js?v=20261017-starcore-7';
+import { render } from './render.js?v=20261017-starcore-9';
+import { awardRun, buyResearch, buyItem, equipItem, clearCheckpoint, loadCheckpoint, readProfile, researchCost, saveCheckpoint, updateBest } from './storage.js?v=20261017-starcore-9';
 import { ORGANS, WEAPONS } from './meta.js';
-import { drawSkillIcon } from './art.js?v=20261017-starcore-7';
+import { drawSkillIcon } from './art.js?v=20261017-starcore-9';
 import { createAudioEngine, musicThemeForChapter } from './audio.js?v=20261017-starcore-5';
 import { getBattleHint } from './tutorial.js';
-import { bossProfileFor } from './boss-profiles.js?v=20261017-starcore-7';
+import { bossProfileFor } from './boss-profiles.js?v=20261017-starcore-9';
 
 const $ = id => document.getElementById(id);
 const canvas = $('arena');
@@ -94,11 +94,7 @@ function refreshHud() {
   const activeChapter = game.chapter === 26 ? CHAPTERS[20 + (game.endlessTier - 1) % 5]
     : CHAPTERS[game.chapter - 1];
   hint.textContent = game.preview && game.runTime < 10
-    ? activeChapter.positionMode === 'center'
-      ? '頭目不會發動攻擊；原地轉向瞄準身體、寶箱與弱點，擊破身節拉回頭部'
-      : game.chapter === 2 ? '原地轉向瞄準身體與寶箱；破壞發聲部位打斷音波'
-      : game.chapter === 3 ? '通知風暴前會亮起手機；轉向打破手機弱點，或逐顆擊落紅泡泡'
-      : '原地旋轉瞄準身體與寶箱；找出頭目預警時的可攻擊部位'
+    ? '頭目只會繞場行軍，不發動攻擊或護罩；原地轉向瞄準弱點、寶箱與身節'
     : getBattleHint(game, activeChapter.summary);
   hint.hidden = paused || game.preview || !hint.textContent;
   hint.classList.toggle('persistent-tutorial', game.chapter === 1 && game.normalDestroyed === 0);
@@ -120,26 +116,8 @@ function refreshHud() {
         boss.segments[0].y - game.player.y) < 280
       : boss.segments[0].y > 540));
   $('boss-warning').hidden = game.phase !== 'playing' || !nearBoss;
-  if (game.phase === 'playing' && nearBoss && !bossWarningActive
-    && activeChapter.positionMode !== 'center') audio.playSfx('warning');
   bossWarningActive = game.phase === 'playing' && nearBoss;
-  $('boss-warning').textContent = activeChapter.positionMode === 'center'
-    ? '頭目沿行軍路線逼近核心 · 轉向集火弱點、寶箱與身節'
-    : activeChapter.bossMode === 'knife-shield'
-    ? '我的刀盾舉刀後會沿斜線揮擊；轉向迎擊彈道可擊落攻擊'
-    : activeChapter.bossMode === 'screech-cat'
-    ? '破音貓蓄音後發射扇形聲浪；轉向迎擊可擊落聲波'
-    : activeChapter.bossMode === 'group-admin'
-    ? '通知風暴即將送出 · 趁手機亮起時打破弱點，或轉向擊落紅色訊息'
-    : activeChapter.bossMode === 'armor'
-    ? '護甲縫隙會輪流亮起 · 轉向打中發光節點，傷害才會有效'
-    : activeChapter.bossMode === 'coffin-dance'
-    ? '節拍牌左右交替來襲 · 轉向迎擊，或打破亮起的承重手節中斷一輪'
-    : activeChapter.bossMode === 'loading-99'
-    ? '載入卡在 99% · 轉向打破紅色故障節，中斷狹幅掃描'
-    : activeChapter.bossMode === 'final'
-    ? '雙母體輪流亮起護盾 · 改打沒發光的長鏈'
-    : currentBossProfile.attackHint;
+  $('boss-warning').textContent = '頭目正在繞場行軍 · 追蹤弱點、寶箱與身節；沒有彈幕或護罩';
 }
 
 function refreshResearch() {
@@ -299,9 +277,9 @@ function setResult() {
     $('result-emblem').textContent = won ? '✦' : '◇';
     $('result-title').textContent = won ? '試打成功' : '再試一次';
     const previewCopy = game.chapter === 3
-      ? '你看到了手機預警與通知彈。正式關卡仍等你挑戰。'
-      : game.chapter === 2 ? '你看到了吸氣蓄音與聲波反制。正式關卡仍等你挑戰。'
-        : '你看到了舉盾、斜斬和換手。正式關卡仍等你挑戰。';
+      ? '你看到了已讀不回群組長的手機弱點和交疊長鏈。正式關卡仍等你挑戰。'
+      : game.chapter === 2 ? '你看到了破音貓的專屬外型、盤繞路線和寶箱。正式關卡仍等你挑戰。'
+        : '你看到了專屬外型、繞場路線和弱點窗口。正式關卡仍等你挑戰。';
     $('result-copy').textContent = won ? previewCopy
       : '這是練習戰。看清頭目預警，再試一次。';
     $('retry-label').textContent = '再次試打';
@@ -421,19 +399,7 @@ function selectShowcase(chapter) {
   if (!customArt.hidden && boss.parts?.head) {
     customArt.src = `./assets/bosses/${boss.parts.head}?v=20261017-boss-roster-2`;
   }
-  $('showcase-moves').innerHTML = CHAPTERS[chapter - 1].positionMode === 'center'
-    ? `<div><strong>01 行軍路線</strong><span>${boss.routeStyle}；長鏈繞行並逐節逼近核心</span></div><div><strong>02 威脅來源</strong><span>頭目不會發動攻擊；挑戰來自行軍路線與逐漸縮短的反應時間</span></div><div><strong>03 應對方式</strong><span>原地轉向，優先擊破身節、寶箱與亮起的弱點，讓長鏈退回</span></div>`
-    : chapter === 1
-    ? '<div><strong>01 舉盾</strong><span>盾牌遮住部分身體，轉向瞄準露出的節點或寶箱</span></div><div><strong>02 斜斬</strong><span>舉刀後會沿預警斜線揮擊；轉向開火可攔截斬線</span></div><div><strong>03 換手</strong><span>身體打掉一半後，刀盾換手並改變護盾側</span></div>'
-    : chapter === 2
-      ? '<div><strong>01 吸氣</strong><span>蓄音時頭部亮起，預告聲波即將發射</span></div><div><strong>02 聲浪</strong><span>扇形聲波朝固定防線逼近；轉向開火可將它擊落</span></div><div><strong>03 變奏</strong><span>半血後蓄音變快，聲波飛得更快且傷害更高</span></div>'
-      : chapter === 3
-        ? '<div><strong>01 手機亮起</strong><span>通知風暴前會打開手機弱點</span></div><div><strong>02 打斷通知</strong><span>轉向集火手機可取消整輪攻擊</span></div><div><strong>03 擊落紅泡泡</strong><span>來不及打手機時，仍可逐顆射掉通知彈</span></div>'
-        : chapter === 5
-          ? '<div><strong>01 抬棺預警</strong><span>領隊舉棺時，承重手節會亮起並預告出牌方向</span></div><div><strong>02 左右交替</strong><span>每輪只飛出一張斜向節拍牌，轉向迎擊可將它擊落</span></div><div><strong>03 失步打斷</strong><span>打破發光手節可中斷本輪；半血後牌速加快</span></div>'
-          : chapter === 6
-            ? '<div><strong>01 卡在 99%</strong><span>載入長鏈沿核心螺旋逼近，打爆身節會拉回頭部</span></div><div><strong>02 找出錯碼</strong><span>紅色故障節亮起時，轉向集火可中斷載入掃描</span></div><div><strong>03 半血反轉</strong><span>頭環反向旋轉，主掃描後延遲追加側掃</span></div>'
-            : `<div><strong>01 行軍</strong><span>${boss.routeStyle}；長鏈沿路線逐節靠近</span></div><div><strong>02 招牌攻擊</strong><span>${boss.attackHint}</span></div><div><strong>03 試打方式</strong><span>角色固定守點，原地轉向瞄準；擊破身節可拉回頭部</span></div>`;
+  $('showcase-moves').innerHTML = `<div><strong>01 繞場路線</strong><span>${boss.routeStyle}；頭目會穿梭畫面左右與上下區域，再沿彎線收束</span></div><div><strong>02 直接命中</strong><span>沒有頭目彈幕或免疫護罩；一般身節直接扣血，亮起弱點時更容易擊破</span></div><div><strong>03 固定守點</strong><span>角色不移動，只需原地 360 度轉向；擊破身節會把頭部沿路拉回</span></div>`;
 }
 for (const stage of CHAPTERS.slice(0, 20)) {
   const boss = bossProfileFor(stage.id, 0);

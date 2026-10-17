@@ -1,7 +1,6 @@
 // 全部魔王共用的畫法；外型差異由資料提供，路線與碰撞仍由遊戲管理。
 import { resolveBossEquipmentPose } from './boss-rig.js';
-import { knifeShieldGuarded } from './knife-shield.js';
-import { BOSS_PROFILES } from './boss-profiles.js?v=20261017-starcore-7';
+import { BOSS_PROFILES } from './boss-profiles.js?v=20261017-starcore-9';
 
 const TAU = Math.PI * 2;
 const INK = '#172235';
@@ -56,7 +55,6 @@ if (typeof Image !== 'undefined') {
       head: [54, 28, 210, 292, 126, 176],
       body: [330, 90, 165, 145, 96, 84],
       phone: [580, 70, 160, 220, 80, 110],
-      warning: [775, 95, 155, 165, 78, 83],
     };
     for (const [part, [sx, sy, sw, sh, width, height]] of Object.entries(parts)) {
       const canvas = document.createElement('canvas');
@@ -84,7 +82,7 @@ if (typeof Image !== 'undefined') {
   }, { once: true });
   const loading99Atlas = new Image();
   loading99Atlas.decoding = 'async';
-  loading99Atlas.src = new URL('../assets/bosses/loading-99-atlas.svg?v=20261017-starcore-7', import.meta.url).href;
+  loading99Atlas.src = new URL('../assets/bosses/loading-99-atlas.svg?v=20261017-starcore-9', import.meta.url).href;
   loading99Atlas.addEventListener('load', () => {
     const parts = {
       head: [0, 0, 100, 104], ring: [105, 16, 72, 72],
@@ -254,16 +252,15 @@ function drawKnifeShield(ctx, { piece, chain, time, profile, pose, head, r }) {
     ? SHIBA_ASSETS[part] : SHIBA_ASSETS[`${part}Fallback`];
   if (!image?.complete || !image.naturalWidth) return false;
   if (head) {
-    const equipment = resolveBossEquipmentPose(pose.state, pose.phase, time);
+    const equipmentState = pose.state === 'hurt' || pose.state === 'dying'
+      ? pose.state : 'move';
+    const equipment = resolveBossEquipmentPose(equipmentState, pose.phase, time);
     const side = equipment.weaponSide;
     const headSize = r * 3.35;
     ctx.save();
     ctx.translate(0, equipment.bob + equipment.recoil);
     if (equipment.fall) ctx.rotate(-equipment.fall * 0.55);
-    if (pose.state === 'telegraph') {
-      ctx.shadowColor = profile.colors.glow;
-      ctx.shadowBlur = 20;
-    } else if (pose.state === 'hurt') {
+    if (pose.state === 'hurt') {
       ctx.shadowColor = '#ffffff';
       ctx.shadowBlur = 18;
       ctx.filter = 'brightness(1.55) saturate(0.6)';
@@ -272,21 +269,8 @@ function drawKnifeShield(ctx, { piece, chain, time, profile, pose, head, r }) {
       r * 1.36, r * 2.18, equipment.knifeSwing, side > 0);
     drawShibaPart(ctx, 'head', 0, 0, headSize);
     ctx.shadowBlur = 0;
-    drawShibaProp(ctx, 'shield', -side * r * (pose.state === 'telegraph' ? 0.55 : 1.25),
-      8 - equipment.shieldLift * 20, r * 1.48, r * 1.85,
-      -side * equipment.shieldLift * 0.32);
-    if (pose.state === 'strike') {
-      ctx.strokeStyle = '#fff1b6';
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.arc(side * r * 1.1, -r * 0.3, r * 1.12,
-        side > 0 ? -1.15 : 2.1, side > 0 ? .5 : 3.75);
-      ctx.stroke();
-    }
-    if (chain.shielded) {
-      ctx.beginPath(); ctx.arc(0, 0, r + 9, 0, TAU);
-      ctx.strokeStyle = '#a4f5ff'; ctx.lineWidth = 4; ctx.stroke();
-    }
+    drawShibaProp(ctx, 'shield', -side * r * 1.25,
+      8, r * 1.48, r * 1.85, 0);
     ctx.restore();
   } else {
     const tilt = (piece.index % 2 ? 1 : -1) * 0.18;
@@ -295,17 +279,6 @@ function drawKnifeShield(ctx, { piece, chain, time, profile, pose, head, r }) {
     const pathAngle = ahead && here
       ? Math.atan2(ahead.y - here.y, ahead.x - here.x) - Math.PI / 2 : 0;
     drawShibaPart(ctx, 'body', 0, 0, r * 2.2, tilt + pathAngle);
-    if (knifeShieldGuarded(chain, piece)) {
-      ctx.save();
-      ctx.shadowColor = '#94ecff';
-      ctx.shadowBlur = 12;
-      ctx.strokeStyle = '#c2f6ff';
-      ctx.lineWidth = 5;
-      ctx.beginPath();
-      ctx.arc(0, 0, r + 5, -2.3, 0.8);
-      ctx.stroke();
-      ctx.restore();
-    }
     if (piece.armorHp > 0) {
       ctx.beginPath(); ctx.arc(0, 0, r + 3, -2.8, -.2);
       ctx.strokeStyle = '#d1e9ed'; ctx.lineWidth = 3; ctx.stroke();
@@ -324,16 +297,12 @@ function drawScreechCat(ctx, { piece, chain, time, profile, pose, head, r }) {
   if (!image?.complete || !image.naturalWidth) return false;
   ctx.save();
   if (head) {
-    const open = pose.state === 'telegraph' ? 1.13 : pose.state === 'strike' ? 1.21 : 1;
+    const open = 1;
     const wobble = pose.state === 'hurt' ? Math.sin(time * 35) * .11 : Math.sin(time * 5) * .025;
     ctx.rotate(wobble);
     if (pose.state === 'hurt') ctx.filter = 'brightness(1.6)';
     ctx.drawImage(mobileSprite(image, 192), -r * 1.6 * open, -r * 1.6 * open,
       r * 3.2 * open, r * 3.2 * open);
-    if (chain.shielded) {
-      ctx.beginPath(); ctx.arc(0, 0, r + 10, 0, TAU);
-      ctx.strokeStyle = '#8af7ff'; ctx.lineWidth = 4; ctx.stroke();
-    }
   } else {
     const ahead = pose.spine[piece.index - 1];
     const here = pose.spine[piece.index];
@@ -359,10 +328,6 @@ function drawSeenZoneAdmin(ctx, { piece, chain, time, pose, head, r }) {
     ctx.rotate(Math.max(-0.28, Math.min(0.28, pose.angle)));
     if (pose.state === 'hurt') ctx.filter = 'brightness(1.55)';
     ctx.drawImage(image, -r * 1.34, -r * 1.68, r * 2.68, r * 3.36);
-    if (pose.state === 'telegraph' && ADMIN_ASSETS.warning) {
-      ctx.drawImage(ADMIN_ASSETS.warning, -r * 0.83, -r * 2.12,
-        r * 1.66, r * 1.72);
-    }
   } else {
     const ahead = pose.spine[piece.index - 1];
     const here = pose.spine[piece.index];
@@ -400,18 +365,8 @@ function drawLoading99(ctx, { piece, chain, time, pose, head, r }) {
   if (!part) return false;
   ctx.save();
   if (head) {
-    const direction = pose.phase === 2 ? -1 : 1;
     if (pose.state === 'hurt') ctx.filter = 'brightness(1.7)';
     ctx.drawImage(part, -r * 1.55, -r * 1.55, r * 3.1, r * 3.1);
-    ctx.save();
-    ctx.rotate(pose.state === 'telegraph' ? 0 : time * direction * 1.35);
-    ctx.beginPath();
-    ctx.arc(0, 0, r * 1.7, -0.9, 1.2 + Math.sin(time * 5) * 0.16);
-    ctx.strokeStyle = pose.state === 'telegraph' ? '#ff796e' : '#74e7de';
-    ctx.lineWidth = pose.state === 'telegraph' ? 4 : 2.5;
-    ctx.setLineDash(pose.state === 'telegraph' ? [4, 4] : []);
-    ctx.stroke();
-    ctx.restore();
   } else {
     const ahead = pose.spine[piece.index - 1];
     const here = pose.spine[piece.index];
@@ -440,22 +395,10 @@ function drawBatchBoss(ctx, { piece, chain, time, profile, pose, head, r }) {
   ctx.save();
   if (head) {
     const moveBob = Math.sin(time * (profile.motion.sway + 2)) * 2.2;
-    const alarm = profile.attackStyle === 'alarm-rush';
-    const lift = pose.state === 'telegraph' ? (alarm ? -5 : -2) : moveBob;
-    ctx.translate(0, lift + (pose.state === 'hurt' ? -4 : 0));
+    ctx.translate(0, moveBob + (pose.state === 'hurt' ? -4 : 0));
     if (pose.state === 'hurt') ctx.filter = 'brightness(1.65)';
-    if (pose.state === 'strike') ctx.scale(1.06, 0.94);
     const size = r * (profile.id === 'meme-clock-in-executioner' ? 3.15 : 3.35);
     ctx.drawImage(mobileSprite(image, 128), -size / 2, -size / 2, size, size);
-    if (pose.state === 'telegraph') {
-      ctx.beginPath();
-      ctx.arc(0, 0, r * (1.65 + Math.sin(time * 16) * 0.05), 0, TAU);
-      ctx.strokeStyle = profile.colors.glow;
-      ctx.lineWidth = 3;
-      ctx.setLineDash([5, 4]);
-      ctx.stroke();
-      ctx.setLineDash([]);
-    }
   } else {
     const ahead = pose.spine[piece.index - 1];
     const here = pose.spine[piece.index];
@@ -486,17 +429,10 @@ function drawLastShiftCoffin(ctx, { piece, chain, time, pose, head, r }) {
   if (!part) return false;
   ctx.save();
   if (head) {
-    const bob = pose.state === 'telegraph' ? -3 - Math.sin(time * 24) * 2
-      : pose.state === 'strike' ? 4 : Math.sin(time * 5) * 2;
+    const bob = Math.sin(time * 5) * 2;
     if (pose.state === 'hurt') ctx.filter = 'brightness(1.65)';
     ctx.translate(0, bob + (pose.state === 'hurt' ? -6 : 0));
     ctx.drawImage(part, -r * 1.55, -r * 1.55, r * 3.1, r * 3.1);
-    if (pose.state === 'telegraph') {
-      ctx.strokeStyle = '#ffe17a'; ctx.lineWidth = 4;
-      ctx.setLineDash([8, 5]); ctx.beginPath();
-      ctx.arc(0, 0, r * 1.72 + Math.sin(time * 18) * 2, 0, TAU);
-      ctx.stroke(); ctx.setLineDash([]);
-    }
   } else {
     const ahead = pose.spine[piece.index - 1];
     const here = pose.spine[piece.index];
@@ -529,8 +465,8 @@ export function drawBossSegment(ctx, { piece, chain, time, profile, pose }) {
   ctx.translate(location.x, location.y);
   if (head) ctx.rotate(['meme-screech-cat', 'meme-loading-99'].includes(profile.id)
     ? Math.max(-0.38, Math.min(0.38, pose.angle)) : pose.angle);
-  if (head && (pose.state === 'telegraph' || pose.phase === 2)) {
-    ctx.shadowColor = colors.glow; ctx.shadowBlur = pose.state === 'telegraph' ? 27 : 13;
+  if (head && pose.phase === 2) {
+    ctx.shadowColor = colors.glow; ctx.shadowBlur = 13;
   }
   if (profile.id === 'meme-knife-shield'
     && drawKnifeShield(ctx, { piece, chain, time, profile, pose, head, r })) {
@@ -607,17 +543,8 @@ export function drawBossSegment(ctx, { piece, chain, time, profile, pose }) {
       ellipse(ctx, side * r * .34, r * .01, r * .07, r * .11, INK, null);
     }
     const jaw = pose.jaw;
-    polygon(ctx, [[-jaw, r * .47], [0, r * (pose.state === 'strike' ? 1.02 : .77)],
+    polygon(ctx, [[-jaw, r * .47], [0, r * .77],
       [jaw, r * .47], [0, r * .56]], colors.shadow, 2.5);
-    if (pose.state === 'telegraph') {
-      ellipse(ctx, 0, -r * .55, 5 + Math.sin(time * 18) * 1.5, 5,
-        colors.glow, null);
-    }
-    if (chain.shielded) {
-      ctx.beginPath(); ctx.arc(0, 0, r + 8 + Math.sin(time * 5) * 1.5, 0, TAU);
-      ctx.strokeStyle = '#a4f5ff'; ctx.lineWidth = 4;
-      ctx.shadowColor = '#6cdeff'; ctx.shadowBlur = 13; ctx.stroke();
-    }
   }
   ctx.restore();
 }

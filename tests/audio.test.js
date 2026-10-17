@@ -137,17 +137,16 @@ test('第五關最後一班切換原創四拍送葬舞曲，並在頭目戰加�
   assert.deepEqual(first, musicEventsForStep('battle', 1, 64, 'coffin-dance'));
 });
 
-test('我的刀盾舉盾與斜斬有不同的提示音', () => {
+test('頭目不再有舉盾、斜斬、吸氣或尖叫攻擊音效', () => {
   const { FakeContext, instances } = fakeAudio();
   const audio = createAudioEngine({ AudioContextClass: FakeContext });
   audio.setScene('boss');
   audio.unlockFromGesture();
-  const ctx = instances[0];
-  assert.equal(audio.playSfx('guard'), true);
-  const afterGuard = ctx.oscillators.length;
-  assert.ok(afterGuard > 0);
-  assert.equal(audio.playSfx('slash'), true);
-  assert.ok(ctx.oscillators.length > afterGuard);
+  for (const cue of ['guard', 'slash', 'inhale', 'screech']) {
+    assert.equal(audio.playSfx(cue), false, `${cue} 不應保留為頭目攻擊提示`);
+  }
+  assert.equal(audio.playSfx('hit'), true);
+  assert.ok(instances[0].oscillators.length > 0, '受擊效果仍可播放');
 });
 
 test('首次點開始時，即使播放裝置仍在恢復也先排入開戰音', () => {
