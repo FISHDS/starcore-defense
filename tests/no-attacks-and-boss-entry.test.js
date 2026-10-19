@@ -77,7 +77,7 @@ test('每關開場只有頭部可見，身體仍由畫外逐段進場', () => {
     advance(game, 0.001);
     const boss = game.bosses[0];
     const visibleCount = () => boss.segments.filter(piece => piece.index > 0
-      && piece.y > 40 && piece.y < 730 && piece.x > -20 && piece.x < 410).length;
+      && piece.y > 196 && piece.y < 730 && piece.x > 0 && piece.x < 390).length;
     assert.ok(boss.segments[0].x >= -20 && boss.segments[0].x <= 410
       && boss.segments[0].y >= 70 && boss.segments[0].y <= 774,
     `第${stage.id}關開場應立刻看得到頭目`);
@@ -95,7 +95,7 @@ test('第1與第2關真正開始作戰時，只生成頭目並立刻可見', () 
     advance(game, 0.001);
     const chain = game.chains[0];
     const visibleCount = () => chain.segments.filter(piece => piece.index > 0
-      && piece.y > 40 && piece.y < 730 && piece.x > -20 && piece.x < 410).length;
+      && piece.y > 196 && piece.y < 730 && piece.x > 0 && piece.x < 390).length;
     const head = chain.segments[0];
     assert.ok(head.x >= -20 && head.x <= 410 && head.y >= 70 && head.y <= 774,
       `第${chapter}關開局看不到頭目 (${head.x.toFixed(0)}, ${head.y.toFixed(0)})`);

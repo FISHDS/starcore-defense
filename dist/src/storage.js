@@ -1,7 +1,7 @@
-import { startRun, WAVES, UPGRADE_BY_ID } from './game.js?v=20261018-starcore-18';
-import { META_BY_ID, MILESTONE_REWARDS, ORGANS, WEAPONS } from './meta.js?v=20261018-starcore-18';
-import { createBossRig } from './boss-rig.js?v=20261018-starcore-18';
-import { bossProfileFor } from './boss-profiles.js?v=20261018-starcore-18';
+import { startRun, WAVES, UPGRADE_BY_ID } from './game.js?v=20261019-starcore-19';
+import { META_BY_ID, MILESTONE_REWARDS, ORGANS, WEAPONS } from './meta.js?v=20261019-starcore-19';
+import { createBossRig } from './boss-rig.js?v=20261019-starcore-19';
+import { bossProfileFor } from './boss-profiles.js?v=20261019-starcore-19';
 
 const CHECKPOINT = 'starcore.checkpoint.v5';
 const BEST = 'starcore.best.v1';
@@ -124,6 +124,7 @@ export function saveCheckpoint(storage, game) {
   if (game.phase !== 'playing' && game.phase !== 'upgrade') return;
   const data = {
     version: 5,
+    routeRevision: 2,
     seed: game.seed,
     chapter: game.chapter,
     endlessTier: game.endlessTier,
@@ -172,7 +173,9 @@ export function loadCheckpoint(storage) {
       || !Array.isArray(data.chains) || data.chains.length > 2
       || data.chains.some(chain => !Array.isArray(chain.segments)
         || chain.segments.length > WAVES[0].segments
-        || !Number.isFinite(chain.travel))) return null;
+        || !Number.isFinite(chain.travel))
+      || (data.encounter === 'boss' && data.chains.some(chain => chain.boss)
+        && data.routeRevision !== 2)) return null;
     const game = startRun(data.seed, {
       ...(data.profileLevels || readProfile(storage)),
       equippedWeapon: data.equippedWeapon,

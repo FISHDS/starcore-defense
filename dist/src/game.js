@@ -1,11 +1,11 @@
-import { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID } from './content.js?v=20261018-starcore-18';
-import { routeLength, routePosition } from './routes.js?v=20261018-starcore-18';
+import { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID } from './content.js?v=20261019-starcore-19';
+import { routeLength, routePosition } from './routes.js?v=20261019-starcore-19';
 import { assignTraits, chainSpeed, chestGuarded, healthPoolKey,
   poisonDamageRatio, pulseDamageRatio, selectNextHealthPoolTarget,
   steerBullet, uniqueHealthTargets, updateWeakpoints }
-  from './mechanics.js?v=20261018-starcore-18';
-import { createBossRig, updateBossRig } from './boss-rig.js?v=20261018-starcore-18';
-import { bossProfileFor, bossRosterIndexFor } from './boss-profiles.js?v=20261018-starcore-18';
+  from './mechanics.js?v=20261019-starcore-19';
+import { createBossRig, updateBossRig } from './boss-rig.js?v=20261019-starcore-19';
+import { bossProfileFor } from './boss-profiles.js?v=20261019-starcore-19';
 
 export { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID };
 export const WIDTH = 390;
@@ -66,7 +66,8 @@ function random(game) {
 export function getShotDamage(game) {
   const depth = Math.max(0, game.previewDamageDepth || game.bossDestroyed || 0);
   const chapterScale = 1 + Math.max(0, game.chapter - 5) * 0.035;
-  const natural = game.baseDamage * (1 + depth / 30) ** 1.45 * chapterScale;
+  const natural = game.baseDamage * (1 + depth / (game.preview ? 30 : 50)) ** 1.45
+    * chapterScale;
   const upgrades = 1 + (game.upgrades.power || 0) * 0.35
     + (game.upgrades.needle || 0) * 0.14 + (game.upgrades.rail || 0) * 0.13;
   const chain = 1 + Math.min(10, game.comboCount || 0) * (game.upgrades.combo || 0) * 0.015;
@@ -108,7 +109,7 @@ export function createBossShowcase(seed = Date.now(), chapter = 1) {
   game.encounter = 'boss';
   game.wave = WAVES.length;
   // 體驗局以頭目擊破進度校準傷害，讓快速試玩能在守點期限前結束。
-  game.previewDamageDepth = 105;
+  game.previewDamageDepth = 52;
   game.upgrades = { power: 1, rapid: 1 };
   advance(game, 0.01);
   const boss = game.bosses[0];
@@ -137,7 +138,9 @@ export function createBossShowcase(seed = Date.now(), chapter = 1) {
 function configuredWave(game, index) {
   const source = WAVES[index];
   const chapter = activeStage(game);
-  const bossRoute = source.boss ? `boss-route-${bossRosterIndexFor(game.chapter)}` : null;
+  const bossRoute = source.boss
+    ? `${chapter.bossCount === 2 ? 'duo-' : ''}boss-route-${game.chapter === 26
+      ? 19 : game.chapter - 1}` : null;
   const path = source.boss
     ? chapter.positionMode === 'center' ? `center-${bossRoute}` : bossRoute
     : game.chapter !== 26 && chapter.positionMode === 'center'
@@ -151,20 +154,24 @@ function configuredWave(game, index) {
     hp: Math.round(source.hp * chapter.hpScale * (game.chapter === 26
       ? 1 + (game.endlessTier - 1) * 0.18 : 1)
       * (source.boss ? chapter.bossHpScale : 1)),
-    speed: source.speed * chapter.speedScale * (source.boss ? 0.75 : 1)
-      * (game.chapter === 26 ? 1 + (game.endlessTier - 1) * 0.04 : 1),
+    speed: source.boss && game.chapter !== 26
+      ? Math.min(source.speed * chapter.speedScale * 0.75,
+        chapter.bossCount === 2 ? 9.3 + (game.chapter - 1) * 0.04
+          : 18 + (game.chapter - 1) * 0.06)
+      : source.speed * chapter.speedScale * (source.boss ? 0.75 : 1)
+        * (game.chapter === 26 ? 1 + (game.endlessTier - 1) * 0.04 : 1),
   };
 }
 
 function initialTravel(path, boss, preview = false, lane = 0) {
   if (boss) {
     if (preview) return 500;
-    for (let distance = -500; distance <= 0; distance += 5) {
+    for (let distance = 0; distance <= 250; distance += 5) {
       const point = routePosition(path, true, lane, distance);
-      if (point.x >= -20 && point.x <= WIDTH + 20
-        && point.y >= 70 && point.y <= HEIGHT - 70) return distance;
+      if (point.x >= 20 && point.x <= WIDTH - 20
+        && point.y >= 205 && point.y <= HEIGHT - 50) return distance - 3;
     }
-    return -30;
+    return 70;
   }
   // 每條路線由入口外開始，避免開始作戰時頭目或長鏈已經在戰場內。
   for (let distance = -60; distance >= -800; distance -= 10) {
@@ -207,14 +214,16 @@ function spawnChain(game, wave, lane = game.spawnCount) {
   const chain = {
     id: game.nextId++, boss, dead: false, path: wave.path, lane, stage: game.wave,
     tint: wave.tint, travel: initialTravel(wave.path, boss, game.preview, lane),
-    spacing: boss ? 31 : 29, speed: wave.speed, actualSpeed: wave.speed,
+    spacing: boss ? 46 : 29, speed: wave.speed, actualSpeed: wave.speed,
     feedSpeed: 0,
     slowFor: 0, recoil: 0, entryComplete: boss, segments: [],
     originalBodyCount: boss ? count - 1 : 0,
     rig: boss ? createBossRig(bossProfileFor(game.chapter, lane).id) : null,
   };
   const chestIndices = boss
-    ? count >= 50 ? [4, 11, 18, 25, 32, 39, 46] : [4, 10, 16, 22, 28, 34, 39]
+    ? stage.bossCount === 1
+      ? [4, 12, 20, 28, 36, 44, 52, 60, 68, 76, 84]
+      : [4, 16, 28, 40, 52, 64]
     : [5, 18, 36, 60, 84, 110, 138, 168, 198];
   for (let index = 0; index < count; index++) {
     const head = index === 0;
@@ -230,7 +239,7 @@ function spawnChain(game, wave, lane = game.spawnCount) {
       radius: head ? (boss ? 27 : 23) : chest ? 23 : boss ? 20 : 18,
       chest, gold: chest && (boss ? stage.mechanics.includes('goldRush')
         ? chestIndices.includes(index)
-        : [11, 25, 39].includes(index)
+        : chestIndices.indexOf(index) % 3 === 1
         : index === 60 || index === 138 || index === 198
           || (stage.mechanics.includes('goldRush') && [18, 84, 168].includes(index))),
       poisonFor: 0, burnFor: 0, mark: 0,
@@ -471,7 +480,7 @@ function updateChains(game, dt) {
 
 function fireCapsules(game, dt) {
   game.fireTimer += dt;
-  const interval = 0.19 / (1 + (game.upgrades.rapid || 0) * 0.18)
+  const interval = 0.21 / (1 + (game.upgrades.rapid || 0) * 0.18)
     * (game.equippedOrgans.includes('tempo') ? 0.9 : 1);
   while (game.fireTimer >= interval) {
     game.fireTimer -= interval;

@@ -1,12 +1,14 @@
-import { WIDTH, HEIGHT } from './game.js?v=20261018-starcore-18';
-import { routePosition } from './routes.js?v=20261018-starcore-18';
+import { WIDTH, HEIGHT } from './game.js?v=20261019-starcore-19';
+import { routePosition } from './routes.js?v=20261019-starcore-19';
 import { drawBiome, drawChestFocus, drawConnector, drawGuardian,
-  drawProjectile, drawSegment } from './art.js?v=20261018-starcore-18';
-import { BOSS_PROFILES, bossProfileFor } from './boss-profiles.js?v=20261018-starcore-18';
-import { resolveBossPose } from './boss-rig.js?v=20261018-starcore-18';
-import { drawBossConnector, drawBossSegment } from './boss-art.js?v=20261018-starcore-18';
+  drawProjectile, drawSegment } from './art.js?v=20261019-starcore-19';
+import { BOSS_PROFILES, bossProfileFor } from './boss-profiles.js?v=20261019-starcore-19';
+import { resolveBossPose } from './boss-rig.js?v=20261019-starcore-19';
+import { drawBossConnector, drawBossSegment } from './boss-art.js?v=20261019-starcore-19';
 
 const TAU = Math.PI * 2;
+const ARENA_TOP = 196;
+const LABEL_TOP = ARENA_TOP + 28;
 const BACKGROUND_TONES = [
   ['#243d47', '#243b4d', '#1b2b3b'],
   ['#383451', '#302e54', '#202743'],
@@ -24,7 +26,7 @@ function compact(value) {
 // 只留下能辨認的戰場資訊；寶箱與數字不共用同一塊畫面。
 export function visibleChests(chains) {
   return chains.filter(chain => !chain.dead).flatMap(chain => chain.segments)
-    .filter(piece => piece.chest && piece.hp > 0 && piece.y >= 55 && piece.y <= 700
+    .filter(piece => piece.chest && piece.hp > 0 && piece.y >= LABEL_TOP && piece.y <= 700
       && piece.x >= 20 && piece.x <= WIDTH - 20)
     .sort((a, b) => b.y - a.y);
 }
@@ -33,7 +35,7 @@ export function selectHealthLabels(chains) {
   const chests = visibleChests(chains);
   const candidates = chains.filter(chain => !chain.dead).flatMap(chain =>
     chain.segments.filter(piece => piece.index > 0 && !piece.chest && piece.hp > 0
-      && piece.y >= 35 && piece.y <= 710 && piece.x >= 20
+      && piece.y >= LABEL_TOP && piece.y <= 710 && piece.x >= 20
       && piece.x <= WIDTH - 20
       && (chain.boss ? piece.healthGroupLeader : piece.index % 6 === 2))
       .map(piece => ({ ...piece, sharedHealth: chain.boss })))
@@ -53,7 +55,7 @@ export function selectDamagePopups(popups, chests) {
   const selected = [];
   for (let index = popups.length - 1; index >= 0; index--) {
     const popup = popups[index];
-    if (popup.life <= 0 || chests.some(chest =>
+    if (popup.life <= 0 || popup.y < LABEL_TOP || chests.some(chest =>
       Math.hypot(chest.x - popup.x, chest.y - popup.y) < 48)) continue;
     if (selected.some(item => Math.abs(item.x - popup.x) < 34
       && Math.abs(item.y - popup.y) < 24)) continue;
@@ -242,10 +244,14 @@ function chain(ctx, item, time, zone = 0) {
   const profile = item.boss ? (BOSS_PROFILES.find(candidate => candidate.id === item.rig?.profileId)
     || bossProfileFor(zone * 5 + 1, item.lane)) : null;
   const pose = profile ? resolveBossPose(item, profile, time) : null;
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, ARENA_TOP, WIDTH, HEIGHT - ARENA_TOP);
+  ctx.clip();
   for (let i = item.segments.length - 1; i > 0; i--) {
     const a = item.segments[i];
     const b = item.segments[i - 1];
-    if (a.hp <= 0 || b.hp <= 0 || a.y < -20 || b.y < -20
+    if (a.hp <= 0 || b.hp <= 0 || (a.y < ARENA_TOP - 40 && b.y < ARENA_TOP - 40)
       || (a.x < -35 && b.x < -35) || (a.x > WIDTH + 35 && b.x > WIDTH + 35)) continue;
     if (profile) drawBossConnector(ctx, { from: a, to: b, profile, pose, index: i });
     else drawConnector(ctx, { from: a, to: b, zone, boss: item.boss,
@@ -253,6 +259,7 @@ function chain(ctx, item, time, zone = 0) {
   }
   for (let i = item.segments.length - 1; i >= 0; i--) {
     if (!item.segments[i].chest) {
+      if (item.segments[i].y < ARENA_TOP - 40) continue;
       if (profile) drawBossSegment(ctx, { piece: item.segments[i], chain: item,
         time, profile, pose });
       else drawSegment(ctx, { piece: item.segments[i], chain: item, time, zone });
@@ -260,9 +267,10 @@ function chain(ctx, item, time, zone = 0) {
   }
   // 寶箱疊在相鄰甲片上方，瞄準時不會被長鏈遮住。
   for (let i = item.segments.length - 1; i >= 0; i--) {
-    if (item.segments[i].chest)
+    if (item.segments[i].chest && item.segments[i].y >= ARENA_TOP - 40)
       drawSegment(ctx, { piece: item.segments[i], chain: item, time, zone });
   }
+  ctx.restore();
 }
 
 export function effectVisualProgress(effect, time) {

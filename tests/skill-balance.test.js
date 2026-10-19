@@ -45,7 +45,7 @@ test('毒素與脈衝場的最高級效果不再低到近乎看不見', () => {
 test('多重發射增加覆蓋面但不把同一方向的總傷害放大五倍', () => {
   const game = startRun(812, {}, 1);
   game.upgrades.multi = 4;
-  game.fireTimer = 0.18;
+  game.fireTimer = 0.20;
   advance(game, 0.02, { aimAngle: -Math.PI / 2 });
 
   assert.equal(game.bullets.length, 5);

@@ -1,6 +1,6 @@
-import { BOSS_PROFILES_A } from './boss-profiles-a.js?v=20261018-starcore-18';
-import { BOSS_PROFILES_B } from './boss-profiles-b.js?v=20261018-starcore-18';
-import { BOSS_PROFILES_C } from './boss-profiles-c.js?v=20261018-starcore-18';
+import { BOSS_PROFILES_A } from './boss-profiles-a.js?v=20261019-starcore-19';
+import { BOSS_PROFILES_B } from './boss-profiles-b.js?v=20261019-starcore-19';
+import { BOSS_PROFILES_C } from './boss-profiles-c.js?v=20261019-starcore-19';
 
 export const BOSS_PROFILES = [...BOSS_PROFILES_A, ...BOSS_PROFILES_B, ...BOSS_PROFILES_C];
 

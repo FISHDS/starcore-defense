@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { advance, getRunProgress, getShotDamage, hitSegment, startRun } from '../dist/src/game.js';
+import { advance, CHAPTERS, getRunProgress, getShotDamage, hitSegment, startRun } from '../dist/src/game.js';
 
 test('雙頭關卡進度只依實際擊破的頭目身體計算', () => {
   const game = startRun(40, {}, 10);
@@ -8,7 +8,7 @@ test('雙頭關卡進度只依實際擊破的頭目身體計算', () => {
   assert.equal(getRunProgress(game), 0);
   game.normalDestroyed = 10000;
   assert.equal(getRunProgress(game), 0);
-  game.bossDestroyed = 41;
+  game.bossDestroyed = CHAPTERS[9].bossSegments - 1;
   assert.ok(getRunProgress(game) > 0.45 && getRunProgress(game) < 0.55);
 });
 
@@ -42,12 +42,13 @@ test('身體被擊破後骨架補齊間距，頭部沿行軍路線平順移動',
   const game = startRun(13);
   advance(game, 0.05);
   const boss = game.bosses[0];
-  const id = boss.segments[20].id;
+  const target = boss.segments.find(piece => piece.depth >= 20 && !piece.chest);
+  const id = target.id;
   const head = boss.segments[0];
   const beforeTravel = boss.travel;
   const before = { x: head.x, y: head.y };
-  const group = boss.healthGroups.find(item => item.members.includes(boss.segments[20]));
-  hitSegment(game, boss, boss.segments[20], group.hp + 1);
+  const group = boss.healthGroups.find(item => item.members.includes(target));
+  hitSegment(game, boss, target, group.hp + 1);
   assert.ok(!boss.segments.some(segment => segment.id === id));
   assert.ok(boss.segments.every((segment, index) => segment.index === index));
   assert.deepEqual({ x: head.x, y: head.y }, before);

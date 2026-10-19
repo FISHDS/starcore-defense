@@ -32,10 +32,12 @@ test('每個主頭目都有專屬繞場路線描述，不把換顏色當成新�
 
 test('前20隻頭目使用各自的行軍曲線，中央關會繞核心收束', () => {
   const routes = CHAPTERS.slice(0, 20).map(stage => {
-    const base = `boss-route-${bossRosterIndexFor(stage.id)}`;
+    const base = `${stage.bossCount === 2 ? 'duo-' : ''}boss-route-${bossRosterIndexFor(stage.id)}`;
     const path = stage.positionMode === 'center' ? `center-${base}` : base;
     assert.ok(routeLength(path, true) > 700);
-    return [300, 650, 1050].map(distance => {
+    const length = routeLength(path, true);
+    return Array.from({ length: 10 }, (_, index) => length * (index + 1) / 11)
+      .map(distance => {
       const point = routePosition(path, true, 0, distance);
       return `${Math.round(point.x)}:${Math.round(point.y)}`;
     }).join('|');

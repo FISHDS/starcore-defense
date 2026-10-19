@@ -91,6 +91,20 @@ test('續玩保留選擇的關卡與當時長鏈的剩餘身體', () => {
   assert.equal(restored.normalDestroyed, game.normalDestroyed);
 });
 
+test('舊版短頭目續玩資料不會把新路線與長度蓋回去', () => {
+  const storage = memoryStorage();
+  storage.setItem('starcore.profile.v2', JSON.stringify({ dna: 88, unlockedStage: 4 }));
+  const game = startRun(49, {}, 4);
+  advance(game, 0.05);
+  saveCheckpoint(storage, game);
+  const legacy = JSON.parse(storage.getItem('starcore.checkpoint.v5'));
+  delete legacy.routeRevision;
+  legacy.chains[0].originalBodyCount = 53;
+  storage.setItem('starcore.checkpoint.v5', JSON.stringify(legacy));
+  assert.equal(loadCheckpoint(storage), null);
+  assert.equal(storage.getItem('starcore.profile.v2') !== null, true);
+});
+
 test('舊版普通長鏈存檔續玩時會轉成頭目開場，不再帶入小怪', () => {
   const storage = memoryStorage();
   const game = startRun(57, {}, 2);

@@ -27,6 +27,8 @@ function rowBounds(path, row, boss, lane) {
 
 function makeCoreRoute(path, boss, lane) {
   const style = path.slice('center-'.length);
+  if (style.startsWith('duo-boss-route-'))
+    return makeBossRoute(Number(style.slice('duo-boss-route-'.length)), true, lane, true);
   if (style.startsWith('boss-route-'))
     return makeBossRoute(Number(style.slice('boss-route-'.length)), true, lane);
   const reverse = style === 'mirror' || style === 'cross' && lane % 2 === 1;
@@ -61,78 +63,63 @@ function makeCoreRoute(path, boss, lane) {
   return { points, lengths, length: lengths.at(-1) };
 }
 
-function makeBossRoute(index, center, lane) {
+function makeBossRoute(index, center, lane, split = false) {
   const routeId = Math.max(0, Math.floor(index) || 0);
-  const points = [];
-  const steps = 320;
-  const direction = routeId % 2 ? -1 : 1;
-  const lanePhase = lane % 2 ? Math.PI : 0;
-  const waveCount = 1 + routeId % 6;
-  const amplitude = 72 + (routeId % 4) * 18;
-  const orbitEnd = 0.82;
-  const turns = center ? 2.2 + (routeId % 7) * 0.38
-    : 1.65 + (routeId % 5) * 0.24;
-  for (let step = 0; step <= steps; step++) {
-    const t = step / steps;
-    if (center) {
-      const shape = routeId % 4;
-      const angle = lanePhase - Math.PI / 2 + direction * turns * Math.PI * 2 * t
-        + Math.sin(t * Math.PI * 2 * (2 + routeId % 3)) * 0.08;
-      const closeAt = 0.78 + (routeId % 3) * 0.025;
-      const closing = Math.max(0, (t - closeAt) / (1 - closeAt));
-      const orbit = 0.93 + 0.035 * Math.sin(t * Math.PI * (2 + shape));
-      const safeRadius = 0.1;
-      const radius = (shape === 1 ? orbit : shape === 2 ? orbit * 0.94 : orbit)
-        * (1 - closing * (1 - safeRadius));
-      const xRadius = 120 * radius + 20
-        + Math.sin(angle * (2.2 + shape)) * (routeId % 5) * 1.5;
-      const yRadius = 185 * radius + 24 + Math.cos(angle * 2.7) * (shape === 3 ? 16 : 5);
-      points.push({ x: 195 + Math.cos(angle) * xRadius,
-        y: 440 + Math.sin(angle) * yRadius });
-    } else {
-      if (t <= orbitEnd) {
-        const phase = routeId * 0.29 + lanePhase;
-        const orbitT = t / orbitEnd;
-        const angle = -Math.PI / 2 + lanePhase
-          + direction * turns * Math.PI * 2 * orbitT;
-        const shape = routeId % 4;
-        const radius = 0.96 - orbitT * (shape === 0 ? 0.18 : 0.1);
-        let x; let y;
-        if (shape === 1) {
-          x = 195 + Math.sin(angle) * 160 * radius;
-          y = 420 + Math.sin(angle * 2 + phase * 0.18) * 205 * radius;
-        } else if (shape === 2) {
-          const c = Math.cos(angle); const s = Math.sin(angle);
-          x = 195 + Math.sign(c) * Math.sqrt(Math.abs(c)) * 168 * radius;
-          y = 420 + Math.sign(s) * Math.sqrt(Math.abs(s)) * 205 * radius;
-        } else {
-          x = 195 + Math.cos(angle) * (160 * radius)
-            + Math.sin(angle * (waveCount + 1)) * amplitude * 0.18;
-          y = 420 + Math.sin(angle) * (205 * radius)
-            + Math.cos(angle * (waveCount + 2) + phase) * 12;
-        }
-        points.push({ x: Math.max(45, Math.min(345, x)),
-          y: Math.max(190, Math.min(700, y)) });
-      } else {
-        const t2 = (t - orbitEnd) / (1 - orbitEnd);
-        const start = points.at(-1);
-        const side = lane % 2 ? 1 : -1;
-        const c1 = { x: Math.max(45, Math.min(345, start.x + side * 120)),
-          y: 650 };
-        const c2 = { x: 195 - side * 130, y: 675 };
-        const end = { x: 195, y: 760 };
-        const inv = 1 - t2;
-        points.push({
-          x: inv ** 3 * start.x + 3 * inv ** 2 * t2 * c1.x
-            + 3 * inv * t2 ** 2 * c2.x + t2 ** 3 * end.x,
-          y: inv ** 3 * start.y + 3 * inv ** 2 * t2 * c1.y
-            + 3 * inv * t2 ** 2 * c2.y + t2 ** 3 * end.y,
-        });
-      }
+  const columns = split ? 4 : 7;
+  const rows = split ? 11 : 10;
+  const cells = Array.from({ length: columns * rows }, (_, cell) => ({
+    x: split ? (lane % 2 ? 218 : 40) + cell % columns * 44
+      : 45 + cell % columns * 50,
+    y: 225 + Math.floor(cell / columns) * (split ? 44 : 50),
+  }));
+  const permitted = new Set(cells.flatMap((point, cell) =>
+    !center || Math.hypot(point.x - 195, point.y - 422) >= 90 ? [cell] : []));
+  const goals = split
+    ? center
+      ? new Set(cells.flatMap((point, cell) =>
+        cell % columns === (lane % 2 ? 0 : 3)
+          && Math.hypot(point.x - 195, point.y - 422) >= 90
+          && Math.hypot(point.x - 195, point.y - 422) <= 125 ? [cell] : []))
+      : new Set([columns * (rows - 1) + (lane % 2 ? 0 : 3)])
+    : center ? new Set([17, 29, 33, 45]) : new Set([66]);
+  const neighbors = cells.map((_, cell) => [cell - columns, cell + columns,
+    cell % columns ? cell - 1 : -1,
+    cell % columns < columns - 1 ? cell + 1 : -1]
+    .filter(next => permitted.has(next)));
+  const starts = split ? [lane % 2 ? columns - 1 : 0,
+    lane % 2 ? columns - 2 : 1, lane % 2 ? 0 : columns - 1]
+    : [lane % 2 ? 6 : 0, lane % 2 ? 0 : 6, 3];
+  const start = starts[routeId % starts.length];
+  let best = [];
+  for (let trial = 0; trial < 1000; trial++) {
+    let seed = ((routeId + 1) * 2654435761 + (lane + 1) * 1013904223
+      + trial * 1664525) >>> 0;
+    const random = () => {
+      seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+      return seed / 4294967296;
+    };
+    const trail = [start];
+    const visited = new Set(trail);
+    while (true) {
+      const options = neighbors[trail.at(-1)].filter(next => !visited.has(next));
+      if (!options.length) break;
+      const ranked = options.map(next => ({ next,
+        exits: neighbors[next].filter(after => !visited.has(after)).length,
+        tie: random() })).sort((a, b) => a.exits - b.exits || a.tie - b.tie);
+      const pick = random() < 0.8 ? ranked[0] : ranked[Math.floor(random()
+        * Math.min(3, ranked.length))];
+      visited.add(pick.next);
+      trail.push(pick.next);
+      if (goals.has(pick.next) && trail.length >= best.length) best = [...trail];
     }
   }
-  if (center) points.push({ x: 195, y: 422 });
-  else points.push({ x: points.at(-1).x, y: 760 });
+  const points = best.map(cell => cells[cell]);
+  const first = points[0];
+  points.unshift(first.x <= 95 ? { x: -45, y: first.y }
+    : first.x >= 295 ? { x: 435, y: first.y }
+      : { x: first.x, y: 145 });
+  points.push(center ? { x: 195, y: 422 }
+    : { x: points.at(-1)?.x ?? 195, y: 760 });
   const lengths = [0];
   for (let index = 1; index < points.length; index++) {
     lengths.push(lengths[index - 1] + Math.hypot(points[index].x - points[index - 1].x,
@@ -143,6 +130,8 @@ function makeBossRoute(index, center, lane) {
 
 function makeRoute(path, boss, lane) {
   if (path.startsWith('center-')) return makeCoreRoute(path, boss, lane);
+  if (path.startsWith('duo-boss-route-'))
+    return makeBossRoute(Number(path.slice('duo-boss-route-'.length)), false, lane, true);
   if (path.startsWith('boss-route-'))
     return makeBossRoute(Number(path.slice('boss-route-'.length)), false, lane);
   const reverse = path === 'mirror' || (path === 'cross' && lane % 2 === 1);

@@ -10,7 +10,7 @@ test('廣角噴射不再出現在戰鬥技能池，雙生藥丸武器仍保留',
 
 test('裝備雙生藥丸仍會每輪發射兩枚藥丸', () => {
   const game = startRun(101, { equippedWeapon: 'scatter' }, 1);
-  game.fireTimer = 0.18;
+  game.fireTimer = 0.20;
   advance(game, 0.02, { aimAngle: 0 });
 
   assert.equal(game.bullets.length, 2);

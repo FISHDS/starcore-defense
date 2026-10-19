@@ -69,19 +69,21 @@ test('寶箱在前段有可直接射擊的空隙，長鏈行列不大面積重�
   assert.ok(crowding < 0.35, `不相鄰的身體重疊率 ${crowding}`);
 });
 
-test('第1至3關真正開場時長鏈在畫面外，之後才逐節進場', () => {
+test('第1至3關開場只露出頭部，長身體之後才逐節進場', () => {
   for (const chapter of [1, 2, 3]) {
     const game = startRun(19, {}, chapter);
     advance(game, 0.05);
     const chain = game.chains[0];
-    assert.equal(chain.segments.filter(piece => piece.x > 20 && piece.x < 370
-      && piece.y > 40 && piece.y < 720).length, 0,
-    `第 ${chapter} 關開局不該已經把長鏈擺在畫面裡`);
+    assert.ok(chain.segments[0].x >= 0 && chain.segments[0].x <= 390
+      && chain.segments[0].y >= 196 && chain.segments[0].y < 720);
+    assert.equal(chain.segments.filter(piece => piece.index > 0
+      && piece.x > 0 && piece.x < 390 && piece.y > 196 && piece.y < 720).length, 0,
+    `第 ${chapter} 關開局不該已經把長身體擺在畫面裡`);
     let visible = 0;
     for (let frame = 0; frame < 400 && game.phase === 'playing'; frame++) {
       advance(game, 0.05);
-      visible = chain.segments.filter(piece => piece.x > 20 && piece.x < 370
-        && piece.y > 40 && piece.y < 720).length;
+      visible = chain.segments.filter(piece => piece.index > 0
+        && piece.x > 0 && piece.x < 390 && piece.y > 196 && piece.y < 720).length;
     }
     assert.ok(visible >= 1 && visible < 40,
       `第 ${chapter} 關應逐節進場，不該瞬間擠滿畫面：${visible}`);
