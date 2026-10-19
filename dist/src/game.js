@@ -1,11 +1,11 @@
-import { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID } from './content.js?v=20261019-starcore-19';
-import { routeLength, routePosition } from './routes.js?v=20261019-starcore-19';
+import { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID } from './content.js?v=20261019-starcore-20';
+import { routeLength, routePosition } from './routes.js?v=20261019-starcore-20';
 import { assignTraits, chainSpeed, chestGuarded, healthPoolKey,
   poisonDamageRatio, pulseDamageRatio, selectNextHealthPoolTarget,
   steerBullet, uniqueHealthTargets, updateWeakpoints }
-  from './mechanics.js?v=20261019-starcore-19';
-import { createBossRig, updateBossRig } from './boss-rig.js?v=20261019-starcore-19';
-import { bossProfileFor } from './boss-profiles.js?v=20261019-starcore-19';
+  from './mechanics.js?v=20261019-starcore-20';
+import { createBossRig, updateBossRig } from './boss-rig.js?v=20261019-starcore-20';
+import { bossProfileFor } from './boss-profiles.js?v=20261019-starcore-20';
 
 export { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID };
 export const WIDTH = 390;

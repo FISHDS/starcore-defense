@@ -1,12 +1,12 @@
-import { advance, CHAPTERS, chooseUpgrade, createBossShowcase, getRunProgress, HEIGHT, rerollUpgrades, startRun, UPGRADE_BY_ID, WAVES, WIDTH } from './game.js?v=20261019-starcore-19';
-import { pointerToAimAngle } from './input.js?v=20261019-starcore-19';
-import { render } from './render.js?v=20261019-starcore-19';
-import { awardRun, buyResearch, buyItem, equipItem, clearCheckpoint, loadCheckpoint, readProfile, researchCost, saveCheckpoint, updateBest } from './storage.js?v=20261019-starcore-19';
-import { ORGANS, WEAPONS } from './meta.js?v=20261019-starcore-19';
-import { drawSkillIcon } from './art.js?v=20261019-starcore-19';
-import { createAudioEngine, musicThemeForChapter } from './audio.js?v=20261019-starcore-19';
-import { getBattleHint } from './tutorial.js?v=20261019-starcore-19';
-import { bossProfileFor } from './boss-profiles.js?v=20261019-starcore-19';
+import { advance, CHAPTERS, chooseUpgrade, createBossShowcase, getRunProgress, HEIGHT, rerollUpgrades, startRun, UPGRADE_BY_ID, WAVES, WIDTH } from './game.js?v=20261019-starcore-20';
+import { pointerToAimAngle } from './input.js?v=20261019-starcore-20';
+import { render } from './render.js?v=20261019-starcore-20';
+import { awardRun, buyResearch, buyItem, equipItem, clearCheckpoint, loadCheckpoint, readProfile, researchCost, saveCheckpoint, updateBest } from './storage.js?v=20261019-starcore-20';
+import { ORGANS, WEAPONS } from './meta.js?v=20261019-starcore-20';
+import { drawSkillIcon } from './art.js?v=20261019-starcore-20';
+import { createAudioEngine, musicThemeForChapter } from './audio.js?v=20261019-starcore-20';
+import { getBattleHint } from './tutorial.js?v=20261019-starcore-20';
+import { bossProfileFor } from './boss-profiles.js?v=20261019-starcore-20';
 
 const $ = id => document.getElementById(id);
 const canvas = $('arena');
@@ -290,8 +290,8 @@ function setResult() {
       : `已解鎖第 ${reward.profile.unlockedStage} 關。下一關有新的路線與機制。`;
     selectedChapter = game.chapter === 25 ? 26 : reward.profile.unlockedStage;
     selectedZone = Math.min(4, Math.floor((selectedChapter - 1) / 5));
-    $('retry-label').textContent = '挑戰下一關';
-  } else $('retry-label').textContent = '再戰一次';
+  }
+  $('retry-label').textContent = '返回主畫面';
   refreshResearch();
   refreshStages();
 }
@@ -401,8 +401,14 @@ $('showcase-boss-select').addEventListener('change', event =>
 selectShowcase(selectedShowcase);
 $('showcase-play').addEventListener('click', beginShowcase);
 $('showcase-back').addEventListener('click', () => { showShowcase = false; syncScreen(); });
-$('retry-button').addEventListener('click', () => game?.preview ? beginShowcase() : beginNew());
-$('result-menu').addEventListener('click', () => { game = null; showShowcase = false; syncScreen(); });
+function returnToMenu() {
+  game = null;
+  paused = false;
+  showShowcase = false;
+  syncScreen();
+}
+$('retry-button').addEventListener('click', () => game?.preview ? beginShowcase() : returnToMenu());
+$('result-menu').addEventListener('click', returnToMenu);
 $('continue-button').addEventListener('click', continueRun);
 $('reroll-button').addEventListener('click', () => {
   if (!game || !rerollUpgrades(game)) return;
@@ -451,7 +457,7 @@ $('resume-button').addEventListener('click', () => {
   audio.playSfx('click');
 });
 $('menu-button').addEventListener('click', () => {
-  game = null; paused = false; showShowcase = false; syncScreen();
+  returnToMenu();
 });
 
 canvas.addEventListener('pointerdown', event => {
@@ -480,7 +486,6 @@ window.addEventListener('keyup', event => {
 document.addEventListener('visibilitychange', () => {
   if (document.hidden && game?.phase === 'playing') {
     saveCheckpoint(storage, game);
-    paused = true; syncScreen();
   }
 });
 
