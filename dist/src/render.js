@@ -1,10 +1,10 @@
-import { WIDTH, HEIGHT } from './game.js?v=20261019-starcore-20';
-import { routePosition } from './routes.js?v=20261019-starcore-20';
+import { WIDTH, HEIGHT } from './game.js?v=20261020-starcore-21';
+import { routePosition } from './routes.js?v=20261020-starcore-21';
 import { drawBiome, drawChestFocus, drawConnector, drawGuardian,
-  drawProjectile, drawSegment } from './art.js?v=20261019-starcore-20';
-import { BOSS_PROFILES, bossProfileFor } from './boss-profiles.js?v=20261019-starcore-20';
-import { resolveBossPose } from './boss-rig.js?v=20261019-starcore-20';
-import { drawBossConnector, drawBossSegment } from './boss-art.js?v=20261019-starcore-20';
+  drawProjectile, drawSegment } from './art.js?v=20261020-starcore-21';
+import { BOSS_PROFILES, bossProfileFor } from './boss-profiles.js?v=20261020-starcore-21';
+import { resolveBossPose } from './boss-rig.js?v=20261020-starcore-21';
+import { drawBossConnector, drawBossSegment } from './boss-art.js?v=20261020-starcore-21';
 
 const TAU = Math.PI * 2;
 const ARENA_TOP = 196;

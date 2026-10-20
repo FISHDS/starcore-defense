@@ -23,6 +23,8 @@ test('快速體驗立即看見我的刀盾，保留兩個身體寶箱與換手�
   assert.equal(boss.rig.profileId, 'meme-knife-shield');
   assert.ok(boss.segments[0].y > 160 && boss.segments[0].y < 600);
   assert.ok(boss.segments.filter(piece => piece.chest).length >= 2);
+  assert.deepEqual(boss.segments.filter(piece => piece.chest).map(piece => piece.index),
+    [4, 12, 20], '快速體驗保留原本三次選技能的節奏');
   assert.ok(boss.originalBodyCount < 41);
   assert.equal(getRunProgress(game), 0);
   const chest = boss.segments.find(piece => piece.chest);

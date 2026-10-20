@@ -1,11 +1,11 @@
-import { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID } from './content.js?v=20261019-starcore-20';
-import { routeLength, routePosition } from './routes.js?v=20261019-starcore-20';
+import { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID } from './content.js?v=20261020-starcore-21';
+import { routeLength, routePosition } from './routes.js?v=20261020-starcore-21';
 import { assignTraits, chainSpeed, chestGuarded, healthPoolKey,
   poisonDamageRatio, pulseDamageRatio, selectNextHealthPoolTarget,
   steerBullet, uniqueHealthTargets, updateWeakpoints }
-  from './mechanics.js?v=20261019-starcore-20';
-import { createBossRig, updateBossRig } from './boss-rig.js?v=20261019-starcore-20';
-import { bossProfileFor } from './boss-profiles.js?v=20261019-starcore-20';
+  from './mechanics.js?v=20261020-starcore-21';
+import { createBossRig, updateBossRig } from './boss-rig.js?v=20261020-starcore-21';
+import { bossProfileFor } from './boss-profiles.js?v=20261020-starcore-21';
 
 export { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID };
 export const WIDTH = 390;
@@ -64,7 +64,11 @@ function random(game) {
 }
 
 export function getShotDamage(game) {
-  const depth = Math.max(0, game.previewDamageDepth || game.bossDestroyed || 0);
+  const rawDepth = Math.max(0, game.previewDamageDepth || game.bossDestroyed || 0);
+  const stage = activeStage(game);
+  const bodyLength = game.boss?.originalBodyCount || stage.bossSegments - 1;
+  const depth = game.preview || !stage.bossGrowthSpan ? rawDepth
+    : rawDepth * stage.bossGrowthSpan / bodyLength;
   const chapterScale = 1 + Math.max(0, game.chapter - 5) * 0.035;
   const natural = game.baseDamage * (1 + depth / (game.preview ? 30 : 50)) ** 1.45
     * chapterScale;
@@ -97,7 +101,9 @@ export function getRunProgress(game) {
   if (game.phase === 'victory') return 1;
   if (game.preview) return Math.min(1, game.bossDestroyed / game.previewBodyTotal);
   const stage = activeStage(game);
-  const bossBodyLength = stage.bossSegments - 1;
+  const bossBodyLength = stage.bossGrowthSpan
+    ? game.boss?.originalBodyCount || stage.bossSegments - 1
+    : stage.bossSegments - 1;
   const bossTotal = stage.bossCount * bossBodyLength;
   return Math.min(1, game.bossDestroyed / bossTotal);
 }
@@ -218,11 +224,14 @@ function spawnChain(game, wave, lane = game.spawnCount) {
     feedSpeed: 0,
     slowFor: 0, recoil: 0, entryComplete: boss, segments: [],
     originalBodyCount: boss ? count - 1 : 0,
+    groupSize: boss ? game.preview ? 4 : stage.bossGroupSize : null,
     rig: boss ? createBossRig(bossProfileFor(game.chapter, lane).id) : null,
   };
   const chestIndices = boss
     ? stage.bossCount === 1
-      ? [4, 12, 20, 28, 36, 44, 52, 60, 68, 76, 84]
+      ? game.chapter === 1 && !game.preview
+        ? [4, 20, 39, 58, 80, 102, 124, 146]
+        : [4, 12, 20, 28, 36, 44, 52, 60, 68, 76, 84]
       : [4, 16, 28, 40, 52, 64]
     : [5, 18, 36, 60, 84, 110, 138, 168, 198];
   for (let index = 0; index < count; index++) {
@@ -287,6 +296,11 @@ function buildBossHealthGroups(chain) {
   const runs = [];
   let run = [];
   const flush = () => {
+    if (chain.groupSize === 3) {
+      while (run.length >= 3) runs.push(run.splice(0, 3));
+      if (run.length) runs.push(run.splice(0));
+      return;
+    }
     while (run.length >= 3) {
       const remainder = run.length - 4;
       const size = remainder === 1 || remainder === 2 ? 3 : 4;
