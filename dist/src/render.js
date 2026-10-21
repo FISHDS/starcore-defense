@@ -1,10 +1,10 @@
-import { WIDTH, HEIGHT } from './game.js?v=20261020-starcore-21';
-import { routePosition } from './routes.js?v=20261020-starcore-21';
+import { WIDTH, HEIGHT } from './game.js?v=20261021-starcore-22';
+import { routeLength, routePosition } from './routes.js?v=20261021-starcore-22';
 import { drawBiome, drawChestFocus, drawConnector, drawGuardian,
-  drawProjectile, drawSegment } from './art.js?v=20261020-starcore-21';
-import { BOSS_PROFILES, bossProfileFor } from './boss-profiles.js?v=20261020-starcore-21';
-import { resolveBossPose } from './boss-rig.js?v=20261020-starcore-21';
-import { drawBossConnector, drawBossSegment } from './boss-art.js?v=20261020-starcore-21';
+  drawProjectile, drawSegment } from './art.js?v=20261021-starcore-22';
+import { BOSS_PROFILES, bossProfileFor } from './boss-profiles.js?v=20261021-starcore-22';
+import { resolveBossPose } from './boss-rig.js?v=20261021-starcore-22';
+import { drawBossConnector, drawBossSegment } from './boss-art.js?v=20261021-starcore-22';
 
 const TAU = Math.PI * 2;
 const ARENA_TOP = 196;
@@ -43,10 +43,10 @@ export function selectHealthLabels(chains) {
   const selected = [];
   for (const piece of candidates) {
     if (chests.some(chest => Math.hypot(chest.x - piece.x, chest.y - piece.y) < 48)) continue;
-    if (selected.some(label => Math.abs(label.x - piece.x) < 50
-      && Math.abs(label.y - piece.y) < 28)) continue;
+    if (selected.some(label => Math.abs(label.x - piece.x) < 65
+      && Math.abs(label.y - piece.y) < 80)) continue;
     selected.push(piece);
-    if (selected.length === 10) break;
+    if (selected.length === 4) break;
   }
   return selected;
 }
@@ -60,9 +60,33 @@ export function selectDamagePopups(popups, chests) {
     if (selected.some(item => Math.abs(item.x - popup.x) < 34
       && Math.abs(item.y - popup.y) < 24)) continue;
     selected.push(popup);
-    if (selected.length === 12) break;
+    if (selected.length === 6) break;
   }
   return selected;
+}
+
+export function breachPressure(game) {
+  if (!game?.bosses?.length) return 0;
+  const nearest = Math.max(0, ...game.bosses.filter(boss => !boss.dead).map(boss => {
+    const length = routeLength(boss.path, true, boss.lane);
+    return length > 0 ? (boss.segments[0]?.routeDistance || 0) / length : 0;
+  }));
+  return Math.max(0, Math.min(1, (nearest - 0.65) / 0.3));
+}
+
+function drawBreachPressure(ctx, game, time) {
+  const pressure = breachPressure(game);
+  if (pressure <= 0) return;
+  ctx.save();
+  ctx.strokeStyle = `rgba(255,105,120,${0.2 + pressure * 0.45})`;
+  ctx.lineWidth = 3 + pressure * 2;
+  ctx.shadowColor = '#ff6474';
+  ctx.shadowBlur = 7 + pressure * (9 + Math.sin(time * 7) * 3);
+  ctx.beginPath();
+  ctx.arc(game.player.x, game.player.y, 48 + pressure * 4,
+    -Math.PI / 2, -Math.PI / 2 + TAU * pressure);
+  ctx.stroke();
+  ctx.restore();
 }
 const PALETTES = {
   mint: { body: '#62d8ba', edge: '#177e80', light: '#c2fff0', shadow: '#286e78', head: '#f58e81' },
@@ -476,6 +500,7 @@ export function render(ctx, game, time) {
     ctx.restore();
   }
   if (game.player.y >= 600) rail(ctx);
+  drawBreachPressure(ctx, game, time);
   chestHighlights(ctx, chests, time);
   ctx.save();
   const aimEndX = game.player.x + Math.cos(game.player.aimAngle) * 62;

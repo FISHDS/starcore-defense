@@ -5,7 +5,7 @@ import { routeLength, routePosition } from '../dist/src/routes.js';
 
 test('同一條長鏈後段達數萬血，玩家火力隨進度成長', () => {
   const game = startRun(12, {}, 25);
-  game.bossDestroyed = 30;
+  game.bossDestroyed = 120;
   advance(game, 0.05);
   const chain = game.chains[0];
   assert.ok(chain.segments.at(-1).maxHp > chain.segments[1].maxHp);
@@ -16,10 +16,11 @@ test('被擊破的身體會補齊間距，尾巴仍連成一條', () => {
   const game = startRun(13);
   advance(game, 0.05);
   const chain = game.chains[0];
-  const id = chain.segments[20].id;
+  const target = chain.segments.find(piece => piece.depth >= 20 && !piece.chest);
+  const id = target.id;
   const head = chain.segments[0];
   const before = { x: head.x, y: head.y };
-  hitSegment(game, chain, chain.segments[20], 100000);
+  hitSegment(game, chain, target, 100000);
   assert.ok(!chain.segments.some(segment => segment.id === id));
   assert.ok(chain.segments.every((segment, index) => segment.index === index));
   assert.deepEqual({ x: head.x, y: head.y }, before, '擊破當下不能讓頭部跳格');

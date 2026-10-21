@@ -24,6 +24,6 @@ test('25關頭目身節耐久與整場總耐久逐關提高，留下技能搭配
         `第${index + 1}關單節耐久沒有高於前一關`);
     }
   }
-  assert.ok(samples[24].totalHp > samples[0].totalHp * 4,
-    '終局應明顯高於首關，但由技能與瞄準搭配仍有取勝空間');
+  assert.ok(samples[24].totalHp > samples[1].totalHp * 4,
+    '終局應明顯高於第二關；首關的一百組長戰另行驗證');
 });

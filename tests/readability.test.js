@@ -1,7 +1,21 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { advance, chooseUpgrade, createBossShowcase, startRun } from '../dist/src/game.js';
-import { selectDamagePopups, selectHealthLabels, visibleChests } from '../dist/src/render.js';
+import { breachPressure, selectDamagePopups, selectHealthLabels, visibleChests } from '../dist/src/render.js';
+import { routeLength } from '../dist/src/routes.js';
+
+test('頭目走近守點才出現危險光環，後退時會同步減弱', () => {
+  const game = startRun(8, {}, 1);
+  advance(game, 0.05);
+  const head = game.bosses[0].segments[0];
+  const length = routeLength(game.bosses[0].path, true, 0);
+  head.routeDistance = length * 0.5;
+  assert.equal(breachPressure(game), 0);
+  head.routeDistance = length * 0.85;
+  assert.ok(breachPressure(game) > 0.6);
+  head.routeDistance = length * 0.7;
+  assert.ok(breachPressure(game) < 0.2);
+});
 
 test('頭目身體較密時只顯示少量分開的血量，寶箱周圍保持淨空', () => {
   const game = startRun(1);
@@ -16,7 +30,7 @@ test('頭目身體較密時只顯示少量分開的血量，寶箱周圍保持�
 
   assert.ok(chest, '寶箱應隨長鏈行軍進入可見戰場');
   assert.ok(labels.length > 0);
-  assert.ok(labels.length <= 10, `顯示了 ${labels.length} 個血量`);
+  assert.ok(labels.length <= 4, `顯示了 ${labels.length} 個血量`);
   assert.ok(labels.every(piece => piece.x >= 20 && piece.x <= 370),
     '畫面外的身體佔用了血量標示名額');
   assert.ok(visibleChests(game.chains).every(piece => piece.x >= 20 && piece.x <= 370));
@@ -26,8 +40,8 @@ test('頭目身體較密時只顯示少量分開的血量，寶箱周圍保持�
   assert.ok(labels.every(piece => Math.hypot(piece.x - chest.x, piece.y - chest.y) >= 48));
   for (let i = 0; i < labels.length; i++) {
     for (let j = i + 1; j < labels.length; j++) {
-      assert.ok(Math.abs(labels[i].x - labels[j].x) >= 50
-        || Math.abs(labels[i].y - labels[j].y) >= 28);
+      assert.ok(Math.abs(labels[i].x - labels[j].x) >= 65
+        || Math.abs(labels[i].y - labels[j].y) >= 80);
     }
   }
 });
@@ -53,7 +67,7 @@ test('傷害數字不覆蓋寶箱，也不在同一位置堆疊', () => {
   }));
   const selected = selectDamagePopups(popups, [chest]);
 
-  assert.ok(selected.length > 0 && selected.length <= 12);
+  assert.ok(selected.length > 0 && selected.length <= 6);
   assert.ok(selected.every(popup => Math.hypot(popup.x - chest.x, popup.y - chest.y) >= 48));
   for (let i = 0; i < selected.length; i++) {
     for (let j = i + 1; j < selected.length; j++) {

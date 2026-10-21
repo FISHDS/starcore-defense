@@ -1,14 +1,13 @@
 import { advance, chooseUpgrade, startRun } from '../dist/src/game.js';
 import { choosePilotUpgrade, fixedAimAngle } from './fixed-aim-pilot.mjs';
+import { simulateProgression } from './simulate-progression.mjs';
 
-function simulate(chapter, seed, idle = false, build = 'base') {
-  const level = chapter <= 2 ? 0 : chapter <= 5 ? 2 : 4;
-  const profile = { fire: level, guard: level, scavenge: level,
-    tactics: level, collector: level,
-    equippedWeapon: chapter >= 15 ? 'rail' : 'capsule',
-    equippedOrgans: chapter >= 20 ? ['focus-lens', 'tempo']
-      : chapter >= 10 ? ['focus-lens'] : [] };
-  const game = startRun(seed, profile, chapter);
+function simulate(chapter, seed, profile, idle = false, build = 'base') {
+  const equippedWeapon = profile.weapons.includes('rail') ? 'rail'
+    : profile.weapons.includes('scatter') ? 'scatter' : 'capsule';
+  const equippedOrgans = ['focus-lens', 'tempo', 'anchor-organ']
+    .filter(id => profile.organs.includes(id)).slice(0, 2);
+  const game = startRun(seed, { ...profile, equippedWeapon, equippedOrgans }, chapter);
   for (let step = 0; step < 9000 && !['victory', 'defeat'].includes(game.phase); step++) {
     if (game.phase === 'upgrade') {
       // 真正的零輸入測試不會替玩家自動選技能；停在技能選擇畫面才是正確結果。
@@ -23,10 +22,12 @@ function simulate(chapter, seed, idle = false, build = 'base') {
 }
 
 const rows = [];
+const progression = simulateProgression();
 for (let chapter = 1; chapter <= 25; chapter++) {
-  const active = [5, 19, 33].map(seed => simulate(chapter, seed));
-  const newBuild = [5, 19, 33].map(seed => simulate(chapter, seed, false, 'new'));
-  const idle = chapter <= 5 ? simulate(chapter, 5, true) : null;
+  const profile = progression.profiles[chapter - 1];
+  const active = [5, 19, 33].map(seed => simulate(chapter, seed, profile));
+  const newBuild = [5, 19, 33].map(seed => simulate(chapter, seed, profile, false, 'new'));
+  const idle = chapter <= 5 ? simulate(chapter, 5, profile, true) : null;
   rows.push({ chapter,
     baseWins: active.filter(result => result.phase === 'victory').length,
     newWins: newBuild.filter(result => result.phase === 'victory').length,
@@ -35,5 +36,5 @@ for (let chapter = 1; chapter <= 25; chapter++) {
     idle: idle?.phase || '-', idleKilled: idle?.killed ?? '-' });
 }
 console.table(rows);
-if (rows.some(row => row.idle === 'victory')) process.exitCode = 1;
+if (progression.failed || rows.some(row => row.idle === 'victory')) process.exitCode = 1;
 if (rows.some(row => row.baseWins + row.newWins === 0)) process.exitCode = 1;

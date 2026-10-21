@@ -25,7 +25,11 @@ export function selectNextHealthPoolTarget(items, origin, excludedPools, range) 
 }
 
 export function poisonDamageRatio(rank) {
-  return 0.22 + (Math.max(1, Math.min(3, rank)) - 1) * 0.1;
+  return 0.018 + (Math.max(1, Math.min(3, rank)) - 1) * 0.0072;
+}
+
+export function burnDamageRatio(rank) {
+  return 0.03 + (Math.max(1, Math.min(3, rank)) - 1) * 0.0135;
 }
 
 export function pulseDamageRatio(rank) {
@@ -63,7 +67,7 @@ export function chestGuarded(chain, chest) {
 
 export function chainSpeed(chain) {
   const hasteCount = chain.segments.filter(piece => piece.haste && piece.hp > 0).length;
-  return chain.speed * (1 + Math.min(0.45, hasteCount * 0.025));
+  return chain.speed * (1 + 0.48 * hasteCount / (hasteCount + 12));
 }
 
 export function steerBullet(game, bullet, dt) {

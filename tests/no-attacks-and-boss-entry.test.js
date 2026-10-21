@@ -136,7 +136,7 @@ test('正式關卡都以頭目長鏈開場，後段頭目身節耐久高於前�
     '第25關尾段應比第1關明顯耐打');
 });
 
-test('連續擊破頭目身體保留短暫回彈，行軍距離不會永久倒退', () => {
+test('連續擊破頭目身體會拉回頭部，隨後恢復推進', () => {
   const game = startRun(909, {}, 1);
   game.encounter = 'boss';
   game.wave = WAVES.length;
@@ -150,11 +150,11 @@ test('連續擊破頭目身體保留短暫回彈，行軍距離不會永久倒�
     const body = group.members[0];
     assert.ok(body, '頭目身節應該還有可破壞目標');
     hitSegment(game, boss, body, group.hp + body.armorHp + 1);
-    assert.equal(boss.travel, before,
-      '永久行軍距離不能隨擊破倒退');
+    assert.ok(boss.travel < before,
+      '擊破身節應讓頭部沿路線退回');
     advance(game, 0.05);
     assert.ok(boss.segments[0].routeDistance < beforeHead + boss.speed * 0.05,
-      '整組破壞後只應有短暫、可見的回彈');
+      '整組破壞後應有可見的後退');
     for (let frame = 0; frame < 99; frame++) advance(game, 0.05);
     assert.ok(boss.travel > before,
       '回彈結束後頭目應持續前進');
@@ -191,8 +191,8 @@ test('第1、2、5關頭目每3至4節共享一個血量池', () => {
       `第${chapter}關共用血量歸零後沒有整組破壞`);
     assert.equal(game.bossDestroyed, destroyedCount,
       `第${chapter}關破壞進度沒有按整組節點計算`);
-    assert.equal(boss.travel, beforeTravel,
-      `第${chapter}關整組破壞後永久行軍距離不應倒退`);
+    assert.ok(boss.travel < beforeTravel,
+      `第${chapter}關整組破壞後頭部應退回`);
   }
 });
 

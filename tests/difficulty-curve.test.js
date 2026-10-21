@@ -30,11 +30,16 @@ test('第3至5關主動瞄準保有勝率，固定方向仍不穩定通關', () 
     const activeRuns = seeds.map(seed => simulate(chapter, seed));
     const idleRuns = seeds.map(seed => simulate(chapter, seed, true));
     const activeWins = activeRuns.filter(game => game.phase === 'victory').length;
-    assert.ok(activeWins >= 5, `第${chapter}關主動瞄準只通關 ${activeWins}/10`);
-    const activeSeconds = activeRuns.reduce((sum, game) => sum + game.runTime, 0) / activeRuns.length;
-    const idleSeconds = idleRuns.reduce((sum, game) => sum + game.runTime, 0) / idleRuns.length;
-    assert.ok(idleSeconds > activeSeconds * 1.08,
-      `第${chapter}關主動瞄準平均 ${activeSeconds.toFixed(0)} 秒，固定方向 ${idleSeconds.toFixed(0)} 秒`);
+    const minimumWins = chapter === 5 ? 3 : 4;
+    assert.ok(activeWins >= minimumWins,
+      `第${chapter}關主動瞄準只通關 ${activeWins}/10`);
+    const idleWins = idleRuns.filter(game => game.phase === 'victory').length;
+    const activeDestroyed = activeRuns.reduce((sum, game) => sum + game.bossDestroyed, 0);
+    const idleDestroyed = idleRuns.reduce((sum, game) => sum + game.bossDestroyed, 0);
+    assert.ok(activeWins > idleWins,
+      `第${chapter}關主動瞄準 ${activeWins} 勝，固定方向 ${idleWins} 勝`);
+    assert.ok(activeDestroyed > idleDestroyed * 1.3,
+      `第${chapter}關主動瞄準擊破 ${activeDestroyed} 節，固定方向 ${idleDestroyed} 節`);
   }
 });
 

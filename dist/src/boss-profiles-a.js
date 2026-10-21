@@ -18,7 +18,7 @@ export const BOSS_PROFILES_A = [
     colors: { shell: '#dc7538', shadow: '#693c45', glow: '#67ebff', eye: '#fff2d1' },
     anatomy: { headScale: 1.24, bodyScale: 1.07, hornLength: 12, jawWidth: 25, finLength: 9 },
     motion: { sway: 2.8, pulse: 0.07, hurtKick: 10 },
-    parts: { head: 'screech-cat-head.png', body: 'screech-cat-body.png' },
+    parts: { head: 'screech-cat-prototype-head.svg', body: 'screech-cat-prototype-body.svg' },
   },
   {
     id: 'meme-knife-shield',
@@ -27,8 +27,8 @@ export const BOSS_PROFILES_A = [
     colors: { shell: '#b67a43', shadow: '#514756', glow: '#ffe087', eye: '#fff4d8' },
     anatomy: { headScale: 1.18, bodyScale: 1.08, hornLength: 21, jawWidth: 20, finLength: 9 },
     motion: { sway: 1.8, pulse: 0.035, hurtKick: 7 },
-    parts: { head: 'shiba-head.png', knife: 'shiba-props.png',
-      shield: 'shiba-props.png', body: 'shiba-body.png' },
+    parts: { head: 'shiba-prototype-head.svg', knife: 'shiba-knife.svg',
+      shield: 'shiba-shield.svg', body: 'shiba-body.svg' },
   },
   {
     id: 'meme-last-shift-coffin-leader',

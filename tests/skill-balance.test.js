@@ -34,12 +34,28 @@ test('彈射目標略過已命中的共享血量組，優先選附近另一組',
   assert.equal(target.segment.id, 'next');
 });
 
-test('毒素與脈衝場的最高級效果不再低到近乎看不見', () => {
+test('灼燒、毒素隨共享血量提高效果，脈衝場高級效果可辨認', () => {
   assert.equal(typeof mechanics.poisonDamageRatio, 'function');
-  assert.equal(mechanics.poisonDamageRatio(1), 0.22);
-  assert.ok(Math.abs(mechanics.poisonDamageRatio(3) - 0.42) < 1e-9);
+  assert.equal(typeof mechanics.burnDamageRatio, 'function');
+  assert.equal(mechanics.poisonDamageRatio(1), 0.018);
+  assert.ok(Math.abs(mechanics.poisonDamageRatio(3) - 0.0324) < 1e-9);
+  assert.equal(mechanics.burnDamageRatio(1), 0.03);
+  assert.ok(Math.abs(mechanics.burnDamageRatio(3) - 0.057) < 1e-9);
   assert.equal(mechanics.pulseDamageRatio(1), 0.4);
   assert.equal(mechanics.pulseDamageRatio(3), 0.7);
+});
+
+test('百組長戰前期火力較低，累積八次技能後即使選功能技也能大幅成長', () => {
+  for (const chapter of [1, 2, 10, 25]) {
+    const game = startRun(813, {}, chapter);
+    const opening = getShotDamage(game);
+    game.upgrades = { burn: 1 };
+    assert.ok(getShotDamage(game) <= opening * 1.2);
+    game.upgrades = { burn: 1, poison: 1, pulse: 1, saw: 1,
+      frost: 1, orbit: 1, mark: 1, anchor: 1 };
+    assert.ok(getShotDamage(game) >= opening * 1.8,
+      `第 ${chapter} 關選技後火力沒有跟上長戰`);
+  }
 });
 
 test('多重發射增加覆蓋面但不把同一方向的總傷害放大五倍', () => {

@@ -13,7 +13,7 @@ test('關卡一開始就有頭目長鏈，沒有普通怪物前置階段', () =>
   assert.equal(game.normalTotal, 0);
 });
 
-test('頭部不受傷，身節共用血量組被擊破時只短暫回彈', () => {
+test('頭部不受傷，身節共用血量組被擊破時沿路線後退', () => {
   const game = startRun(7);
   advance(game, 0.05);
   const boss = game.bosses[0];
@@ -24,12 +24,11 @@ test('頭部不受傷，身節共用血量組被擊破時只短暫回彈', () =>
   const group = boss.healthGroups[0];
   const beforeTravel = boss.travel;
   hitSegment(game, boss, group.members[0], group.hp + 1);
-  assert.equal(boss.travel, beforeTravel);
+  assert.ok(boss.travel < beforeTravel);
   assert.ok(boss.recoil > 0);
   const routeBefore = boss.segments[0].routeDistance;
   advance(game, 0.1);
-  assert.ok(boss.travel > beforeTravel);
-  assert.ok(boss.segments[0].routeDistance < routeBefore + boss.speed * 0.1);
+  assert.ok(boss.segments[0].routeDistance < routeBefore);
 });
 
 test('寶箱是頭目身體節點，打破後出現三選一並返回原戰場', () => {

@@ -1,17 +1,20 @@
-import { startRun, WAVES, UPGRADE_BY_ID } from './game.js?v=20261020-starcore-21';
-import { META_BY_ID, MILESTONE_REWARDS, ORGANS, WEAPONS } from './meta.js?v=20261020-starcore-21';
-import { createBossRig } from './boss-rig.js?v=20261020-starcore-21';
-import { bossProfileFor } from './boss-profiles.js?v=20261020-starcore-21';
+import { startRun, WAVES, CHAPTERS, UPGRADE_BY_ID } from './game.js?v=20261021-starcore-22';
+import { META_BY_ID, MILESTONE_REWARDS, ORGANS, WEAPONS } from './meta.js?v=20261021-starcore-22';
+import { createBossRig } from './boss-rig.js?v=20261021-starcore-22';
+import { bossProfileFor } from './boss-profiles.js?v=20261021-starcore-22';
 
 const CHECKPOINT = 'starcore.checkpoint.v5';
 const BEST = 'starcore.best.v1';
 const PROFILE = 'starcore.profile.v2';
 const LEGACY_PROFILE = 'starcore.profile.v1';
-const RESEARCH = ['fire', 'precision', 'scavenge', 'tactics', 'collector'];
+const RESEARCH = ['fire', 'precision', 'scavenge', 'tactics', 'collector',
+  'thermal', 'momentum', 'ricochet'];
+const MAX_BOSS_SEGMENTS = Math.max(...CHAPTERS.map(stage => stage.bossSegments));
 
 export function readProfile(storage) {
   const empty = {
     dna: 0, fire: 0, precision: 0, scavenge: 0, tactics: 0, collector: 0,
+    thermal: 0, momentum: 0, ricochet: 0,
     unlockedStage: 1, cleared: [], endlessUnlocked: false,
     weapons: ['capsule'], organs: [], equippedWeapon: 'capsule',
     equippedOrgans: [], bestEndless: 0,
@@ -54,7 +57,7 @@ function writeProfile(storage, profile) {
 }
 
 export function researchCost(level) {
-  return 45 + level * 40;
+  return 45 + level * 65 + level * level * 10;
 }
 
 export function buyResearch(storage, id) {
@@ -113,7 +116,6 @@ export function awardRun(storage, game) {
   }
   if (game.chapter === 26) profile.bestEndless = Math.max(profile.bestEndless,
     game.endlessTier || 1);
-  if (profile.equippedOrgans.includes('salvage')) profile.dna += Math.ceil(gained * 0.15);
   profile.dna += gained;
   writeProfile(storage, profile);
   return { gained, profile, firstClear };
@@ -172,7 +174,7 @@ export function loadCheckpoint(storage) {
       || data.normalDestroyed > WAVES[0].segments - 1
       || !Array.isArray(data.chains) || data.chains.length > 2
       || data.chains.some(chain => !Array.isArray(chain.segments)
-        || chain.segments.length > WAVES[0].segments
+        || chain.segments.length > MAX_BOSS_SEGMENTS
         || !Number.isFinite(chain.travel))
       || (data.encounter === 'boss' && data.chains.some(chain => chain.boss)
         && data.routeRevision !== 2)) return null;
@@ -192,7 +194,7 @@ export function loadCheckpoint(storage) {
     game.encounter = 'boss';
     game.normalDestroyed = 0;
     game.bossDestroyed = !migrateNormalRun && Number.isInteger(data.bossDestroyed)
-      ? Math.max(0, Math.min(2 * (WAVES.at(-1).segments - 1), data.bossDestroyed)) : 0;
+      ? Math.max(0, Math.min(2 * (MAX_BOSS_SEGMENTS - 1), data.bossDestroyed)) : 0;
     game.spawnCount = migrateNormalRun ? 0
       : Number.isInteger(data.spawnCount) ? data.spawnCount : 0;
     game.nextId = Number.isInteger(data.nextId) ? data.nextId : 1;

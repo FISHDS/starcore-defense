@@ -22,21 +22,22 @@ test('雙頭關的頭目在同一個開場更新中一起登場', () => {
   assert.ok(game.bosses.every(boss => boss.travel === game.bosses[0].travel));
 });
 
-test('快速連續擊破頭目共享血量組不會扣回永久行軍距離', () => {
+test('快速連續擊破會拉回頭部，但最低推進壓力仍持續累積', () => {
   const game = startRun(1202, {}, 2);
   advance(game, 0.01);
   const boss = game.bosses[0];
   const initialTravel = boss.travel;
+  const initialPressure = boss.pressureTravel;
   for (let count = 0; count < 8; count++) {
     const group = boss.healthGroups.find(item => item.members.some(piece => piece.index > 0));
     assert.ok(group, `第${count + 1}次應有可擊破身體組`);
     assert.equal(hitSegment(game, boss, group.members[0], group.hp + 1), true);
-    assert.ok(boss.travel >= initialTravel,
-      `第${count + 1}次擊破後，頭目行軍被永久拉回入口`);
+    assert.ok(boss.pressureTravel >= initialPressure,
+      `第${count + 1}次擊破後，最低推進壓力倒退`);
   }
-  advance(game, 1);
+  for (let frame = 0; frame < 100; frame++) advance(game, 0.05);
   assert.ok(boss.travel > initialTravel,
-    '持續輸出時頭目仍須沿路推進，不能停在入口陪玩家刷擊破');
+    '擊破後頭目仍須沿路推進，不能停在入口陪玩家刷擊破');
 });
 
 test('頭目身體擊破仍保留可見的短暫回彈', () => {
@@ -48,7 +49,8 @@ test('頭目身體擊破仍保留可見的短暫回彈', () => {
   hitSegment(game, boss, group.members[0], group.hp + 1);
   assert.ok(boss.recoil > 0);
   assert.ok((boss.recoilDistance || 0) > 0);
-  assert.equal(boss.travel, before);
+  assert.ok(boss.travel < before);
   advance(game, 0.1);
-  assert.ok(boss.travel > before, '回彈演出期間行軍進度仍然向前');
+  assert.ok(boss.segments[0].routeDistance < before,
+    '回彈期間頭部必須沿路線向後退');
 });

@@ -1,11 +1,11 @@
-import { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID } from './content.js?v=20261020-starcore-21';
-import { routeLength, routePosition } from './routes.js?v=20261020-starcore-21';
-import { assignTraits, chainSpeed, chestGuarded, healthPoolKey,
+import { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID } from './content.js?v=20261021-starcore-22';
+import { routeLength, routePosition } from './routes.js?v=20261021-starcore-22';
+import { assignTraits, burnDamageRatio, chainSpeed, chestGuarded, healthPoolKey,
   poisonDamageRatio, pulseDamageRatio, selectNextHealthPoolTarget,
   steerBullet, uniqueHealthTargets, updateWeakpoints }
-  from './mechanics.js?v=20261020-starcore-21';
-import { createBossRig, updateBossRig } from './boss-rig.js?v=20261020-starcore-21';
-import { bossProfileFor } from './boss-profiles.js?v=20261020-starcore-21';
+  from './mechanics.js?v=20261021-starcore-22';
+import { createBossRig, updateBossRig } from './boss-rig.js?v=20261021-starcore-22';
+import { bossProfileFor } from './boss-profiles.js?v=20261021-starcore-22';
 
 export { WAVES, CHAPTERS, UPGRADES, UPGRADE_BY_ID };
 export const WIDTH = 390;
@@ -34,6 +34,9 @@ export function startRun(seed = Date.now(), profile = {}, chapter = 1) {
     scavenge: Math.max(0, Math.min(4, profile.scavenge || 0)),
     tactics: Math.max(0, Math.min(4, profile.tactics || 0)),
     collector: Math.max(0, Math.min(4, profile.collector || 0)),
+    thermal: Math.max(0, Math.min(4, profile.thermal || 0)),
+    momentum: Math.max(0, Math.min(4, profile.momentum || 0)),
+    ricochet: Math.max(0, Math.min(4, profile.ricochet || 0)),
   };
   const organs = Array.isArray(profile.equippedOrgans) ? profile.equippedOrgans : [];
   const weapon = ['capsule', 'scatter', 'rail', 'prism'].includes(profile.equippedWeapon)
@@ -48,7 +51,7 @@ export function startRun(seed = Date.now(), profile = {}, chapter = 1) {
     spawnCount: 0, nextId: 1,
     fireTimer: 0, specialTimers: {}, normalShotTimer: 0,
     baseDamage: 40 + profileLevels.fire * 5,
-    chestMaxHp: 100 - profileLevels.scavenge * 8 - (organs.includes('salvage') ? 15 : 0),
+    chestMaxHp: 100,
     profileLevels, score: 0, player: { ...playerPosition(chapter), aimAngle: -Math.PI / 2 },
     chains: [], chest: null, bullets: [], effects: [], popups: [],
     pickups: [], chargeFor: 0, comboCount: 0, comboTimer: 0,
@@ -74,9 +77,14 @@ export function getShotDamage(game) {
     * chapterScale;
   const upgrades = 1 + (game.upgrades.power || 0) * 0.35
     + (game.upgrades.needle || 0) * 0.14 + (game.upgrades.rail || 0) * 0.13;
-  const chain = 1 + Math.min(10, game.comboCount || 0) * (game.upgrades.combo || 0) * 0.015;
+  const chosenRanks = Object.values(game.upgrades).reduce((sum, rank) => sum + rank, 0);
+  const longBattleGrowth = !game.preview
+    ? 1 + Math.max(0, chosenRanks - 1) * 0.12 : 1;
+  const chain = 1 + Math.min(10, game.comboCount || 0)
+    * ((game.upgrades.combo || 0) + game.profileLevels.momentum) * 0.015;
   const charge = game.chargeFor > 0 ? 1.25 : 1;
-  return Math.round(natural * upgrades * (1 + game.profileLevels.precision * 0.06)
+  return Math.round(natural * upgrades * longBattleGrowth
+    * (1 + game.profileLevels.precision * 0.06)
     * chain * charge
     * (game.equippedWeapon === 'rail' ? 1.2 : 1));
 }
@@ -162,8 +170,11 @@ function configuredWave(game, index) {
       * (source.boss ? chapter.bossHpScale : 1)),
     speed: source.boss && game.chapter !== 26
       ? Math.min(source.speed * chapter.speedScale * 0.75,
-        chapter.bossCount === 2 ? 9.3 + (game.chapter - 1) * 0.04
-          : 18 + (game.chapter - 1) * 0.06)
+        chapter.bossCount === 2 ? game.chapter === 25 ? 7.2
+          : 7.3 + (game.chapter - 1) * 0.04
+          : chapter.mechanics.includes('haste')
+            ? 16 + Math.max(0, game.chapter - 16) * 0.03
+            : 18 + (game.chapter - 1) * 0.06)
       : source.speed * chapter.speedScale * (source.boss ? 0.75 : 1)
         * (game.chapter === 26 ? 1 + (game.endlessTier - 1) * 0.04 : 1),
   };
@@ -223,16 +234,18 @@ function spawnChain(game, wave, lane = game.spawnCount) {
     spacing: boss ? 46 : 29, speed: wave.speed, actualSpeed: wave.speed,
     feedSpeed: 0,
     slowFor: 0, recoil: 0, entryComplete: boss, segments: [],
+    pressureTravel: initialTravel(wave.path, boss, game.preview, lane),
+    recoveryDebt: 0,
     originalBodyCount: boss ? count - 1 : 0,
     groupSize: boss ? game.preview ? 4 : stage.bossGroupSize : null,
     rig: boss ? createBossRig(bossProfileFor(game.chapter, lane).id) : null,
   };
   const chestIndices = boss
-    ? stage.bossCount === 1
-      ? game.chapter === 1 && !game.preview
-        ? [4, 20, 39, 58, 80, 102, 124, 146]
-        : [4, 12, 20, 28, 36, 44, 52, 60, 68, 76, 84]
-      : [4, 16, 28, 40, 52, 64]
+    ? game.preview ? [4, 12, 20, 28, 36, 44, 52, 60, 68, 76, 84]
+      : game.chapter === 1 ? [4, 20, 39, 76, 113, 168, 223, 278]
+        : (stage.bossCount === 1 ? [1, 6, 12, 24, 36, 54, 72, 90]
+          : [1, 10, 25, 40]).map((group, index) =>
+          1 + group * stage.bossGroupSize + index)
     : [5, 18, 36, 60, 84, 110, 138, 168, 198];
   for (let index = 0; index < count; index++) {
     const head = index === 0;
@@ -341,12 +354,14 @@ export function hitSegment(game, chain, segment, amount, options = {}) {
   const supplyGuarded = !chain.boss && chestGuarded(chain, segment);
   const critical = !options.dot && random(game) < (game.upgrades.crit || 0) * 0.1;
   const weakpoint = segment.weakpoint && segment.weakOpen;
-  const damage = Math.max(1, Math.round(amount * (critical ? 2 : 1)
+  const scaledDamage = amount * (critical ? 2 : 1)
     * (weakpoint ? 1 + game.profileLevels.collector * 0.12
       + (game.equippedOrgans.includes('focus-lens') ? 0.2 : 0) : 1)
     * (1 + segment.mark)
     * (supplyGuarded ? 0.35 : 1)
-    * (segment.weakpoint ? (segment.weakOpen ? 1.6 : chain.boss ? 1 : 0.28) : 1)));
+    * (segment.weakpoint ? (segment.weakOpen ? 1.6 : chain.boss ? 1 : 0.28) : 1);
+  const damage = options.statusTick ? Math.max(0, scaledDamage)
+    : Math.max(1, Math.round(scaledDamage));
   const healthGroup = chain.boss && segment.healthGroupId
     ? chain.healthGroups.find(group => group.id === segment.healthGroupId) : null;
   const armor = Math.min(segment.armorHp || 0, damage);
@@ -355,8 +370,10 @@ export function hitSegment(game, chain, segment, amount, options = {}) {
     healthGroup.hp -= damage - armor;
     for (const member of healthGroup.members) member.hp = healthGroup.hp;
   } else segment.hp -= damage - armor;
-  addPopup(game, segment.x, segment.y - 12, damage, critical || segment.chest);
-  game.effects.push({ kind: 'hit', x: segment.x, y: segment.y, life: 0.2, maxLife: 0.2 });
+  if (!options.statusTick) {
+    addPopup(game, segment.x, segment.y - 12, damage, critical || segment.chest);
+    game.effects.push({ kind: 'hit', x: segment.x, y: segment.y, life: 0.2, maxLife: 0.2 });
+  }
   if (chain.boss && chain.rig && !options.dot) chain.rig.hurtFor = 0.14;
   if (!options.dot) {
     const affected = healthGroup?.members || [segment];
@@ -367,6 +384,9 @@ export function hitSegment(game, chain, segment, amount, options = {}) {
     }
     if (game.upgrades.burn) for (const member of affected) {
       member.burnFor = Math.max(member.burnFor, 2 + game.upgrades.burn);
+    }
+    if (game.profileLevels.thermal) for (const member of affected) {
+      member.burnFor = Math.max(member.burnFor, 1.5 + game.profileLevels.thermal * 0.35);
     }
     if (game.upgrades.mark) for (const member of affected) {
       member.mark = Math.max(member.mark, game.upgrades.mark * 0.11);
@@ -396,7 +416,12 @@ export function hitSegment(game, chain, segment, amount, options = {}) {
   if (healthGroup) chain.healthGroups = chain.healthGroups.filter(group => group !== healthGroup);
   chain.actualSpeed = chainSpeed(chain);
   chain.segments.forEach((piece, index) => { piece.index = index; });
-  // 擊破會讓前段頭身短暫回彈；回彈只影響姿勢，不倒扣已取得的行軍距離。
+  // 後段留在原位，前段頭身沿路線退回來填補被擊破的空缺。
+  const retreat = chain.spacing * defeatedSegments.length;
+  const beforeTravel = chain.travel;
+  chain.travel = Math.max((chain.pressureTravel ?? chain.travel) - 45,
+    chain.travel - retreat);
+  chain.recoveryDebt = (chain.recoveryDebt || 0) + beforeTravel - chain.travel;
   chain.recoilDuration = 0.38;
   chain.recoil = chain.recoilDuration;
   chain.recoilDistance = Math.min(chain.spacing * 1.15,
@@ -421,6 +446,15 @@ export function hitSegment(game, chain, segment, amount, options = {}) {
     for (const { segment: neighbor } of targets) {
       hitSegment(game, chain, neighbor, getShotDamage(game)
         * (0.12 + game.upgrades.shatter * 0.12), { dot: true });
+    }
+  }
+  if (!segment.chest && !options.dot && game.profileLevels.scavenge > 0) {
+    const targets = uniqueHealthTargets(neighbors.filter(neighbor => neighbor?.index > 0
+      && !neighbor.chest && chain.segments.includes(neighbor))
+      .map(segment => ({ chain, segment })));
+    for (const { segment: neighbor } of targets) {
+      hitSegment(game, chain, neighbor,
+        getShotDamage(game) * 0.25 * game.profileLevels.scavenge, { dot: true });
     }
   }
   for (const position of positions) game.effects.push({ kind: 'burst',
@@ -477,8 +511,17 @@ function updateChains(game, dt) {
     chain.actualSpeed = chainSpeed(chain) + chain.feedSpeed;
     const movementScale = chain.anchorFor > 0 ? 0
       : chain.slowFor > 0 ? 0.72 : 1;
-    const nextTravel = chain.travel + chain.actualSpeed * movementScale * dt;
-    chain.travel = Math.min(routeLength(chain.path, chain.boss, chain.lane), nextTravel);
+    const routeEnd = routeLength(chain.path, chain.boss, chain.lane);
+    chain.pressureTravel = Math.min(routeEnd,
+      (chain.pressureTravel ?? chain.travel) + chain.actualSpeed * movementScale * dt * 0.6);
+    const baseStep = chain.actualSpeed * movementScale * dt;
+    const recovery = Math.min(chain.recoveryDebt || 0,
+      chain.actualSpeed * movementScale * dt * 4.8);
+    const nextTravel = Math.max(chain.pressureTravel - 45,
+      chain.travel + baseStep + recovery);
+    const recovered = Math.max(0, nextTravel - chain.travel - baseStep);
+    chain.recoveryDebt = Math.max(0, (chain.recoveryDebt || 0) - recovered);
+    chain.travel = Math.min(routeEnd, nextTravel);
     chain.slowFor = Math.max(0, chain.slowFor - dt);
     reposition(chain, dt);
     const head = chain.segments[0];
@@ -494,7 +537,8 @@ function updateChains(game, dt) {
 
 function fireCapsules(game, dt) {
   game.fireTimer += dt;
-  const interval = 0.21 / (1 + (game.upgrades.rapid || 0) * 0.18)
+  const interval = 0.21 / (1 + (game.upgrades.rapid || 0) * 0.18
+    + game.profileLevels.tactics * 0.06)
     * (game.equippedOrgans.includes('tempo') ? 0.9 : 1);
   while (game.fireTimer >= interval) {
     game.fireTimer -= interval;
@@ -502,7 +546,8 @@ function fireCapsules(game, dt) {
     const multi = game.upgrades.multi || 0;
     const count = 1 + multi
       + (game.equippedWeapon === 'scatter' ? 1 : 0);
-    const extra = random(game) < (game.upgrades.echo || 0) * 0.22 ? 1 : 0;
+    const extra = (random(game) < (game.upgrades.echo || 0) * 0.22 ? 1 : 0)
+      + (game.equippedOrgans.includes('salvage') && game.shotCount % 4 === 0 ? 1 : 0);
     for (let shot = 0; shot < count + extra; shot++) {
       const angle = game.player.aimAngle
         + (shot - (count + extra - 1) / 2) * 0.035;
@@ -514,8 +559,11 @@ function fireCapsules(game, dt) {
         y: game.player.y + Math.sin(angle) * 24,
         vx, vy, damage: getShotDamage(game) * (1 + multi * 0.45) / (1 + multi),
         speed: velocity,
-        bounces: game.upgrades.bounce || 0,
-        bounceLevel: game.upgrades.bounce || 0,
+        bounces: (game.upgrades.bounce || 0)
+          + (game.profileLevels.ricochet
+            && game.shotCount % (8 - game.profileLevels.ricochet) === 0 ? 1 : 0),
+        bounceLevel: Math.max(game.upgrades.bounce || 0,
+          game.profileLevels.ricochet ? 1 : 0),
         pierceLevel: game.upgrades.pierce || 0,
         extraHit: false,
         volley: !!game.upgrades.volley && game.shotCount % 4 === 0,
@@ -776,15 +824,17 @@ function updateStatuses(game, dt) {
     if (poisonFor > 0) {
       const remaining = Math.max(0, poisonFor - dt);
       for (const member of members) member.poisonFor = remaining;
-      hitSegment(game, chain, segment, getShotDamage(game)
-        * poisonDamageRatio(game.upgrades.poison || 1) * dt, { dot: true });
+      hitSegment(game, chain, segment, Math.max(getShotDamage(game) * 0.4,
+        (group?.maxHp || segment.maxHp) * poisonDamageRatio(game.upgrades.poison || 1))
+        * dt, { dot: true, statusTick: true });
     }
     const burnFor = Math.max(...members.map(member => member.burnFor || 0));
     if (burnFor > 0 && game.phase === 'playing') {
       const remaining = Math.max(0, burnFor - dt);
       for (const member of members) member.burnFor = remaining;
-      hitSegment(game, chain, segment, getShotDamage(game)
-        * 0.18 * (game.upgrades.burn || 0) * dt, { dot: true });
+      hitSegment(game, chain, segment, Math.max(getShotDamage(game) * 0.5,
+        (group?.maxHp || segment.maxHp) * burnDamageRatio(game.upgrades.burn || 1))
+        * dt, { dot: true, statusTick: true });
     }
     if (game.phase !== 'playing') return;
   }
@@ -821,7 +871,7 @@ function drawUpgradeChoices(game, previous = []) {
 function presentUpgrades(game, source) {
   game.phase = 'upgrade';
   game.upgradeSource = source;
-  game.rerollsLeft = 1 + game.profileLevels.tactics;
+  game.rerollsLeft = 1;
   game.choices = drawUpgradeChoices(game);
 }
 

@@ -9,7 +9,7 @@ const memory = () => {
     setItem: (key, value) => data.set(key, value), removeItem: key => data.delete(key) };
 };
 
-test('戰術研究增加寶箱重抽次數；弱點解析提升精準傷害', () => {
+test('舊戰術研究保留等級並改為射速成長；弱點解析保留', () => {
   const storage = memory();
   storage.setItem('starcore.profile.v2', JSON.stringify({ dna: 1000 }));
   for (let i = 0; i < 2; i++) assert.equal(buyResearch(storage, 'tactics').success, true);
@@ -21,5 +21,5 @@ test('戰術研究增加寶箱重抽次數；弱點解析提升精準傷害', ()
   advance(game, 0.05);
   const chest = game.chains[0].segments.find(piece => piece.chest);
   hitSegment(game, game.chains[0], chest, chest.hp + 1);
-  assert.equal(game.rerollsLeft, 3);
+  assert.equal(game.rerollsLeft, 1);
 });

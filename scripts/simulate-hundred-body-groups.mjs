@@ -9,6 +9,8 @@ function simulate(seed, style) {
   let boss;
   let skillChoices = 0;
   const chestTimes = [];
+  const groupMilestones = {};
+  let maxHeadPercent = 0;
   for (let frame = 0; frame < 9000 && !['victory', 'defeat'].includes(game.phase); frame++) {
     if (game.phase === 'upgrade') {
       skillChoices++;
@@ -22,18 +24,31 @@ function simulate(seed, style) {
       aimAngle: style === 'fixed' ? -Math.PI / 2 : fixedAimAngle(game),
     });
     boss ||= game.bosses[0];
+    if (boss) {
+      const headPercent = boss.segments[0].routeDistance
+        / routeLength(boss.path, true, boss.lane) * 100;
+      maxHeadPercent = Math.max(maxHeadPercent, headPercent);
+      for (const [groups, bodies] of [[10, 30], [20, 60], [50, 150], [80, 240]]) {
+        if (game.bossDestroyed >= bodies && !groupMilestones[groups]) {
+          groupMilestones[groups] = { seconds: Math.round(game.runTime),
+            headPercent: Math.round(headPercent) };
+        }
+      }
+    }
   }
   return {
     seed, style, result: game.phase, seconds: Math.round(game.runTime),
-    skillChoices, chestTimes,
+    skillChoices, chestTimes, groupMilestones,
+    maxHeadPercent: Math.round(maxHeadPercent),
     routePercent: Math.round(boss.travel / routeLength(boss.path, true, boss.lane) * 100),
   };
 }
 
 const rows = ['active', 'fixed', 'no-skills'].flatMap(style =>
   SEEDS.map(seed => simulate(seed, style)));
-console.table(rows.map(({ seed, style, result, seconds, skillChoices, routePercent }) =>
-  ({ seed, style, result, seconds, skillChoices, routePercent })));
+console.table(rows.map(({ seed, style, result, seconds, skillChoices,
+  maxHeadPercent, routePercent }) =>
+  ({ seed, style, result, seconds, skillChoices, maxHeadPercent, routePercent })));
 const summary = Object.fromEntries(['active', 'fixed', 'no-skills'].map(style => {
   const runs = rows.filter(row => row.style === style);
   return [style, {
@@ -42,13 +57,19 @@ const summary = Object.fromEntries(['active', 'fixed', 'no-skills'].map(style =>
       / runs.length),
   }];
 }));
-console.log(JSON.stringify({ summary, activeChestTimes: rows.filter(row =>
-  row.style === 'active').map(row => ({ seed: row.seed, times: row.chestTimes })) }, null, 2));
+console.log(JSON.stringify({ summary, activeRuns: rows.filter(row =>
+  row.style === 'active').map(row => ({ seed: row.seed, result: row.result,
+    times: row.chestTimes, milestones: row.groupMilestones })) }, null, 2));
 
 // 主動瞄準應有勝算；固定方向與不選技能不應成為穩定通關方法。
 if (summary.active.wins < 8 || summary.fixed.wins > 5
   || summary['no-skills'].wins > 0 || rows.some(row => row.skillChoices > 8)
   || rows.filter(row => row.style === 'active' && row.result === 'victory')
-    .some(row => row.seconds < 120 || row.seconds > 190 || row.routePercent < 60)) {
+    .some(row => row.seconds < 180 || row.seconds > 280
+      || row.maxHeadPercent < 60
+      || row.groupMilestones[20]?.headPercent < 50
+      || !row.groupMilestones[80]
+      || row.groupMilestones[80].seconds - row.groupMilestones[50].seconds
+        >= (row.groupMilestones[50].seconds - row.groupMilestones[20].seconds) * 0.8)) {
   process.exitCode = 1;
 }

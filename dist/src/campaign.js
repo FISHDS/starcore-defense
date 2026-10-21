@@ -66,7 +66,7 @@ const BOSS_PATHS = ['tide', 'narrow', 'weave', 'mirror', 'spiral',
 // 每關身節耐久遞增，通關時間再以不同路線、寶箱與技能選擇的全關模擬驗證。
 const BOSS_HP_SCALES = Array.from({ length: LEVELS.length }, (_, index) =>
   index === 0 ? 1.21 : index === 1 ? 1.15
-    : Math.round((1 + index * 0.06) * 1000) / 1000);
+    : Math.round((1 + index * 0.06) * (index === 24 ? 1.25 : 1) * 1000) / 1000);
 
 export const CHAPTERS = LEVELS.map(([name, path, mechanics, bossMode], index) => {
   const id = index + 1;
@@ -95,9 +95,9 @@ export const CHAPTERS = LEVELS.map(([name, path, mechanics, bossMode], index) =>
     difficulty: id <= 5 ? '入門' : id <= 10 ? '進階' : id <= 20 ? '挑戰' : '深域',
     mechanics, bossMode, path, bossCount,
     positionMode: POSITION_MODES[index],
-    bossSegments: id === 1 ? 159 : bossCount === 1 ? 92 : 72,
+    bossSegments: id === 1 ? 309 : bossCount === 1 ? 409 : 205,
     bossGroupSize: id === 1 ? 3 : 4,
-    bossGrowthSpan: id === 1 ? 91 : null,
+    bossGrowthSpan: bossCount === 1 ? 91 : 71,
     bossHpScale: BOSS_HP_SCALES[index],
     summary: `${positionModeName(POSITION_MODES[index])} · ${details} · ${bossCount === 1 ? '單頭長戰' : '雙頭交疊'}`,
     paths: [path, path, path, path, path,

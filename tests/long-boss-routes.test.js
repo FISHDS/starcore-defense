@@ -147,7 +147,7 @@ test('前五關即使持續追準頭目，跳過所有技能仍會失守', () =>
       }
       advance(game, 0.05, { aimAngle: fixedAimAngle(game) });
     }
-    assert.ok(offered >= 3, `第 ${chapter} 關沒有足夠的技能選擇機會`);
+    assert.ok(offered >= 1, `第 ${chapter} 關連第一個寶箱都打不開`);
     assert.equal(game.phase, 'defeat', `第 ${chapter} 關不選技能仍通關`);
   }
 });

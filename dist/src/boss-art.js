@@ -1,6 +1,6 @@
 // 全部魔王共用的畫法；外型差異由資料提供，路線與碰撞仍由遊戲管理。
-import { resolveBossEquipmentPose } from './boss-rig.js?v=20261020-starcore-21';
-import { BOSS_PROFILES } from './boss-profiles.js?v=20261020-starcore-21';
+import { resolveBossEquipmentPose } from './boss-rig.js?v=20261021-starcore-22';
+import { BOSS_PROFILES } from './boss-profiles.js?v=20261021-starcore-22';
 
 const TAU = Math.PI * 2;
 const INK = '#172235';
@@ -28,8 +28,8 @@ function mobileSprite(image, size = 112) {
 }
 if (typeof Image !== 'undefined') {
   const files = {
-    head: 'shiba-head-battle.png', props: 'shiba-props-battle.png', body: 'shiba-body.png',
-    headFallback: 'shiba-head.svg', knifeFallback: 'shiba-knife.svg',
+    head: 'shiba-prototype-head.svg', body: 'shiba-body.svg',
+    knifeFallback: 'shiba-knife.svg',
     shieldFallback: 'shiba-shield.svg',
   };
   for (const [part, file] of Object.entries(files)) {
@@ -44,7 +44,7 @@ if (typeof Image !== 'undefined') {
   for (const part of ['head', 'body']) {
     const image = new Image();
     image.decoding = 'async';
-    image.src = new URL(`../assets/bosses/screech-cat-${part}.png?v=20261017-cat-2`, import.meta.url).href;
+    image.src = new URL(`../assets/bosses/screech-cat-prototype-${part}.svg?v=20261017-cat-2`, import.meta.url).href;
     CAT_ASSETS[part] = image;
   }
   const admin = new Image();
@@ -82,7 +82,7 @@ if (typeof Image !== 'undefined') {
   }, { once: true });
   const loading99Atlas = new Image();
   loading99Atlas.decoding = 'async';
-  loading99Atlas.src = new URL('../assets/bosses/loading-99-atlas.svg?v=20261020-starcore-21', import.meta.url).href;
+  loading99Atlas.src = new URL('../assets/bosses/loading-99-atlas.svg?v=20261021-starcore-22', import.meta.url).href;
   loading99Atlas.addEventListener('load', () => {
     const parts = {
       head: [0, 0, 100, 104], ring: [105, 16, 72, 72],

@@ -1,12 +1,12 @@
-import { advance, CHAPTERS, chooseUpgrade, createBossShowcase, getRunProgress, HEIGHT, rerollUpgrades, startRun, UPGRADE_BY_ID, WAVES, WIDTH } from './game.js?v=20261020-starcore-21';
-import { pointerToAimAngle } from './input.js?v=20261020-starcore-21';
-import { render } from './render.js?v=20261020-starcore-21';
-import { awardRun, buyResearch, buyItem, equipItem, clearCheckpoint, loadCheckpoint, readProfile, researchCost, saveCheckpoint, updateBest } from './storage.js?v=20261020-starcore-21';
-import { ORGANS, WEAPONS } from './meta.js?v=20261020-starcore-21';
-import { drawSkillIcon } from './art.js?v=20261020-starcore-21';
-import { createAudioEngine, musicThemeForChapter } from './audio.js?v=20261020-starcore-21';
-import { getBattleHint } from './tutorial.js?v=20261020-starcore-21';
-import { bossProfileFor } from './boss-profiles.js?v=20261020-starcore-21';
+import { advance, CHAPTERS, chooseUpgrade, createBossShowcase, getRunProgress, HEIGHT, rerollUpgrades, startRun, UPGRADE_BY_ID, WAVES, WIDTH } from './game.js?v=20261021-starcore-22';
+import { pointerToAimAngle } from './input.js?v=20261021-starcore-22';
+import { render } from './render.js?v=20261021-starcore-22';
+import { awardRun, buyResearch, buyItem, equipItem, clearCheckpoint, loadCheckpoint, readProfile, researchCost, saveCheckpoint, updateBest } from './storage.js?v=20261021-starcore-22';
+import { ORGANS, WEAPONS } from './meta.js?v=20261021-starcore-22';
+import { drawSkillIcon } from './art.js?v=20261021-starcore-22';
+import { createAudioEngine, musicThemeForChapter } from './audio.js?v=20261021-starcore-22';
+import { getBattleHint } from './tutorial.js?v=20261021-starcore-22';
+import { bossProfileFor } from './boss-profiles.js?v=20261021-starcore-22';
 
 const $ = id => document.getElementById(id);
 const canvas = $('arena');
@@ -112,7 +112,8 @@ function refreshResearch() {
   const profile = readProfile(storage);
   $('menu-dna').textContent = `◆ ${profile.dna}`;
   $('research-dna').textContent = String(profile.dna);
-  for (const id of ['fire', 'precision', 'scavenge', 'tactics', 'collector']) {
+  for (const id of ['fire', 'precision', 'scavenge', 'tactics', 'collector',
+    'thermal', 'momentum', 'ricochet']) {
     const level = profile[id];
     const cost = researchCost(level);
     $(`research-${id}-level`).textContent = `等級 ${level} / 4`;

@@ -22,7 +22,8 @@ function investResearch(storage) {
   let bought = true;
   while (bought) {
     bought = false;
-    for (const id of ['fire', 'precision', 'collector', 'scavenge', 'tactics']) {
+    for (const id of ['fire', 'precision', 'momentum', 'thermal',
+      'ricochet', 'tactics', 'collector', 'scavenge']) {
       const result = buyResearch(storage, id);
       if (result.success) bought = true;
     }
@@ -43,8 +44,10 @@ function playChapter(chapter, seed, profile) {
 export function simulateProgression() {
   const storage = new MemoryStorage();
   const rows = [];
+  const profiles = [];
   let failed = false;
   for (let chapter = 1; chapter <= 25; chapter++) {
+    profiles.push(readProfile(storage));
     let result = null;
     let attempts = 0;
     while (attempts < 4) {
@@ -63,11 +66,13 @@ export function simulateProgression() {
     rows.push({ chapter, attempts, result: result?.phase || 'locked',
       seconds: Math.round(result?.runTime || 0), research: profile.dna,
       fire: profile.fire, precision: profile.precision, collector: profile.collector,
+      thermal: profile.thermal, momentum: profile.momentum,
+      ricochet: profile.ricochet,
       weapon: loadout(profile).equippedWeapon,
       organs: loadout(profile).equippedOrgans.join('+') || '-' });
     if (!result || result.phase !== 'victory') failed = true;
   }
-  return { rows, failed };
+  return { rows, profiles, failed };
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

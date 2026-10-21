@@ -52,7 +52,7 @@ test('不同關卡的頭目有自己的行軍路線，不共用同一條交叉�
 
 test('第五關改由棺材舞單頭長鏈守關', () => {
   assert.equal(CHAPTERS[4].bossCount, 1);
-  assert.equal(CHAPTERS[4].bossSegments, 92);
+  assert.equal(CHAPTERS[4].bossSegments, 409);
   assert.equal(CHAPTERS[4].name, '最後一班');
   assert.equal(CHAPTERS[4].bossMode, 'coffin-dance');
   assert.equal(bossProfileFor(5, 0).id, 'meme-last-shift-coffin-leader');

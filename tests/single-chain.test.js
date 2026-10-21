@@ -54,7 +54,7 @@ test('身體被擊破後骨架補齊間距，頭部沿行軍路線平順移動',
   assert.deepEqual({ x: head.x, y: head.y }, before);
   advance(game, 0.05);
   assert.ok(Math.hypot(head.x - before.x, head.y - before.y) < 20);
-  assert.ok(boss.travel > beforeTravel);
+  assert.ok(boss.travel < beforeTravel);
 });
 
 test('每條頭目長鏈沿身體安排補給寶箱，擊破後仍在同一場戰鬥', () => {
@@ -62,7 +62,7 @@ test('每條頭目長鏈沿身體安排補給寶箱，擊破後仍在同一場�
   advance(game, 0.05);
   const boss = game.bosses[0];
   const chests = boss.segments.filter(piece => piece.chest);
-  assert.ok(chests.length >= 5);
+  assert.equal(chests.length, 4);
   assert.ok(chests.some(piece => piece.gold));
   const chest = chests[0];
   hitSegment(game, boss, chest, chest.hp + 1);
